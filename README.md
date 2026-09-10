@@ -1,24 +1,44 @@
-# Kingdom 3662 · Alliance Mobilization website
+# Kingdom 3662 · Last of 300 Spartan
 
-This is a static website generated from `alliance-mobilization.xlsx`.
+Static statistics site for Alliance Mobilization events of Rise of Kingdoms Kingdom 3662.
 
-## Files
+## Local update
 
-- `index.html` — website shell
-- `styles.css` — visual design
-- `app.js` — navigation, player profiles, tables and search
-- `data.js` — generated data
-- `build.py` — rebuilds `data.js` from a newer Excel workbook
+1. Replace `alliance-mobilization.xlsx` with the newest workbook.
+2. Make sure the workbook contains the `Name changes` sheet.
+3. Run:
 
-## Add future events
+```cmd
+python -m pip install -r requirements.txt
+python build.py
+```
 
-1. Add a new worksheet to `alliance-mobilization.xlsx` using the same structure as the existing sheets.
-2. Keep the event metadata in rows 3–10 and player results starting at row 13.
-3. If a governor changes name, enter the first post-change result as:
-   `New Name (Old Name)`
-4. Run:
-   `python build.py`
-5. Publish the folder to any static web host.
+4. Open `index.html` locally or commit the changes to GitHub.
 
-The player identity logic follows the explicit `New Name (Old Name)` convention, including chained renames such as:
-`Old → New → Newer`.
+## Name matching
+
+The `Name changes` sheet is the authoritative matching table:
+
+- Column B = current name
+- Column C = former name 1
+- Column D = former name 2
+- Column E = former name 3, etc.
+
+Names in the event sheets using `New Name (Old Name)` are also recognized automatically. The matching sheet takes precedence when both sources contain a relationship.
+
+All former names in a chain are merged into one player profile. For example:
+
+`RamONa → Aresツ → ✗ Ares ✗ → • Iceball •`
+
+## GitHub automatic deployment
+
+The repository includes `.github/workflows/update-data.yml`.
+
+After the repository is configured for **GitHub Pages → GitHub Actions**, every push to `main` that changes the workbook or website files will:
+
+1. install Python/openpyxl,
+2. run `build.py`,
+3. generate `data.js`, and
+4. deploy the site to GitHub Pages.
+
+You therefore only need to replace the Excel workbook for normal data updates, then commit/push it.

@@ -23,6 +23,7 @@ function dashboard(){
    <div class="card"><div class="kpi-label">Players</div><div class="kpi-value">${D.players.length}</div><div class="kpi-note">unique identities</div></div>
    <div class="card"><div class="kpi-label">Latest alliance points</div><div class="kpi-value">${fmt(latest.alliancePoints)}</div><div class="kpi-note">Rank ${esc(latest.allianceRank)}</div></div>
    <div class="card"><div class="kpi-label">All event points</div><div class="kpi-value">${fmt(totalPoints)}</div><div class="kpi-note">sum of alliance totals</div></div>
+   <div class="card accent-kpi"><div class="kpi-label">Ø points / quest</div><div class="kpi-value">${avg(D.averagePPQ)}</div><div class="kpi-note">average across recorded events</div></div>
  </section>
  <section class="grid two">
    <div class="card table-card"><div class="table-head"><h2>Top players · total points</h2><span class="muted">all recorded events</span></div>
@@ -47,19 +48,34 @@ function eventsView(){
  </article>`).join("")}</section>`;
 }
 
-function playersView(query=""){
+function playersView(query="", preserveInput=false){
  nav("players");
  const q=query.trim().toLowerCase();
  const list=D.players.filter(p=>!q || p.currentName.toLowerCase().includes(q) || p.names.some(n=>n.toLowerCase().includes(q)));
  const page=Number(sessionStorage.getItem("playerPage")||0);
  const size=25, pages=Math.max(1,Math.ceil(list.length/size)), pg=Math.min(page,pages-1);
  const shown=list.slice(pg*size,(pg+1)*size);
- app.innerHTML=`<section class="hero"><div><div class="eyebrow">Player index</div><h1>Players</h1><p class="sub">${list.length} matching unique identities</p></div></section>
+ app.innerHTML=`<section class="hero"><div><div class="eyebrow">Player index</div><h1>Players</h1><p class="sub" id="playersCount">${list.length} matching unique identities</p></div></section>
  <section class="card table-card"><div class="table-head"><h2>All governors</h2><span class="muted">click a player for the full profile</span></div>
- <div class="filter-row" style="padding:0 18px 12px"><input id="playerFilter" value="${esc(query)}" placeholder="Filter players…" oninput="playersView(this.value)"></div>
- <div class="table-scroll"><table><thead><tr><th>#</th><th>Governor</th><th class="num">Total</th><th class="num">Avg/event</th><th class="num">Events</th><th class="num">Best rank</th><th>Former names</th></tr></thead><tbody>
+ <div class="filter-row" style="padding:0 18px 12px"><input id="playerFilter" value="${esc(query)}" placeholder="Filter players…" oninput="filterPlayersLive(this.value)"></div>
+ <div class="table-scroll"><table><thead><tr><th>#</th><th>Governor</th><th class="num">Total</th><th class="num">Avg/event</th><th class="num">Events</th><th class="num">Best rank</th><th>Former names</th></tr></thead><tbody id="playersTbody">
  ${shown.map((p,i)=>`<tr class="clickable" onclick="location.hash='player/${encodeURIComponent(p.id)}'"><td>${pg*size+i+1}</td><td><button class="player-link">${esc(p.currentName)}</button></td><td class="num">${fmt(p.totalPoints)}</td><td class="num">${fmt(p.averagePoints)}</td><td class="num">${p.eventsParticipated}</td><td class="num">${p.bestRank??"—"}</td><td class="muted">${p.names.length>1?esc(p.names.slice(0,-1).join(" → ")):"—"}</td></tr>`).join("")}
- </tbody></table></div><div class="pagination">${Array.from({length:pages},(_,i)=>`<button class="${i===pg?'active':''}" onclick="event.stopPropagation();sessionStorage.setItem('playerPage',${i});playersView(document.getElementById('playerFilter').value)">${i+1}</button>`).join("")}</div></section>`;
+ </tbody></table></div><div class="pagination" id="playersPagination">${Array.from({length:pages},(_,i)=>`<button class="${i===pg?'active':''}" onclick="event.stopPropagation();sessionStorage.setItem('playerPage',${i});playersView(document.getElementById('playerFilter').value)">${i+1}</button>`).join("")}</div></section>`;
+}
+
+function filterPlayersLive(query=""){
+ const q=query.trim().toLowerCase();
+ const list=D.players.filter(p=>!q || p.currentName.toLowerCase().includes(q) || p.names.some(n=>n.toLowerCase().includes(q)));
+ const size=25, pages=Math.max(1,Math.ceil(list.length/size));
+ const page=Math.min(Number(sessionStorage.getItem("playerPage")||0),pages-1);
+ const shown=list.slice(page*size,(page+1)*size);
+ const table=shown.map((p,i)=>`<tr class="clickable" onclick="location.hash='player/${encodeURIComponent(p.id)}'"><td>${page*size+i+1}</td><td><button class="player-link">${esc(p.currentName)}</button></td><td class="num">${fmt(p.totalPoints)}</td><td class="num">${fmt(p.averagePoints)}</td><td class="num">${p.eventsParticipated}</td><td class="num">${p.bestRank??"—"}</td><td class="muted">${p.names.length>1?esc(p.names.slice(0,-1).join(" → ")):"—"}</td></tr>`).join("");
+ const tbody=document.querySelector("#playersTbody");
+ const pag=document.querySelector("#playersPagination");
+ const count=document.querySelector("#playersCount");
+ if(tbody) tbody.innerHTML=table;
+ if(pag) pag.innerHTML=Array.from({length:pages},(_,i)=>`<button class="${i===page?'active':''}" onclick="sessionStorage.setItem('playerPage',${i});filterPlayersLive(document.getElementById('playerFilter').value)">${i+1}</button>`).join("");
+ if(count) count.textContent=`${list.length} matching unique identities`;
 }
 
 function playerView(id){
@@ -73,6 +89,7 @@ function playerView(id){
    <div class="card"><div class="kpi-label">Events ≥ 1 point</div><div class="kpi-value">${p.eventsParticipated}</div></div>
    <div class="card"><div class="kpi-label">Best event rank</div><div class="kpi-value">${p.bestRank??"—"}</div></div>
    <div class="card"><div class="kpi-label">Quests completed</div><div class="kpi-value">${fmt(p.questsCompleted)}</div></div>
+   <div class="card accent-kpi"><div class="kpi-label">Ø points / quest</div><div class="kpi-value">${avg(p.averagePPQ)}</div><div class="kpi-note">average across events</div></div>
  </section>
  <section class="grid two">
   <div class="card"><h2>Points over time</h2><div class="chart">${p.events.map(e=>`<div class="bar-wrap" title="${esc(e.event)}: ${fmt(e.points)} points"><div class="bar" style="height:${Math.max(2,e.points/max*100)}%"></div><div class="bar-label">${esc(e.event.replace("2026","").replace("2025",""))}</div></div>`).join("")}</div></div>
@@ -92,6 +109,7 @@ function eventView(id){
   <div class="card"><div class="kpi-label">Level</div><div class="kpi-value">${e.level}</div></div>
   <div class="card"><div class="kpi-label">Minimum</div><div class="kpi-value">${fmt(e.minimumPoints)}</div></div>
   <div class="card"><div class="kpi-label">Reward</div><div class="kpi-value" style="font-size:20px">${esc(e.reward)}</div></div>
+  <div class="card accent-kpi"><div class="kpi-label">Ø points / quest</div><div class="kpi-value">${avg(e.averagePPQ)}</div><div class="kpi-note">all completed quests in this event</div></div>
  </section>
  <section class="card table-card"><div class="table-head"><h2>Player results</h2><span class="muted">${sorted.length} rows</span></div><div class="table-scroll"><table><thead><tr><th>Rank</th><th>Governor</th><th class="num">Points</th><th class="num">Started</th><th class="num">Completed</th><th class="num">Pts/quest</th></tr></thead><tbody>
  ${sorted.map(r=>`<tr class="clickable" onclick="location.hash='player/${encodeURIComponent(r.playerId)}'"><td class="rank">${r.rank}</td><td><button class="player-link">${esc(r.name)}</button>${r.name!==r.playerId?` <span class="muted">· identity linked</span>`:""}</td><td class="num">${fmt(r.points)}</td><td class="num">${r.started}</td><td class="num">${r.completed}</td><td class="num">${avg(r.ppq)}</td></tr>`).join("")}
