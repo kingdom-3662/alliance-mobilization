@@ -62,3 +62,12 @@ tr.clickable{cursor:pointer}tr.clickable:hover{background:rgba(226,29,47,.08)}
 footer{border-top:1px solid var(--line);color:var(--muted);display:flex;justify-content:space-between;padding:20px 28px;font-size:12px}
 @media(max-width:900px){.topbar{gap:10px;padding:0 14px}.brand{min-width:auto}.brand>div:last-child{display:none}.search-wrap input{width:150px}.kpis{grid-template-columns:repeat(2,1fr)}.two,.event-list{grid-template-columns:1fr}.stat-grid{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:600px){nav{display:none}.hero{display:block}main{padding:25px 14px 50px}h1{font-size:28px}.kpis{grid-template-columns:1fr 1fr}.search-wrap{margin-left:auto}.search-wrap input{width:135px}}
+
+th.sortable{cursor:pointer;user-select:none}
+th.sortable button{display:flex;align-items:center;gap:7px;width:100%;padding:0;border:0;background:none;color:inherit;font:inherit;text-transform:inherit;letter-spacing:inherit;cursor:pointer;text-align:left}
+th.sortable:hover{color:var(--text)}
+.sort-icon{font-size:12px;opacity:.45;line-height:1}
+th.sortable.sort-asc,.th.sortable.sort-desc{color:var(--gold)}
+th.sortable.sort-asc .sort-icon::after{content:"↑";font-size:12px}
+th.sortable.sort-desc .sort-icon::after{content:"↓";font-size:12px}
+th.sortable.sort-asc .sort-icon,th.sortable.sort-desc .sort-icon{font-size:0;opacity:1}

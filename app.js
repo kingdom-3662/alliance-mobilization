@@ -4,6 +4,31 @@ const app = document.getElementById("app");
 const fmt = n => new Intl.NumberFormat("en-US").format(Math.round(n || 0));
 const avg = n => Number(n || 0).toLocaleString("en-US",{maximumFractionDigits:1});
 const esc = s => String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
+function sortValue(text,type){
+  const t=String(text ?? "").trim();
+  if(type === "number") { const n=parseFloat(t.replace(/[^0-9.\-]/g,"")); return Number.isNaN(n) ? -Infinity : n; }
+  return t.toLocaleLowerCase();
+}
+function sortTable(tableId,col,type){
+  const table=document.getElementById(tableId); if(!table) return;
+  const tbody=table.tBodies[0]; if(!tbody) return;
+  const rows=Array.from(tbody.rows);
+  const current=table.dataset.sortCol;
+  const direction=(current===String(col) && table.dataset.sortDir==="asc") ? "desc" : "asc";
+  rows.sort((a,b)=>{
+    const av=sortValue(a.cells[col]?.dataset.value ?? a.cells[col]?.textContent,type);
+    const bv=sortValue(b.cells[col]?.dataset.value ?? b.cells[col]?.textContent,type);
+    if(av<bv) return direction==="asc"?-1:1;
+    if(av>bv) return direction==="asc"?1:-1;
+    return 0;
+  });
+  rows.forEach(r=>tbody.appendChild(r));
+  table.dataset.sortCol=col; table.dataset.sortDir=direction;
+  table.querySelectorAll("th.sortable").forEach(th=>th.classList.remove("sort-asc","sort-desc"));
+  const active=table.querySelector(`th.sortable[data-col="${col}"]`);
+  if(active) active.classList.add(direction==="asc"?"sort-asc":"sort-desc");
+}
+function sortHead(label,table,col,type="text"){ return `<th class="sortable" data-table="${table}" data-col="${col}" data-type="${type}"><button type="button">${label}<span class="sort-icon">↕</span></button></th>`; }
 
 function nav(view){ document.querySelectorAll(".nav-btn").forEach(b=>b.classList.toggle("active",b.dataset.view===view)); }
 function playerById(id){return D.players.find(p=>p.id===decodeURIComponent(id));}
@@ -27,8 +52,8 @@ function dashboard(){
  </section>
  <section class="grid two">
    <div class="card table-card"><div class="table-head"><h2>Top players · total points</h2><span class="muted">all recorded events</span></div>
-    <div class="table-scroll"><table><thead><tr><th>#</th><th>Governor</th><th class="num">Points</th><th class="num">Events</th><th class="num">Avg/event</th></tr></thead><tbody>
-    ${top.map((p,i)=>`<tr class="clickable" onclick="location.hash='player/${encodeURIComponent(p.id)}'"><td class="rank">${i+1}</td><td><button class="player-link">${esc(p.currentName)}</button></td><td class="num">${fmt(p.totalPoints)}</td><td class="num">${p.eventsParticipated}</td><td class="num">${fmt(p.averagePoints)}</td></tr>`).join("")}
+    <div class="table-scroll"><table id="dashboardTopTable"><thead><tr>${sortHead("#","dashboardTopTable",0,"number")}${sortHead("Governor","dashboardTopTable",1)}${sortHead("Points","dashboardTopTable",2,"number")}${sortHead("Events","dashboardTopTable",3,"number")}${sortHead("Avg/event","dashboardTopTable",4,"number")}${sortHead("Ø Pts/Quest","dashboardTopTable",5,"number")}</tr></thead><tbody>
+    ${top.map((p,i)=>`<tr class="clickable" onclick="location.hash='player/${encodeURIComponent(p.id)}'"><td class="rank">${i+1}</td><td><button class="player-link">${esc(p.currentName)}</button></td><td class="num">${fmt(p.totalPoints)}</td><td class="num">${p.eventsParticipated}</td><td class="num">${fmt(p.averagePoints)}</td><td class="num">${avg(p.averagePPQ)}</td></tr>`).join("")}
     </tbody></table></div>
    </div>
    <div class="card"><h2>Event history</h2><div class="event-list" style="grid-template-columns:1fr">
@@ -58,7 +83,7 @@ function playersView(query="", preserveInput=false){
  app.innerHTML=`<section class="hero"><div><div class="eyebrow">Player index</div><h1>Players</h1><p class="sub" id="playersCount">${list.length} matching unique identities</p></div></section>
  <section class="card table-card"><div class="table-head"><h2>All governors</h2><span class="muted">click a player for the full profile</span></div>
  <div class="filter-row" style="padding:0 18px 12px"><input id="playerFilter" value="${esc(query)}" placeholder="Filter players…" oninput="filterPlayersLive(this.value)"></div>
- <div class="table-scroll"><table><thead><tr><th>#</th><th>Governor</th><th class="num">Total</th><th class="num">Avg/event</th><th class="num">Events</th><th class="num">Best rank</th><th>Former names</th></tr></thead><tbody id="playersTbody">
+ <div class="table-scroll"><table id="playersTable"><thead><tr>${sortHead("#","playersTable",0,"number")}${sortHead("Governor","playersTable",1)}${sortHead("Total","playersTable",2,"number")}${sortHead("Avg/event","playersTable",3,"number")}${sortHead("Events","playersTable",4,"number")}${sortHead("Best rank","playersTable",5,"number")}${sortHead("Former names","playersTable",6)}</tr></thead><tbody id="playersTbody">
  ${shown.map((p,i)=>`<tr class="clickable" onclick="location.hash='player/${encodeURIComponent(p.id)}'"><td>${pg*size+i+1}</td><td><button class="player-link">${esc(p.currentName)}</button></td><td class="num">${fmt(p.totalPoints)}</td><td class="num">${fmt(p.averagePoints)}</td><td class="num">${p.eventsParticipated}</td><td class="num">${p.bestRank??"—"}</td><td class="muted">${p.names.length>1?esc(p.names.slice(0,-1).join(" → ")):"—"}</td></tr>`).join("")}
  </tbody></table></div><div class="pagination" id="playersPagination">${Array.from({length:pages},(_,i)=>`<button class="${i===pg?'active':''}" onclick="event.stopPropagation();sessionStorage.setItem('playerPage',${i});playersView(document.getElementById('playerFilter').value)">${i+1}</button>`).join("")}</div></section>`;
 }
@@ -95,7 +120,7 @@ function playerView(id){
   <div class="card"><h2>Points over time</h2><div class="chart">${p.events.map(e=>`<div class="bar-wrap" title="${esc(e.event)}: ${fmt(e.points)} points"><div class="bar" style="height:${Math.max(2,e.points/max*100)}%"></div><div class="bar-label">${esc(e.event.replace("2026","").replace("2025",""))}</div></div>`).join("")}</div></div>
   <div class="card"><h2>Name history</h2>${p.names.map((n,i)=>`<div style="padding:10px 0;border-bottom:1px solid var(--line)"><span class="badge">${i===p.names.length-1?"Current":"Former"}</span> <strong>${esc(n)}</strong></div>`).join("")}</div>
  </section>
- <section class="card table-card" style="margin-top:16px"><div class="table-head"><h2>Event-by-event results</h2></div><div class="table-scroll"><table><thead><tr><th>Event</th><th class="num">Rank</th><th class="num">Points</th><th class="num">Started</th><th class="num">Completed</th><th class="num">Pts/quest</th></tr></thead><tbody>${playerRows(p)}</tbody></table></div></section>`;
+ <section class="card table-card" style="margin-top:16px"><div class="table-head"><h2>Event-by-event results</h2></div><div class="table-scroll"><table id="playerEventsTable"><thead><tr>${sortHead("Event","playerEventsTable",0)}${sortHead("Rank","playerEventsTable",1,"number")}${sortHead("Points","playerEventsTable",2,"number")}${sortHead("Started","playerEventsTable",3,"number")}${sortHead("Completed","playerEventsTable",4,"number")}${sortHead("Pts/quest","playerEventsTable",5,"number")}</tr></thead><tbody>${playerRows(p)}</tbody></table></div></section>`;
 }
 
 function eventView(id){
@@ -111,7 +136,7 @@ function eventView(id){
   <div class="card"><div class="kpi-label">Reward</div><div class="kpi-value" style="font-size:20px">${esc(e.reward)}</div></div>
   <div class="card accent-kpi"><div class="kpi-label">Ø points / quest</div><div class="kpi-value">${avg(e.averagePPQ)}</div><div class="kpi-note">all completed quests in this event</div></div>
  </section>
- <section class="card table-card"><div class="table-head"><h2>Player results</h2><span class="muted">${sorted.length} rows</span></div><div class="table-scroll"><table><thead><tr><th>Rank</th><th>Governor</th><th class="num">Points</th><th class="num">Started</th><th class="num">Completed</th><th class="num">Pts/quest</th></tr></thead><tbody>
+ <section class="card table-card"><div class="table-head"><h2>Player results</h2><span class="muted">${sorted.length} rows</span></div><div class="table-scroll"><table id="eventPlayersTable"><thead><tr>${sortHead("Rank","eventPlayersTable",0,"number")}${sortHead("Governor","eventPlayersTable",1)}${sortHead("Points","eventPlayersTable",2,"number")}${sortHead("Started","eventPlayersTable",3,"number")}${sortHead("Completed","eventPlayersTable",4,"number")}${sortHead("Pts/quest","eventPlayersTable",5,"number")}</tr></thead><tbody>
  ${sorted.map(r=>`<tr class="clickable" onclick="location.hash='player/${encodeURIComponent(r.playerId)}'"><td class="rank">${r.rank}</td><td><button class="player-link">${esc(r.name)}</button>${r.name!==r.playerId?` <span class="muted">· identity linked</span>`:""}</td><td class="num">${fmt(r.points)}</td><td class="num">${r.started}</td><td class="num">${r.completed}</td><td class="num">${avg(r.ppq)}</td></tr>`).join("")}
  </tbody></table></div></section>`;
 }
@@ -127,5 +152,6 @@ function route(){
 document.querySelectorAll(".nav-btn").forEach(b=>b.onclick=()=>{location.hash=b.dataset.view});
 document.getElementById("globalSearch").addEventListener("keydown",e=>{if(e.key==="Enter"){location.hash="players";setTimeout(()=>playersView(e.target.value),0)}});
 document.getElementById("footerUpdated").textContent="Source: alliance-mobilization.xlsx · "+D.updatedFromWorkbook;
+document.addEventListener("click", e=>{ const th=e.target.closest("th.sortable"); if(th) sortTable(th.dataset.table,Number(th.dataset.col),th.dataset.type); });
 window.addEventListener("hashchange",route);
 route();
