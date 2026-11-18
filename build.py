@@ -56,7 +56,21 @@ inline_aliases = {}
 for ws in wb.worksheets:
     if ws.title == "Name changes":
         continue
-    meta = {clean(ws.cell(r, 2).value): ws.cell(r, 4).value for r in range(3, 11) if ws.cell(r, 2).value}
+    # Metadata labels are not always in the same column: most labels are in B,
+    # while "Level completed" is in C. Find each label across B:D and take
+    # the next non-empty cell to its right.
+    meta = {}
+    for r in range(3, 11):
+        for c in range(2, 5):
+            label = clean(ws.cell(r, c).value)
+            if label:
+                value = None
+                for value_col in range(c + 1, min(ws.max_column, c + 3) + 1):
+                    candidate = ws.cell(r, value_col).value
+                    if candidate is not None and clean(candidate) != "":
+                        value = candidate
+                        break
+                meta[label.strip().lower()] = value
     rows = []
     for r in range(13, ws.max_row + 1):
         name = ws.cell(r, 3).value
@@ -80,13 +94,13 @@ for ws in wb.worksheets:
     events.append({
         "id": ws.title.lower().replace(" ", "-"),
         "name": ws.title,
-        "start": meta.get("Start"),
-        "end": meta.get("End"),
-        "alliancePoints": meta.get("Alliance-Points", 0),
-        "allianceRank": meta.get("Alliance-Rank"),
-        "level": meta.get("Level completed"),
-        "reward": meta.get("Legendary Fragment Choice-Chests"),
-        "minimumPoints": meta.get("Minimum Points Required", meta.get("Minimum Points required")),
+        "start": meta.get("start"),
+        "end": meta.get("end"),
+        "alliancePoints": meta.get("alliance-points", 0),
+        "allianceRank": meta.get("alliance-rank"),
+        "level": meta.get("level completed"),
+        "reward": meta.get("legendary fragment choice-chests"),
+        "minimumPoints": meta.get("minimum points required", meta.get("minimum points required")),
         "rows": rows,
     })
 
@@ -151,11 +165,15 @@ for p in players.values():
     p["averagePPQ"] = round(sum(pp) / len(pp), 1) if pp else 0
     p["nameHistory"] = p["names"]
 
-# Event-level average points per completed quest.
+# Event-level average points per completed quest and highest-scoring player.
 for event in events:
     completed = sum(x["completed"] for x in event["rows"])
     points = sum(x["points"] for x in event["rows"])
     event["averagePPQ"] = round(points / completed, 1) if completed else 0
+    best_row = max(event["rows"], key=lambda x: x["points"], default=None)
+    event["topPlayer"] = best_row["playerId"] if best_row else ""
+    event["topPlayerId"] = best_row["playerId"] if best_row else ""
+    event["topPlayerPoints"] = best_row["points"] if best_row else 0
 
 # Dashboard metric: arithmetic mean of event-level averages.
 event_ppq = [e["averagePPQ"] for e in events if e["averagePPQ"] > 0]
