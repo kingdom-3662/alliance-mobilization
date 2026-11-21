@@ -143,19 +143,28 @@ function trendChange(pct,decimals=1){
  const state=pct>5?'up':pct< -5?'down':'flat';
  return `<span class="trend-delta ${state}">${sign}${pct.toFixed(decimals)}%</span>`;
 }
-function trendLine(values,caption,format='number'){
+function trendMetricBadge(change,unit='%',decimals=1){
+ if(change===null||change===undefined||!Number.isFinite(change))return '<span class="trend-metric-badge neutral">No comparison</span>';
+ const rounded=Number(change.toFixed(decimals)),sign=rounded>0?'+':'',status=rounded>0?'positive':rounded<0?'negative':'neutral';
+ return `<span class="trend-metric-badge ${status}">${sign}${rounded.toFixed(decimals)}${unit}</span>`;
+}
+function trendLine(values,caption,format='number',tone='gold'){
  if(!values.length)return '<div class="empty">No event data yet.</div>';
  const numeric=values.map(v=>Number(v)||0);
- const low=Math.min(...numeric),high=Math.max(...numeric),range=high-low||1,w=650,h=135,p=14;
- const points=numeric.map((value,i)=>{
-  const x=p+i*(w-2*p)/Math.max(1,numeric.length-1);
-  return [x,h-p-(value-low)/range*(h-2*p)];
- });
+ const low=Math.min(...numeric),high=Math.max(...numeric),range=high-low||1,w=650,h=144,p=16;
+ const points=numeric.map((v,i)=>[p+i*(w-2*p)/Math.max(1,numeric.length-1),h-p-(v-low)/range*(h-2*p)]);
  const path=points.map(([x,y])=>`${x},${y}`).join(' ');
- const fmtValue=value=>format==='pct'?value.toFixed(1)+'%':format==='decimal'?value.toFixed(1):fmt(value);
- return `<svg viewBox="0 0 ${w} ${h}" class="trend-line-svg" role="img" aria-label="${esc(caption)}. Values in recorded event order: ${esc(numeric.map(fmtValue).join(', '))}">
-  <polyline points="${path}" fill="none" stroke="var(--gold)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-  ${points.map(([x,y],i)=>`<circle cx="${x}" cy="${y}" r="4.5" fill="var(--gold)"><title>${esc(D.events[i]?.name||'Event')}: ${esc(fmtValue(numeric[i]))}</title></circle>`).join('')}
+ const area=`${p},${h-p} ${path} ${w-p},${h-p}`;
+ const fmtValue=v=>format==='pct'?v.toFixed(1)+'%':format==='decimal'?v.toFixed(1):fmt(v);
+ const safeTone=tone==='turquoise'?'turquoise':'gold',gradientId='trend-fill-'+safeTone;
+ const last=points[points.length-1];
+ return `<svg viewBox="0 0 ${w} ${h}" class="trend-line-svg tone-${safeTone}" role="img" aria-label="${esc(caption)}. Values in recorded event order: ${esc(numeric.map(fmtValue).join(', '))}">
+  <defs><linearGradient id="${gradientId}" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="var(--trend-chart-color)" stop-opacity=".34"/><stop offset="1" stop-color="var(--trend-chart-color)" stop-opacity="0"/></linearGradient></defs>
+  ${[.25,.5,.75,1].map(f=>`<line class="trend-gridline" x1="${p}" x2="${w-p}" y1="${p+(1-f)*(h-2*p)}" y2="${p+(1-f)*(h-2*p)}"/>`).join('')}
+  <polygon points="${area}" fill="url(#${gradientId})"/>
+  <polyline points="${path}" fill="none" stroke="var(--trend-chart-color)" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+  ${points.map(([x,y],i)=>`<circle cx="${x}" cy="${y}" r="${i===points.length-1?6:3.2}" fill="var(--trend-chart-color)" stroke="${i===points.length-1?'var(--panel)':'none'}" stroke-width="2"><title>${esc(D.events[i]?.name||'Event')}: ${esc(fmtValue(numeric[i]))}</title></circle>`).join('')}
+  <circle cx="${last[0]}" cy="${last[1]}" r="10" fill="none" stroke="var(--trend-chart-color)" opacity=".22" stroke-width="5"/>
  </svg>`;
 }
 function trendsView(){
@@ -173,11 +182,19 @@ function trendsView(){
  const emptyPlayers='<p class="muted trend-empty">No players currently meet these criteria.</p>';
  const rate=latest?.requirementRate;
  const rateText=rate===null||rate===undefined?'—':rate.toFixed(1)+'%';
+ const latestEfficiency=latest?.ppq;
+ const efficiencyChange=prior?.ppq?100*(latestEfficiency-prior.ppq)/prior.ppq:null;
+ const activeChange=prior?.active?100*(latest.active-prior.active)/prior.active:null;
+ const participationRate=latest?.total?100*latest.active/latest.total:null;
+ const previousRate=prior?.requirementRate;
+ const completionPointChange=rate!=null&&previousRate!=null?rate-previousRate:null;
  const rateBars=eventStats.map(st=>{
-  const value=st.requirementRate;
-  return `<a href="#event/${encodeURIComponent(st.event.id)}" class="trend-bar-item" title="${esc(st.event.name)}: ${value===null?'not available':value.toFixed(1)+'%'} met the minimum">
+  const value=st.requirementRate,pct=value===null?'—':value.toFixed(1)+'%';
+  return `<a href="#event/${encodeURIComponent(st.event.id)}" class="trend-bar-item" aria-label="${esc(st.event.name)}: ${pct} met the minimum">
+   <div class="trend-bar-percent">${pct}</div>
    <div class="trend-bar-track"><div class="trend-bar-fill" style="height:${value===null?0:value}%"></div></div>
-   <span>${esc(st.event.name.replace(/ \d{4}$/,''))}</span></a>`;
+   <span class="trend-bar-label">${esc(st.event.name.replace(/ \\d{4}$/,''))}</span>
+  </a>`;
  }).join('');
  const eventRows=eventStats.slice().reverse().map(st=>`<tr class="clickable" onclick="location.hash='event/${encodeURIComponent(st.event.id)}'">
   <td><button class="player-link">${esc(st.event.name)}</button></td>
@@ -197,9 +214,23 @@ function trendsView(){
  </section>
  <section class="section-heading trend-section-title"><h2>Alliance trends</h2><span class="muted">Each point represents one recorded event, not a calendar month</span></section>
  <section class="grid trends-chart-grid">
-  <div class="card"><div class="table-head compact"><h2>Quest efficiency</h2><span class="muted">average points / quest</span></div>${trendLine(eventStats.map(st=>st.ppq),'Alliance average points per quest','decimal')}<div class="chart-labels"><span>${esc(D.events[0]?.name||'')}</span><span>${esc(latest?.event.name||'')}</span></div></div>
-  <div class="card"><div class="table-head compact"><h2>Active participation</h2><span class="muted">entries with points above zero</span></div>${trendLine(eventStats.map(st=>st.active),'Active scoring entries')}<div class="chart-labels"><span>${esc(D.events[0]?.name||'')}</span><span>${esc(latest?.event.name||'')}</span></div></div>
-  <div class="card trends-wide"><div class="table-head compact"><h2>Minimum requirement completion</h2><span class="muted">share of event rows meeting that event's threshold</span></div><div class="trend-bar-chart">${rateBars}</div><p class="kpi-note">Event minimums vary. Denominator includes all recorded entries, including zero-point accounts; these are account/result rows, not deduplicated individuals.</p></div>
+  <div class="card trend-metric-card"><div class="trend-metric-header"><h2>Quest efficiency</h2>${trendMetricBadge(efficiencyChange)}</div>
+   <div class="trend-metric-value">${latest?avg(latest.ppq):'—'}</div>
+   <div class="trend-metric-caption">Points per completed quest · ${esc(latest?.event.name||'latest event')}</div>
+   ${trendLine(eventStats.map(st=>st.ppq),'Alliance average points per quest','decimal','gold')}
+   <div class="chart-labels"><span>${esc(D.events[0]?.name||'')}</span><span>${esc(latest?.event.name||'')}</span></div>
+   <div class="trend-metric-foot">Relative change vs previous recorded event</div></div>
+  <div class="card trend-metric-card"><div class="trend-metric-header"><h2>Active participation</h2>${trendMetricBadge(activeChange)}</div>
+   <div class="trend-metric-value">${fmt(latest?.active||0)} <small>active entries</small></div>
+   <div class="trend-metric-caption">${participationRate===null?'—':participationRate.toFixed(1)+'%'} of ${fmt(latest?.total||0)} recorded entries · latest event</div>
+   ${trendLine(eventStats.map(st=>st.active),'Active scoring entries','number','turquoise')}
+   <div class="chart-labels"><span>${esc(D.events[0]?.name||'')}</span><span>${esc(latest?.event.name||'')}</span></div>
+   <div class="trend-metric-foot">Relative change in active entries vs previous event</div></div>
+  <div class="card trends-wide trend-metric-card"><div class="trend-metric-header"><h2>Minimum requirement completion</h2>${trendMetricBadge(completionPointChange,' pp')}</div>
+   <div class="trend-metric-value">${rateText}</div>
+   <div class="trend-metric-caption">${fmt(latest?.qualifying||0)} of ${fmt(latest?.total||0)} entries met the minimum · latest event</div>
+   <div class="trend-bar-scroll"><div class="trend-bar-chart">${rateBars}</div></div>
+   <div class="trend-metric-foot">Change in percentage points vs previous event. Minimum thresholds vary. Includes all result rows, including zero-point accounts.</div></div>
  </section>
  <section class="section-heading trend-section-title"><h2>Player momentum</h2><span class="muted">last 3 scoring results vs. previous 3 scoring results</span></section>
  <p class="muted trend-method">Requires at least 6 scoring results per governor; scoring exceptions are respected. A change greater than +5% counts as improving, below −5% as declining, and otherwise stable. The comparison measures average points per event, not calendar-time growth.</p>
