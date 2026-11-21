@@ -82,9 +82,9 @@ function dashboard(){
    <div class="card accent-kpi"><div class="kpi-label">Ø points / quest</div><div class="kpi-value">${avg(D.averagePPQ)}</div><div class="kpi-note">average across recorded events</div></div>
  </section>
  <section class="leader-section"><div class="section-heading"><h2>Player leaders</h2><span class="muted">minimum 3 events participated</span></div><div class="grid leader-grid">
- ${leaderCard('Most total points',mostPoints,fmt(mostPoints?.totalPoints),'combined points','🪙')}
- ${leaderCard('Best average ranking',bestRank,avg(bestRank?.averageRank),'average event placement · lower is better','🎯')}
- ${leaderCard('Highest average points / quest',bestPPQ,avg(bestPPQ?.averagePPQ),'average of event-level points / quest','⚡')}
+ ${leaderCard('Most total points',mostPoints,fmt(mostPoints?.totalPoints),'combined points','💰')}
+ ${leaderCard('Best average ranking',bestRank,avg(bestRank?.averageRank),'average event placement · lower is better','📊')}
+ ${leaderCard('Highest average points / quest',bestPPQ,avg(bestPPQ?.averagePPQ),'average of event-level points / quest','🚀')}
  </div></section>
  <section class="grid dashboard-main">
    <div class="card table-card"><div class="table-head"><h2>Top 25 players · total points</h2><span class="muted">all recorded events</span></div>
@@ -105,7 +105,7 @@ function dashboard(){
 function eventsView(){
  nav("events");
  const bestEvent=D.events.reduce((best,e)=>!best || Number(e.alliancePoints)>Number(best.alliancePoints)?e:best,null);
- app.innerHTML=`<section class="hero"><div><div class="eyebrow">History</div><h1>Events</h1><p class="sub">Every recorded Alliance Mobilization result.</p></div><button class="back" onclick="goBack('dashboard')">← Back</button></section>
+ app.innerHTML=`<section class="hero back-first"><button class="back" onclick="goBack('dashboard')">← Back</button><div><div class="eyebrow">History</div><h1>Events</h1><p class="sub">Every recorded Alliance Mobilization result.</p></div></section>
  <section class="card chart-card event-overview-chart"><div class="table-head compact"><h2>Alliance performance</h2><span class="muted">points by event</span></div>${allianceChart()}</section>
  <section class="event-list">${D.events.slice().reverse().map(e=>`
  <article class="card event-card ${e.id===bestEvent?.id?'best-event':''}" onclick="location.hash='event/${e.id}'">
@@ -120,7 +120,7 @@ function playersView(query=''){
  nav('players');
  const list=sortedPlayers(query),size=25,pages=Math.max(1,Math.ceil(list.length/size));
  const page=Math.min(Math.max(0,Number(sessionStorage.getItem('playerPage')||0)),pages-1);
- app.innerHTML=`<section class="hero"><div><div class="eyebrow">Player index</div><h1>Players</h1><p class="sub" id="playersCount">${list.length} matching unique identities</p></div><button class="back" onclick="goBack('dashboard')">← Back</button></section>
+ app.innerHTML=`<section class="hero back-first"><button class="back" onclick="goBack('dashboard')">← Back</button><div><div class="eyebrow">Player index</div><h1>Players</h1><p class="sub" id="playersCount">${list.length} matching unique identities</p></div></section>
  <section class="card table-card"><div class="table-head"><h2>All governors</h2><span class="muted">click a player for the full profile</span></div>
  <div class="filter-row player-filter-row"><input id="playerFilter" value="${esc(query)}" placeholder="Filter players…" oninput="sessionStorage.setItem('playerPage','0');filterPlayersLive(this.value)"></div>
  <div class="table-scroll"><table id="playersTable"><thead><tr>${sortHead('#','playersTable',0,'number')}${sortHead('Governor','playersTable',1)}${sortHead('Total','playersTable',2,'number')}${sortHead('Avg/event','playersTable',3,'number')}${sortHead('Events','playersTable',4,'number')}${sortHead('Best rank','playersTable',5,'number')}${sortHead('Former names','playersTable',6)}</tr></thead><tbody id="playersTbody">${list.slice(page*size,(page+1)*size).map(playerTableRow).join('')}</tbody></table></div><div class="pagination" id="playersPagination">${playerPagination(page,pages)}</div></section>`;
@@ -146,7 +146,7 @@ function playerView(id){
  const top3=placements.filter(r=>r>=2 && r<=3).length;
  const top5=placements.filter(r=>r>=4 && r<=5).length;
  const top10=placements.filter(r=>r>=6 && r<=10).length;
- app.innerHTML=`<section class="detail-head"><div><div class="eyebrow">Player profile</div><h1>${esc(p.currentName)}</h1><p class="sub">${p.names.length>1?"Former names: "+esc(p.names.slice(0,-1).join(" → ")):"No recorded name changes"}</p></div><button class="back" onclick="goBack('players')">← Back</button></section>
+ app.innerHTML=`<section class="detail-head back-first"><button class="back" onclick="goBack('players')">← Back</button><div><div class="eyebrow">Player profile</div><h1>${esc(p.currentName)}</h1><p class="sub">${p.names.length>1?"Former names: "+esc(p.names.slice(0,-1).join(" → ")):"No recorded name changes"}</p></div></section>
  <section class="stat-grid">
    <div class="card"><div class="kpi-label">Total points</div><div class="kpi-value">${fmt(p.totalPoints)}</div></div>
    <div class="card"><div class="kpi-label">Average / event</div><div class="kpi-value">${fmt(p.averagePoints)}</div></div>
@@ -167,7 +167,7 @@ function eventView(id){
  const e=eventById(id); if(!e){dashboard();return}
  nav("");
  const sorted=e.rows.slice().sort((a,b)=>a.rank-b.rank);
- app.innerHTML=`<section class="detail-head"><div><div class="eyebrow">Event detail</div><h1>${esc(e.name)}</h1><p class="sub">${esc(e.start)} → ${esc(e.end)}</p></div><button class="back" onclick="goBack('events')">← Back</button></section>
+ app.innerHTML=`<section class="detail-head back-first"><button class="back" onclick="goBack('events')">← Back</button><div><div class="eyebrow">Event detail</div><h1>${esc(e.name)}</h1><p class="sub">${esc(e.start)} → ${esc(e.end)}</p></div></section>
  <section class="stat-grid">
   <div class="card"><div class="kpi-label">Alliance points</div><div class="kpi-value">${fmt(e.alliancePoints)}</div></div>
   <div class="card"><div class="kpi-label">Alliance rank</div><div class="kpi-value">${esc(e.allianceRank)}</div></div>
