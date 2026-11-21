@@ -269,3 +269,8 @@ main,.grid,.card,.profile-content,.profile-content>.card,.dashboard-main,.dashbo
     gap:12px;
   }
 }
+
+
+/* Sortable numeric headings share their column's right edge with the values. */
+th.sortable.num{text-align:right}
+th.sortable.num button{justify-content:flex-end;text-align:right}
