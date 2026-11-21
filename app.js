@@ -193,7 +193,7 @@ function trendsView(){
   return `<a href="#event/${encodeURIComponent(st.event.id)}" class="trend-bar-item" aria-label="${esc(st.event.name)}: ${pct} met the minimum">
    <div class="trend-bar-percent">${pct}</div>
    <div class="trend-bar-track"><div class="trend-bar-fill" style="height:${value===null?0:value}%"></div></div>
-   <span class="trend-bar-label">${esc(st.event.name.replace(/ \\d{4}$/,''))}</span>
+   <span class="trend-bar-label">${esc(st.event.name.replace(/ \d{4}$/,''))}</span>
   </a>`;
  }).join('');
  const eventRows=eventStats.slice().reverse().map(st=>`<tr class="clickable" onclick="location.hash='event/${encodeURIComponent(st.event.id)}'">
