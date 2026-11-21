@@ -102,7 +102,7 @@ main{max-width:1480px;padding-top:28px}
 .performance-card{margin-top:16px}.performance-badges{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
 .performance-badge{min-height:100px;border:1px solid var(--line);border-radius:10px;padding:13px 16px;display:grid;grid-template-columns:auto 1fr;column-gap:10px;align-items:center;background:rgba(255,255,255,.018)}
 .performance-badge .medal{grid-row:span 2;font-size:24px}.performance-badge strong{font-size:26px;line-height:1;color:var(--gold)}.performance-badge>span:last-child{font-size:12px;color:var(--muted)}
-.performance-badge.rank3{border-color:rgba(231,189,88,.5)}.performance-badge.rank5{border-color:rgba(180,190,205,.4)}.performance-badge.rank10{border-color:rgba(229,72,77,.4)}
+
 th{background:#191c22}td,th{border-color:#343941}
 tr.clickable:hover{background:rgba(231,189,88,.055)}
 .sortable button{cursor:pointer}
@@ -124,12 +124,18 @@ tr.met-requirement td:first-child{box-shadow:inset 3px 0 0 rgba(99,185,149,.65)}
 tr.below-requirement{background:rgba(225,107,112,.075)}
 tr.below-requirement td:first-child{box-shadow:inset 3px 0 0 #e16b70}
 tr[hidden]{display:none}
-/* Four mutually exclusive performance tiers */
-.performance-badges{grid-template-columns:repeat(4,minmax(0,1fr))}
-.performance-badge.rank1{border-color:rgba(231,189,88,.8);background:linear-gradient(145deg,rgba(111,81,28,.2),rgba(255,255,255,.018))}
-.performance-badge.rank3{border-color:rgba(181,193,210,.5)}
-.performance-badge.rank5{border-color:rgba(205,135,91,.45)}
-.performance-badge.rank10{border-color:rgba(229,72,77,.35)}
+/* Five mutually exclusive performance tiers */
+.performance-badges{grid-template-columns:repeat(5,minmax(0,1fr))}
+.performance-badge.rank1{border-color:var(--place-gold);background:linear-gradient(145deg,rgba(111,81,28,.2),rgba(255,255,255,.018))}
+.performance-badge.rank2{border-color:var(--place-silver)}
+.performance-badge.rank3{border-color:var(--place-bronze)}
+.performance-badge.rank45{border-color:var(--place-purple)}
+.performance-badge.rank10{border-color:var(--place-turquoise)}
+.performance-badge.rank1 strong{color:var(--place-gold)}
+.performance-badge.rank2 strong{color:var(--place-silver)}
+.performance-badge.rank3 strong{color:var(--place-bronze)}
+.performance-badge.rank45 strong{color:var(--place-purple)}
+.performance-badge.rank10 strong{color:var(--place-turquoise)}
 .performance-card + .profile-content{margin-top:16px}
 /* Neutral, gold-accented event bars replace the red-to-green gradient */
 .bar{background:linear-gradient(180deg,#e9c66b,#b88a3e);border:1px solid rgba(255,220,150,.16);border-radius:5px 5px 2px 2px;box-shadow:0 3px 12px rgba(231,189,88,.08)}
@@ -154,10 +160,11 @@ body{background:linear-gradient(180deg,#11151a 0%,#0c0f13 48%,#0a0d11 100%);back
 .current-name-badge{background:rgba(232,198,109,.17);color:#f2d58d}
 .current-name-note{display:inline-flex;align-items:center;margin-left:5px;padding:2px 7px;border:1px solid rgba(232,198,109,.2);border-radius:6px;background:rgba(232,198,109,.07);color:#d9c18b;font-size:10px;font-weight:600;vertical-align:middle}
 .mini-rank-badge{display:inline-flex;align-items:center;gap:4px;margin-left:5px;padding:2px 7px;border-radius:6px;border:1px solid rgba(255,255,255,.09);font-size:10px;font-weight:750;line-height:1.4;vertical-align:middle}
-.mini-rank-badge.rank1{color:var(--place-gold);background:rgba(232,198,109,.13);border-color:rgba(232,198,109,.38)}
-.mini-rank-badge.rank3{color:var(--place-silver);background:rgba(185,198,216,.09);border-color:rgba(185,198,216,.2)}
-.mini-rank-badge.rank5{color:var(--place-bronze);background:rgba(180,124,82,.09);border-color:rgba(180,124,82,.22)}
-.mini-rank-badge.rank10{color:var(--place-purple);background:rgba(154,127,203,.09);border-color:rgba(154,127,203,.22)}
+.mini-rank-badge.rank1{color:var(--place-gold);background:rgba(232,198,109,.13);border-color:var(--place-gold)}
+.mini-rank-badge.rank2{color:var(--place-silver);background:rgba(185,198,216,.09);border-color:var(--place-silver)}
+.mini-rank-badge.rank3{color:var(--place-bronze);background:rgba(180,124,82,.09);border-color:var(--place-bronze)}
+.mini-rank-badge.rank45{color:var(--place-purple);background:rgba(154,127,203,.09);border-color:var(--place-purple)}
+.mini-rank-badge.rank10{color:var(--place-turquoise);background:rgba(75,192,181,.09);border-color:var(--place-turquoise)}
 @media(max-width:600px){.topbar nav{gap:2px;padding:3px}.nav-btn{padding:7px 9px;font-size:12px}}
 
 /* v6 refinements: consistent event modules, clear record highlight and filter placement */
@@ -196,10 +203,11 @@ main,.grid,.card,.profile-content,.profile-content>.card,.dashboard-main,.dashbo
 .leader-name{display:block;font-size:15px;margin:10px 0 3px;overflow-wrap:anywhere}
 .leader-value{font-weight:800;color:var(--gold);line-height:1.2}
 .rank-pill{display:inline-flex;align-items:center;justify-content:center;width:29px;height:29px;border-radius:50%;font-size:12px;font-weight:800;color:var(--text);background:#30363f;border:1px solid #454b55;font-variant-numeric:tabular-nums}
-.rank-pill.rank1{color:var(--place-gold);background:#5b481f;border-color:#b99745}
-.rank-pill.rank3{color:var(--place-silver);background:#3b4656;border-color:#8392a6}
-.rank-pill.rank5{color:var(--place-bronze);background:#594031;border-color:#b67d56}
-.rank-pill.rank10{color:var(--place-purple);background:#40364e;border-color:#886aa7}
+.rank-pill.rank1{color:var(--place-gold);background:#5b481f;border-color:var(--place-gold)}
+.rank-pill.rank2{color:var(--place-silver);background:#3b4656;border-color:var(--place-silver)}
+.rank-pill.rank3{color:var(--place-bronze);background:#594031;border-color:var(--place-bronze)}
+.rank-pill.rank45{color:var(--place-purple);background:#40364e;border-color:var(--place-purple)}
+.rank-pill.rank10{color:var(--place-turquoise);background:#203b40;border-color:var(--place-turquoise)}
 .player-filter-row{padding:0 18px 12px}
 .pagination{flex-wrap:wrap}
 .points-card{overflow:hidden}
@@ -303,11 +311,9 @@ th.sortable.num button{justify-content:flex-end;text-align:right}
 :root{
  --place-gold:#e8c66d;
  --place-silver:#d5dce7;
- --place-silver-dark:#aab7cb;
  --place-bronze:#d9a77f;
- --place-bronze-dark:#b78261;
  --place-purple:#c5b4e7;
- --place-purple-dark:#9981ca;
+ --place-turquoise:#63c9bd;
  --place-neutral:#8793a5;
 }
 
@@ -356,3 +362,8 @@ th.sortable.num button{justify-content:flex-end;text-align:right}
 @media(max-width:1100px){.trend-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:800px){.trends-chart-grid{grid-template-columns:minmax(0,1fr)}}
 @media(max-width:560px){.trend-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.trend-promo{flex-direction:column;align-items:flex-start}.trend-bar-chart{gap:3px}.trend-bar-item{font-size:9px}.trend-bar-track{height:145px}.trend-bar-chart{height:180px}.trend-inline-link{justify-content:flex-start}.profile-trend-card,.event-trend-card{align-items:flex-start;flex-direction:column}}
+
+/* Keep five achievement tiers legible and evenly spaced on desktop and mobile. */
+@media(max-width:1250px){.performance-badges{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:800px){.performance-badges{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:420px){.performance-badges{grid-template-columns:minmax(0,1fr)}}
