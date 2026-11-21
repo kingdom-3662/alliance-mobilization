@@ -110,6 +110,107 @@ function allianceRankingChart(){
  </div>`;
 }
 
+/* Trends are derived from the deployed event and player data, never a separate data source. */
+const trendEvents=()=>D.events.map((e,i)=>{
+ const rows=e.rows||[],minimum=Number(e.minimumPoints)||0;
+ const active=rows.filter(r=>Number(r.points)>0).length;
+ const qualifying=minimum>0?rows.filter(r=>Number(r.points)>=minimum).length:0;
+ const previous=D.events[i-1];
+ const prevPoints=Number(previous?.alliancePoints)||0;
+ return {event:e,index:i,active,qualifying,total:rows.length,
+  requirementRate:minimum>0&&rows.length?100*qualifying/rows.length:null,
+  points:Number(e.alliancePoints)||0,ppq:Number(e.averagePPQ)||0,
+  pointsChange:i&&prevPoints?100*((Number(e.alliancePoints)||0)-prevPoints)/prevPoints:null,
+  rank:Number.parseInt(e.allianceRank,10)};
+});
+function playerMomentum(p){
+ // A zero-point account row is not a scoring event. Explicit scoring exceptions
+ // were already removed from p.events by the workbook builder.
+ const qualifying=(p.events||[]).filter(e=>Number(e.points)>0);
+ if(qualifying.length<6)return null;
+ const recent=qualifying.slice(-3),prior=qualifying.slice(-6,-3);
+ const mean=(rows,key)=>rows.reduce((sum,e)=>sum+Number(e[key]||0),0)/rows.length;
+ const before=mean(prior,'points'),now=mean(recent,'points');
+ if(!before)return null;
+ const pct=100*(now-before)/before;
+ return {player:p,pct,prior:before,recent:now,
+  priorRank:mean(prior,'rank'),recentRank:mean(recent,'rank'),
+  priorPPQ:mean(prior,'ppq'),recentPPQ:mean(recent,'ppq'),
+  label:pct>5?'Improving':pct< -5?'Declining':'Stable'};
+}
+function trendChange(pct,decimals=1){
+ if(pct===null||pct===undefined||!Number.isFinite(pct))return '<span class="muted">—</span>';
+ const sign=pct>0?'+':'';
+ const state=pct>5?'up':pct< -5?'down':'flat';
+ return `<span class="trend-delta ${state}">${sign}${pct.toFixed(decimals)}%</span>`;
+}
+function trendLine(values,caption,format='number'){
+ if(!values.length)return '<div class="empty">No event data yet.</div>';
+ const numeric=values.map(v=>Number(v)||0);
+ const low=Math.min(...numeric),high=Math.max(...numeric),range=high-low||1,w=650,h=135,p=14;
+ const points=numeric.map((value,i)=>{
+  const x=p+i*(w-2*p)/Math.max(1,numeric.length-1);
+  return [x,h-p-(value-low)/range*(h-2*p)];
+ });
+ const path=points.map(([x,y])=>`${x},${y}`).join(' ');
+ const fmtValue=value=>format==='pct'?value.toFixed(1)+'%':format==='decimal'?value.toFixed(1):fmt(value);
+ return `<svg viewBox="0 0 ${w} ${h}" class="trend-line-svg" role="img" aria-label="${esc(caption)}. Values in recorded event order: ${esc(numeric.map(fmtValue).join(', '))}">
+  <polyline points="${path}" fill="none" stroke="var(--gold)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  ${points.map(([x,y],i)=>`<circle cx="${x}" cy="${y}" r="4.5" fill="var(--gold)"><title>${esc(D.events[i]?.name||'Event')}: ${esc(fmtValue(numeric[i]))}</title></circle>`).join('')}
+ </svg>`;
+}
+function trendsView(){
+ nav('trends');
+ const eventStats=trendEvents();
+ const latest=eventStats[eventStats.length-1];
+ const prior=eventStats[eventStats.length-2];
+ const eligible=D.players.map(playerMomentum).filter(Boolean);
+ const improving=eligible.filter(p=>p.pct>5).sort((a,b)=>b.pct-a.pct).slice(0,8);
+ const declining=eligible.filter(p=>p.pct< -5).sort((a,b)=>a.pct-b.pct).slice(0,8);
+ const stable=eligible.filter(p=>Math.abs(p.pct)<=5).length;
+ const linkPlayer=t=>`<a href="#player/${encodeURIComponent(t.player.id)}" class="trend-player-row"><span class="trend-player-name">${esc(t.player.currentName)}</span>${trendChange(t.pct)}<small>${fmt(t.prior)} → ${fmt(t.recent)} avg points</small></a>`;
+ const emptyPlayers='<p class="muted trend-empty">No players currently meet these criteria.</p>';
+ const rate=latest?.requirementRate;
+ const rateText=rate===null||rate===undefined?'—':rate.toFixed(1)+'%';
+ const rateBars=eventStats.map(st=>{
+  const value=st.requirementRate;
+  return `<a href="#event/${encodeURIComponent(st.event.id)}" class="trend-bar-item" title="${esc(st.event.name)}: ${value===null?'not available':value.toFixed(1)+'%'} met the minimum">
+   <div class="trend-bar-track"><div class="trend-bar-fill" style="height:${value===null?0:value}%"></div></div>
+   <span>${esc(st.event.name.replace(/ \d{4}$/,''))}</span></a>`;
+ }).join('');
+ const eventRows=eventStats.slice().reverse().map(st=>`<tr class="clickable" onclick="location.hash='event/${encodeURIComponent(st.event.id)}'">
+  <td><button class="player-link">${esc(st.event.name)}</button></td>
+  <td class="num">${fmt(st.points)}</td>
+  <td class="num">${trendChange(st.pointsChange)}</td>
+  <td class="num">${esc(st.event.allianceRank??'—')}</td>
+  <td class="num">${fmt(st.active)}</td>
+  <td class="num">${st.requirementRate===null?'—':st.requirementRate.toFixed(1)+'%'}</td>
+  <td class="num">${avg(st.ppq)}</td></tr>`).join('');
+ app.innerHTML=`<section class="hero back-first"><button class="back" onclick="goBack('dashboard')">← Back</button>
+ <div><div class="eyebrow">Performance intelligence</div><h1>Trends</h1><p class="sub">Player momentum, alliance activity and event progression across recorded Alliance Mobilization events.</p></div></section>
+ <section class="grid trend-kpis">
+  <div class="card"><div class="kpi-label">Latest quest efficiency</div><div class="kpi-value">${latest?avg(latest.ppq):'—'}</div><div class="kpi-note">points per completed quest ${prior?'· previously '+avg(prior.ppq):''}</div></div>
+  <div class="card"><div class="kpi-label">Minimum requirement met</div><div class="kpi-value">${rateText}</div><div class="kpi-note">of ${latest?.total||0} recorded result rows · latest event</div></div>
+  <div class="card"><div class="kpi-label">Active scoring entries</div><div class="kpi-value">${fmt(latest?.active||0)}</div><div class="kpi-note">latest event · entries above zero points</div></div>
+  <div class="card accent-kpi"><div class="kpi-label">Player momentum</div><div class="kpi-value">${eligible.length}</div><div class="kpi-note">eligible governors · ${improving.length+declining.length} highlighted · ${stable} stable overall</div></div>
+ </section>
+ <section class="section-heading trend-section-title"><h2>Alliance trends</h2><span class="muted">Each point represents one recorded event, not a calendar month</span></section>
+ <section class="grid trends-chart-grid">
+  <div class="card"><div class="table-head compact"><h2>Quest efficiency</h2><span class="muted">average points / quest</span></div>${trendLine(eventStats.map(st=>st.ppq),'Alliance average points per quest','decimal')}<div class="chart-labels"><span>${esc(D.events[0]?.name||'')}</span><span>${esc(latest?.event.name||'')}</span></div></div>
+  <div class="card"><div class="table-head compact"><h2>Active participation</h2><span class="muted">entries with points above zero</span></div>${trendLine(eventStats.map(st=>st.active),'Active scoring entries')}<div class="chart-labels"><span>${esc(D.events[0]?.name||'')}</span><span>${esc(latest?.event.name||'')}</span></div></div>
+  <div class="card trends-wide"><div class="table-head compact"><h2>Minimum requirement completion</h2><span class="muted">share of event rows meeting that event's threshold</span></div><div class="trend-bar-chart">${rateBars}</div><p class="kpi-note">Event minimums vary. Denominator includes all recorded entries, including zero-point accounts; these are account/result rows, not deduplicated individuals.</p></div>
+ </section>
+ <section class="section-heading trend-section-title"><h2>Player momentum</h2><span class="muted">last 3 scoring results vs. previous 3 scoring results</span></section>
+ <p class="muted trend-method">Requires at least 6 scoring results per governor; scoring exceptions are respected. A change greater than +5% counts as improving, below −5% as declining, and otherwise stable. The comparison measures average points per event, not calendar-time growth.</p>
+ <section class="grid trends-chart-grid">
+  <div class="card"><div class="table-head compact"><h2><span class="trend-up-icon">↗</span> Improving players</h2><span class="muted">top 8 gains</span></div><div class="trend-player-list">${improving.map(linkPlayer).join('')||emptyPlayers}</div></div>
+  <div class="card"><div class="table-head compact"><h2><span class="trend-down-icon">↘</span> Declining players</h2><span class="muted">top 8 declines</span></div><div class="trend-player-list">${declining.map(linkPlayer).join('')||emptyPlayers}</div></div>
+ </section>
+ <section class="section-heading trend-section-title"><h2>Event progression</h2><span class="muted">comparison with the previous recorded event</span></section>
+ <section class="card table-card"><div class="table-head"><h2>Performance by event</h2><span class="muted">select an event to view its results</span></div><div class="table-scroll">
+ <table id="trendsEventTable"><thead><tr>${sortHead('Event','trendsEventTable',0)}${sortHead('Alliance points','trendsEventTable',1,'number')}${sortHead('Points change','trendsEventTable',2,'number')}${sortHead('Alliance rank','trendsEventTable',3,'number')}${sortHead('Active entries','trendsEventTable',4,'number')}${sortHead('Met minimum','trendsEventTable',5,'number')}${sortHead('Ø Pts/Quest','trendsEventTable',6,'number')}</tr></thead><tbody>${eventRows}</tbody></table></div></section>`;
+}
+
 function dashboard(){
  nav("dashboard");
  const totalPoints=D.events.reduce((s,e)=>s+e.alliancePoints,0);
