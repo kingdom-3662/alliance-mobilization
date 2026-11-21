@@ -80,7 +80,7 @@ function allianceChart(){
   return `<circle cx="${xx}" cy="${yy}" r="4.5" fill="var(--gold)"><title>${esc(name)}: ${fmt(value)} alliance points</title></circle><text class="metric-data-label" x="${xx}" y="${Math.max(12,yy-11)}" text-anchor="middle">${(value/1000).toFixed(1)}k</text><text class="metric-axis-event" x="${xx}" y="${h-14}" text-anchor="middle">${esc(shortEventLabel(name))}</text>`;
  }).join('');
  return `<div class="chart-metric-head"><div class="chart-summary"><strong>${fmt(last)}</strong><span class="muted">alliance points · ${latestName}</span></div>${trendMetricBadge(change)}</div>
-  <div class="chart-axis-scroll"><svg class="line-chart metric-axis-chart" viewBox="0 0 ${w} ${h}" role="img" aria-label="Alliance points by recorded event, with axes and numeric point labels">
+  <div class="chart-axis-scroll"><svg class="line-chart metric-axis-chart" style="min-width:${w}px" viewBox="0 0 ${w} ${h}" role="img" aria-label="Alliance points by recorded event, with axes and numeric point labels">
    <defs><linearGradient id="chartFill" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#e5b94f" stop-opacity=".28"/><stop offset="1" stop-color="#e5b94f" stop-opacity="0"/></linearGradient></defs>
    ${axisTicks}
    <line class="metric-axis-line" x1="${left}" y1="${top}" x2="${left}" y2="${bottom}"/>
@@ -387,7 +387,7 @@ function playerPointsChart(p){
   const value=values[i],x=left+gap*(i+.5),yy=y(value),barHeight=Math.max(0,bottom-yy);
   return `<rect x="${x-barWidth/2}" y="${yy}" width="${barWidth}" height="${barHeight}" rx="3" fill="url(#playerChartFill)"><title>${esc(event.event)}: ${fmt(value)} points</title></rect><text class="metric-data-label" x="${x}" y="${Math.max(top-7,yy-8)}" text-anchor="middle">${fmt(value)}</text><text class="metric-axis-event" x="${x}" y="${h-17}" text-anchor="middle">${esc(shortEventLabel(event.event))}</text>`;
  }).join('');
- return `<div class="chart-axis-scroll player-axis-scroll"><svg class="metric-axis-chart player-axis-chart" viewBox="0 0 ${w} ${h}" role="img" aria-label="Player points by scoring event with point values, event axis, and a zero-based numeric axis">
+ return `<div class="chart-axis-scroll player-axis-scroll"><svg class="metric-axis-chart player-axis-chart" style="min-width:${w}px" viewBox="0 0 ${w} ${h}" role="img" aria-label="Player points by scoring event with point values, event axis, and a zero-based numeric axis">
   <defs><linearGradient id="playerChartFill" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#e9c66b"/><stop offset="1" stop-color="#a27d36"/></linearGradient></defs>
   ${ticks}
   <line class="metric-axis-line" x1="${left}" y1="${top}" x2="${left}" y2="${bottom}"/>
