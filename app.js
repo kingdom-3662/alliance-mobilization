@@ -246,7 +246,7 @@ function trendsView(){
   <div class="card"><div class="kpi-label">Latest quest efficiency</div><div class="kpi-value">${latest?avg(latest.ppq):'—'}</div><div class="kpi-note">points per completed quest ${prior?'· previously '+avg(prior.ppq):''}</div></div>
   <div class="card"><div class="kpi-label">Minimum requirement met</div><div class="kpi-value">${rateText}</div><div class="kpi-note">of ${latest?.total||0} recorded result rows · latest event</div></div>
   <div class="card"><div class="kpi-label">Active scoring entries</div><div class="kpi-value">${fmt(latest?.active||0)}</div><div class="kpi-note">latest event · entries above zero points</div></div>
-  <div class="card accent-kpi"><div class="kpi-label">Player momentum</div><div class="kpi-value">${eligible.length}</div><div class="kpi-note">eligible governors · ${improvingTotal} improving · ${decliningTotal} declining · ${stable} stable</div></div>
+  <div class="card"><div class="kpi-label">Player momentum</div><div class="kpi-value">${eligible.length}</div><div class="kpi-note">eligible governors · ${improvingTotal} improving · ${decliningTotal} declining · ${stable} stable</div></div>
  </section>
  <section class="section-heading trend-section-title"><h2>Alliance trends</h2><span class="muted">Each point represents one recorded event, not a calendar month</span></section>
  <section class="grid trends-chart-grid">
@@ -304,7 +304,7 @@ function dashboard(){
    <div class="card"><div class="kpi-label">Players</div><div class="kpi-value">${D.players.length}</div><div class="kpi-note">unique identities</div></div>
    <div class="card"><div class="kpi-label">Latest alliance points</div><div class="kpi-value">${fmt(latest.alliancePoints)}</div><div class="kpi-note">Rank ${esc(latest.allianceRank)}</div></div>
    <div class="card"><div class="kpi-label">All event points</div><div class="kpi-value">${fmt(totalPoints)}</div><div class="kpi-note">sum of alliance totals</div></div>
-   <div class="card accent-kpi"><div class="kpi-label">Ø points / quest</div><div class="kpi-value">${avg(D.averagePPQ)}</div><div class="kpi-note">average across recorded events</div></div>
+   <div class="card"><div class="kpi-label">Ø points / quest</div><div class="kpi-value">${avg(D.averagePPQ)}</div></div>
  </section>
  ${trendsCta()}
  <section class="leader-section"><div class="section-heading"><h2>Player leaders</h2><span class="muted">minimum 3 events participated</span></div><div class="grid leader-grid">
@@ -314,7 +314,7 @@ function dashboard(){
  </div></section>
 
   <section class="grid dashboard-main">
-   <div class="card table-card"><div class="table-head"><h2>Top 25 players · total points</h2><span class="muted">all recorded events</span></div>
+   <div class="card table-card"><div class="table-head"><h2>Top 25 players · total points</h2></div>
     <div class="table-scroll"><table id="dashboardTopTable"><thead><tr>${sortHead("#","dashboardTopTable",0,"number")}${sortHead("Governor","dashboardTopTable",1)}${sortHead("Points","dashboardTopTable",2,"number")}${sortHead("Events","dashboardTopTable",3,"number")}${sortHead("Avg/event","dashboardTopTable",4,"number")}${sortHead("Ø Pts/Quest","dashboardTopTable",5,"number")}</tr></thead><tbody>
     ${top.map((p,i)=>`<tr class="clickable" onclick="location.hash='player/${encodeURIComponent(p.id)}'"><td class="rank" data-value="${i+1}">${rankPill(i+1)}</td><td><button class="player-link">${esc(p.currentName)}</button></td><td class="num">${fmt(p.totalPoints)}</td><td class="num">${p.eventsParticipated}</td><td class="num">${fmt(p.averagePoints)}</td><td class="num">${avg(p.averagePPQ)}</td></tr>`).join("")}
     </tbody></table></div>
