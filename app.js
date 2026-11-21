@@ -65,6 +65,10 @@ function dashboard(){
  const top=D.players.slice(0,25);
  const bestEvent=D.events.reduce((best,e)=>!best || e.alliancePoints>best.alliancePoints?e:best,null);
  const history=D.events.slice(-5).reverse();
+ const mostPoints=D.players.slice().sort((a,b)=>b.totalPoints-a.totalPoints)[0];
+ const bestRank=D.players.filter(p=>p.events.length&&Number(p.averageRank)>0).sort((a,b)=>a.averageRank-b.averageRank)[0];
+ const bestPPQ=D.players.filter(p=>p.questsCompleted>0).sort((a,b)=>b.averagePPQ-a.averagePPQ)[0];
+ const leaderCard=(label,p,value,note,icon)=>`<div class="card leader-card" ${p?`onclick="location.hash='player/${encodeURIComponent(p.id)}'"`:''}><span class="leader-icon">${icon}</span><div class="leader-label">${label}</div><strong class="leader-name">${p?esc(p.currentName):'—'}</strong><div class="leader-value">${p?value:'—'}</div><span class="kpi-note">${note}</span></div>`;
  app.innerHTML=`
  <section class="hero"><div><div class="eyebrow">Rise of Kingdoms · Kingdom 3662</div><h1>Alliance Mobilization</h1><p class="sub">${D.events.length} recorded events · latest: ${esc(latest.name)}</p></div>
  <div class="badge good">Data through ${esc(D.updatedFromWorkbook)}</div></section>
@@ -75,18 +79,23 @@ function dashboard(){
    <div class="card"><div class="kpi-label">All event points</div><div class="kpi-value">${fmt(totalPoints)}</div><div class="kpi-note">sum of alliance totals</div></div>
    <div class="card accent-kpi"><div class="kpi-label">Ø points / quest</div><div class="kpi-value">${avg(D.averagePPQ)}</div><div class="kpi-note">average across recorded events</div></div>
  </section>
+ <section class="leader-section"><div class="section-heading"><h2>Player leaders</h2><span class="muted">all recorded events</span></div><div class="grid leader-grid">
+ ${leaderCard('Most total points',mostPoints,fmt(mostPoints?.totalPoints),'combined points','👑')}
+ ${leaderCard('Best average ranking',bestRank,avg(bestRank?.averageRank),'average event placement · lower is better','🏅')}
+ ${leaderCard('Highest average points / quest',bestPPQ,avg(bestPPQ?.averagePPQ),'average of event-level points / quest','⭐')}
+ </div></section>
  <section class="grid dashboard-main">
    <div class="card table-card"><div class="table-head"><h2>Top 25 players · total points</h2><span class="muted">all recorded events</span></div>
     <div class="table-scroll"><table id="dashboardTopTable"><thead><tr>${sortHead("#","dashboardTopTable",0,"number")}${sortHead("Governor","dashboardTopTable",1)}${sortHead("Points","dashboardTopTable",2,"number")}${sortHead("Events","dashboardTopTable",3,"number")}${sortHead("Avg/event","dashboardTopTable",4,"number")}${sortHead("Ø Pts/Quest","dashboardTopTable",5,"number")}</tr></thead><tbody>
-    ${top.map((p,i)=>`<tr class="clickable" onclick="location.hash='player/${encodeURIComponent(p.id)}'"><td class="rank">${i+1}</td><td><button class="player-link">${esc(p.currentName)}</button></td><td class="num">${fmt(p.totalPoints)}</td><td class="num">${p.eventsParticipated}</td><td class="num">${fmt(p.averagePoints)}</td><td class="num">${avg(p.averagePPQ)}</td></tr>`).join("")}
+    ${top.map((p,i)=>`<tr class="clickable" onclick="location.hash='player/${encodeURIComponent(p.id)}'"><td class="rank" data-value="${i+1}">${rankPill(i+1)}</td><td><button class="player-link">${esc(p.currentName)}</button></td><td class="num">${fmt(p.totalPoints)}</td><td class="num">${p.eventsParticipated}</td><td class="num">${fmt(p.averagePoints)}</td><td class="num">${avg(p.averagePPQ)}</td></tr>`).join("")}
     </tbody></table></div>
    </div>
    <div class="dashboard-side">
+    <div class="card chart-card"><div class="table-head compact"><h2>Alliance performance</h2><span class="muted">points by event</span></div>${allianceChart()}</div>
     <div class="card"><div class="table-head compact"><h2>Event history</h2><span class="muted">last 5 events</span></div><div class="event-list" style="grid-template-columns:1fr">
     ${!history.some(e=>e.id===bestEvent?.id)?`<div class="event-card best-event record-card" onclick="location.hash='event/${bestEvent.id}'"><div class="event-title"><strong>Kingdom points record</strong><span class="badge gold-badge">All-time best</span></div><div class="event-stat"><span class="muted">${esc(bestEvent.name)}</span><b>${fmt(bestEvent.alliancePoints)}</b></div><div class="event-meta"><span>Top player: <strong>${esc(bestEvent.topPlayer||'—')}</strong></span></div></div>`:''}
-    ${history.map(e=>`<div class="event-card ${e.id===bestEvent?.id?'best-event':''}" onclick="location.hash='event/${e.id}'"><div class="event-title"><strong>${esc(e.name)}</strong><span class="badge ${e.id===bestEvent?.id?'gold-badge':''}">${e.id===bestEvent?.id?'Best result':'#'+esc(e.allianceRank)}</span></div><div class="event-stat"><span class="muted">Alliance points</span><b>${fmt(e.alliancePoints)}</b></div><div class="event-meta"><span>Top player: <strong>${esc(e.topPlayer||'—')}</strong></span></div><div class="event-meta"><span>${esc(e.start)} · Reward: ${esc(e.reward||'—')}</span></div></div>`).join("")}
+    ${history.map(e=>`<div class="event-card ${e.id===bestEvent?.id?'best-event':''}" onclick="location.hash='event/${e.id}'"><div class="event-title"><strong>${esc(e.name)}</strong><span class="badge ${e.id===bestEvent?.id?'gold-badge':''}">${e.id===bestEvent?.id?'All-time best':'#'+esc(e.allianceRank)}</span></div><div class="event-stat"><span class="muted">Alliance points</span><b>${fmt(e.alliancePoints)}</b></div><div class="event-meta"><span>Top player: <strong>${esc(e.topPlayer||'—')}</strong></span></div><div class="event-meta"><span>${esc(e.start)} · Reward: ${esc(e.reward||'—')}</span></div></div>`).join("")}
     </div></div>
-    <div class="card chart-card"><div class="table-head compact"><h2>Alliance performance</h2><span class="muted">points by event</span></div>${allianceChart()}</div>
    </div>
  </section>`;
 }
