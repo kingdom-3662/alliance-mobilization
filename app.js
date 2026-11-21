@@ -82,9 +82,9 @@ function dashboard(){
    <div class="card accent-kpi"><div class="kpi-label">Ø points / quest</div><div class="kpi-value">${avg(D.averagePPQ)}</div><div class="kpi-note">average across recorded events</div></div>
  </section>
  <section class="leader-section"><div class="section-heading"><h2>Player leaders</h2><span class="muted">minimum 3 events participated</span></div><div class="grid leader-grid">
- ${leaderCard('Most total points',mostPoints,fmt(mostPoints?.totalPoints),'combined points','👑')}
- ${leaderCard('Best average ranking',bestRank,avg(bestRank?.averageRank),'average event placement · lower is better','🏅')}
- ${leaderCard('Highest average points / quest',bestPPQ,avg(bestPPQ?.averagePPQ),'average of event-level points / quest','⭐')}
+ ${leaderCard('Most total points',mostPoints,fmt(mostPoints?.totalPoints),'combined points','🪙')}
+ ${leaderCard('Best average ranking',bestRank,avg(bestRank?.averageRank),'average event placement · lower is better','🎯')}
+ ${leaderCard('Highest average points / quest',bestPPQ,avg(bestPPQ?.averagePPQ),'average of event-level points / quest','⚡')}
  </div></section>
  <section class="grid dashboard-main">
    <div class="card table-card"><div class="table-head"><h2>Top 25 players · total points</h2><span class="muted">all recorded events</span></div>
