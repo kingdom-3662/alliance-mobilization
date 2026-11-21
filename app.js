@@ -225,7 +225,7 @@ function trendsView(){
  const activeChange=prior?.active?100*(latest.active-prior.active)/prior.active:null;
  const participationRate=latest?.total?100*latest.active/latest.total:null;
  const previousRate=prior?.requirementRate;
- const completionRateChange=rate!=null&&previousRate>0?100*(rate-previousRate)/previousRate:null;
+ const completionRateChange=rate!=null&&previousRate!=null?rate-previousRate:null;
  const rateBars=eventStats.map(st=>{
   const value=st.requirementRate,pct=value===null?'—':value.toFixed(1)+'%';
   const shortName=st.event.name.replace(/^([A-Za-z]{3})[A-Za-z]* (\d{4})$/,(_whole,month,year)=>month+" '"+year.slice(2));
