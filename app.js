@@ -156,7 +156,7 @@ function trendLine(values,caption,format='number',tone='gold'){
  const path=points.map(([x,y])=>`${x},${y}`).join(' ');
  const area=`${p},${h-p} ${path} ${w-p},${h-p}`;
  const fmtValue=v=>format==='pct'?v.toFixed(1)+'%':format==='decimal'?v.toFixed(1):fmt(v);
- const safeTone=['gold','purple','turquoise'].includes(tone)?tone:'gold',gradientId='trend-fill-'+safeTone;
+ const safeTone=['gold','purple','steel-blue'].includes(tone)?tone:'gold',gradientId='trend-fill-'+safeTone;
  const last=points[points.length-1];
  return `<svg viewBox="0 0 ${w} ${h}" class="trend-line-svg tone-${safeTone}" role="img" aria-label="${esc(caption)}. Values in recorded event order: ${esc(numeric.map(fmtValue).join(', '))}">
   <defs><linearGradient id="${gradientId}" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="var(--trend-chart-color)" stop-opacity=".34"/><stop offset="1" stop-color="var(--trend-chart-color)" stop-opacity="0"/></linearGradient></defs>
@@ -223,7 +223,7 @@ function trendsView(){
   <div class="card trend-metric-card"><div class="trend-metric-header"><h2>Active participation</h2>${trendMetricBadge(activeChange)}</div>
    <div class="trend-metric-value">${fmt(latest?.active||0)} <small>active entries</small></div>
    <div class="trend-metric-caption">${participationRate===null?'—':participationRate.toFixed(1)+'%'} of ${fmt(latest?.total||0)} recorded entries · latest event</div>
-   ${trendLine(eventStats.map(st=>st.active),'Active scoring entries','number','turquoise')}
+   ${trendLine(eventStats.map(st=>st.active),'Active scoring entries','number','steel-blue')}
    <div class="chart-labels"><span>${esc(D.events[0]?.name||'')}</span><span>${esc(latest?.event.name||'')}</span></div>
    <div class="trend-metric-foot">Relative change in active entries vs previous event</div></div>
   <div class="card trends-wide trend-metric-card"><div class="trend-metric-header"><h2>Minimum requirement completion</h2>${trendMetricBadge(completionPointChange,' percentage points')}</div>
