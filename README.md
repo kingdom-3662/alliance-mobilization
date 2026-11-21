@@ -120,3 +120,15 @@ The **Trends** page (available via the website navigation) calculates all metric
 - Contextual insights appear on the Dashboard, Events overview, player profiles and individual event pages. Chart data and links are automatically updated when the workbook is updated.
 
 The charts connect consecutive recorded events, which may be separated by several months. No values are invented for unrecorded months or missing player history.
+
+
+### Trend card presentation
+
+The Trends page presents Quest efficiency, Active participation, and Minimum requirement completion as visual metric cards inspired by game tracker dashboards:
+
+- **Quest efficiency:** latest average points per quest, a percentage-change pill versus the previous recorded event, and a gold line/area chart.
+- **Active participation:** latest nonzero scoring-entry count, the percentage of all result entries that scored, percentage change in the count versus the previous recorded event, and a turquoise line/area chart.
+- **Minimum requirement completion:** latest qualifying-entry percentage, an absolute change measured in **percentage points (pp)** versus the previous recorded event, and a per-event column chart with percentage labels inside the bars.
+- Each bar identifies its event, including the year, and links to the event details. Missing earlier comparisons show “No comparison” rather than a made-up percentage.
+- The Events overview donut uses the **dark backgrounds** of the existing ranking circles for its segments; the gold, silver, bronze, purple, and turquoise tier definitions are unchanged.
+
