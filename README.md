@@ -132,3 +132,12 @@ The Trends page presents Quest efficiency, Active participation, and Minimum req
 - Each bar identifies its event, including the year, and links to the event details. Missing earlier comparisons show “No comparison” rather than a made-up percentage.
 - The Events overview donut uses the **dark backgrounds** of the existing ranking circles for its segments; the gold, silver, bronze, purple, and turquoise tier definitions are unchanged.
 
+
+
+### Cross-site chart indicators
+
+The dashboard Alliance performance chart and Events overview Alliance points chart display the latest alliance point total, the latest event label, and a `last:` percentage change compared with the previous **recorded** event. The ranking donut continues to show event counts and percentages by placement and now additionally describes the latest placement and movement compared with the prior recorded event; lower rank numbers are better.
+
+On player profiles, the Points over time bar chart shows each recorded scoring event's point total directly above the bar, including a month/year label, plus a latest-result summary and `last:` percentage change from that player's previous recorded scoring result. Missing prior results display `last: No comparison`, with no fabricated percentage.
+
+The Active participation trend is **steel blue**, using the site's shared `--place-steel-blue` color token; Quest efficiency remains purple. These chart enhancements use only generated `data.js` values and do not change the workbook builder, scoring exceptions, or statistics.
