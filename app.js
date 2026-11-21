@@ -300,7 +300,7 @@ function dashboard(){
  const leaderCard=(label,p,value,note,icon)=>`<${p?'a':'div'} ${p?`href="#player/${encodeURIComponent(p.id)}"`:''} class="card leader-card ${p?'interactive-card':''}"><span class="leader-icon">${icon}</span><div class="leader-label">${label}</div><strong class="leader-name">${p?esc(p.currentName):'—'}</strong><div class="leader-value">${p?value:'—'}</div><span class="kpi-note">${note}</span></${p?'a':'div'}>`;
  app.innerHTML=`
  <section class="hero"><div><div class="eyebrow">Rise of Kingdoms · Kingdom 3662</div><h1>Alliance Mobilization</h1><p class="sub">${D.events.length} recorded events · latest: ${esc(latest.name)}</p></div>
- <div class="badge alliance-placement-badge">Data through ${esc(D.updatedFromWorkbook)}</div></section>
+ </section>
  <section class="grid kpis">
    <div class="card"><div class="kpi-label">Events</div><div class="kpi-value">${D.events.length}</div><div class="kpi-note">recorded in the dataset</div></div>
    <div class="card"><div class="kpi-label">Players</div><div class="kpi-value">${D.players.length}</div><div class="kpi-note">unique identities</div></div>
