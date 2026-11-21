@@ -65,9 +65,11 @@ function dashboard(){
  const top=D.players.slice(0,25);
  const bestEvent=D.events.reduce((best,e)=>!best || e.alliancePoints>best.alliancePoints?e:best,null);
  const history=D.events.slice(-5).reverse();
- const mostPoints=D.players.slice().sort((a,b)=>b.totalPoints-a.totalPoints)[0];
- const bestRank=D.players.filter(p=>p.events.length&&Number(p.averageRank)>0).sort((a,b)=>a.averageRank-b.averageRank)[0];
- const bestPPQ=D.players.filter(p=>p.questsCompleted>0).sort((a,b)=>b.averagePPQ-a.averagePPQ)[0];
+ // Leaderboards require participation in at least three events (events with > 0 points).
+ const eligibleLeaders=D.players.filter(p=>Number(p.eventsParticipated)>=3);
+ const mostPoints=eligibleLeaders.slice().sort((a,b)=>b.totalPoints-a.totalPoints)[0];
+ const bestRank=eligibleLeaders.filter(p=>Number(p.averageRank)>0).sort((a,b)=>a.averageRank-b.averageRank)[0];
+ const bestPPQ=eligibleLeaders.filter(p=>p.questsCompleted>0).sort((a,b)=>b.averagePPQ-a.averagePPQ)[0];
  const leaderCard=(label,p,value,note,icon)=>`<div class="card leader-card" ${p?`onclick="location.hash='player/${encodeURIComponent(p.id)}'"`:''}><span class="leader-icon">${icon}</span><div class="leader-label">${label}</div><strong class="leader-name">${p?esc(p.currentName):'—'}</strong><div class="leader-value">${p?value:'—'}</div><span class="kpi-note">${note}</span></div>`;
  app.innerHTML=`
  <section class="hero"><div><div class="eyebrow">Rise of Kingdoms · Kingdom 3662</div><h1>Alliance Mobilization</h1><p class="sub">${D.events.length} recorded events · latest: ${esc(latest.name)}</p></div>
@@ -79,7 +81,7 @@ function dashboard(){
    <div class="card"><div class="kpi-label">All event points</div><div class="kpi-value">${fmt(totalPoints)}</div><div class="kpi-note">sum of alliance totals</div></div>
    <div class="card accent-kpi"><div class="kpi-label">Ø points / quest</div><div class="kpi-value">${avg(D.averagePPQ)}</div><div class="kpi-note">average across recorded events</div></div>
  </section>
- <section class="leader-section"><div class="section-heading"><h2>Player leaders</h2><span class="muted">all recorded events</span></div><div class="grid leader-grid">
+ <section class="leader-section"><div class="section-heading"><h2>Player leaders</h2><span class="muted">minimum 3 events participated</span></div><div class="grid leader-grid">
  ${leaderCard('Most total points',mostPoints,fmt(mostPoints?.totalPoints),'combined points','👑')}
  ${leaderCard('Best average ranking',bestRank,avg(bestRank?.averageRank),'average event placement · lower is better','🏅')}
  ${leaderCard('Highest average points / quest',bestPPQ,avg(bestPPQ?.averagePPQ),'average of event-level points / quest','⭐')}
