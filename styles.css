@@ -396,6 +396,7 @@ th.sortable.num button{justify-content:flex-end;text-align:right}
 .trend-metric-badge.positive{color:#93e7bd;background:rgba(39,136,86,.2);border-color:rgba(80,176,126,.18)}
 .trend-metric-badge.negative{color:#f4a6a6;background:rgba(160,64,76,.19);border-color:rgba(221,99,109,.17)}
 .trend-metric-badge.neutral{color:#b7bec8;background:rgba(125,135,150,.12);border-color:rgba(125,135,150,.12)}
+.trend-metric-prefix{font-weight:600;opacity:.88;margin-right:4px}
 .trend-line-svg.tone-gold{--trend-chart-color:#e8c66d}
 .trend-line-svg.tone-purple{--trend-chart-color:var(--place-purple)}
 .trend-line-svg.tone-turquoise{--trend-chart-color:#63c9bd}
@@ -405,7 +406,7 @@ th.sortable.num button{justify-content:flex-end;text-align:right}
 .trend-bar-scroll{width:100%;max-width:100%;overflow-x:auto;scrollbar-width:thin;padding-bottom:4px}
 .trend-metric-card .trend-bar-chart{min-width:600px;height:229px;gap:clamp(8px,1.5vw,18px);padding-top:8px}
 .trend-metric-card .trend-bar-item{color:var(--muted);font-size:10px;gap:7px}
-.trend-metric-card .trend-bar-percent{font-size:12px;line-height:1.5;font-weight:850;color:#1c2027;font-variant-numeric:tabular-nums;white-space:nowrap;text-shadow:0 1px 0 rgba(255,255,255,.18)}
+.trend-metric-card .trend-bar-percent{font-size:12px;line-height:1.5;font-weight:850;color:#fff5df;font-variant-numeric:tabular-nums;white-space:nowrap;text-shadow:0 1px 3px rgba(9,12,17,.9);background:rgba(18,21,28,.34);padding:1px 4px;border-radius:4px}
 .trend-metric-card .trend-bar-track{height:195px;border-radius:6px;background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.055)}
 .trend-metric-card .trend-bar-fill{min-height:0;display:flex;align-items:flex-start;justify-content:center;padding-top:9px;background:linear-gradient(180deg,#f0d586,#8c6c30);box-shadow:0 0 12px rgba(232,198,109,.1);transition:filter .2s}
 .trend-metric-card .trend-bar-item:hover .trend-bar-fill{filter:brightness(1.17)}
