@@ -106,3 +106,17 @@ On a commit to `main` that changes the workbook, `build.py` or website assets (a
 The workflow substitutes the Git commit SHA into `__ASSET_VERSION__` in the **published** HTML. This version marker applies to `data.js`, `app.js`, and `styles.css`. The source `index.html` keeps the placeholder, by design.
 
 For a manual rebuild, open **Actions → Build and deploy → Run workflow** and choose `main`.
+
+
+## Trends analytics
+
+The **Trends** page (available via the website navigation) calculates all metrics at runtime from the generated `data.js`; the Excel workbook and build process do not need additional columns.
+
+- **Player momentum:** compares mean points in the last **three scoring event results** (points > 0) with the preceding **three scoring event results**. A governor needs at least six scoring results before a trend is shown. A change > +5% is tagged Improving; < -5% is Declining; otherwise Stable. This is a comparison across recorded event results, not monthly growth. The builder's `Scoring exceptions` exclusions are respected in player histories.
+- **Alliance quest efficiency:** plots `averagePPQ` from each recorded event.
+- **Active entries:** counts event result rows with more than zero points. These are **account/result entries**, not deduplicated unique governors.
+- **Requirement completion rate:** number of event rows with points at least the event's own minimum requirement, divided by all recorded result rows. This includes zero-point accounts. Event minimum thresholds may differ, so percentages across events are not directly equivalent.
+- **Event progression:** event-by-event table shows alliance points, percentage change versus the previous **recorded** event, alliance rank, active entries, requirement completion and efficiency.
+- Contextual insights appear on the Dashboard, Events overview, player profiles and individual event pages. Chart data and links are automatically updated when the workbook is updated.
+
+The charts connect consecutive recorded events, which may be separated by several months. No values are invented for unrecorded months or missing player history.
