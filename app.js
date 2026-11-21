@@ -102,13 +102,19 @@ function allianceRankingChart(){
    return `<li class="rank-donut-legend-item"><span class="rank-donut-legend-dot" style="background:${colorFor(rank)}" aria-hidden="true"></span><span class="rank-donut-legend-content"><span class="rank-donut-legend-label">${esc(label)}</span><span class="rank-donut-legend-detail">${count} ${count===1?'event':'events'} · ${percent}%</span></span></li>`;
  }).join('');
  const summary=distribution.map(([rank,count])=>`${rank}: ${count} ${count===1?'event':'events'}`).join(', ');
+ const latestRank=D.events[D.events.length-1]?.allianceRank;
+ const previousRank=D.events[D.events.length-2]?.allianceRank;
+ const currentPlace=rankNumber(String(latestRank||''));
+ const previousPlace=rankNumber(String(previousRank||''));
+ const diff=Number.isSafeInteger(currentPlace)&&Number.isSafeInteger(previousPlace)?previousPlace-currentPlace:null;
+ const comparison=diff===null?'No earlier placement':diff===0?'unchanged vs previous event':diff>0?`up ${diff} ${diff===1?'place':'places'} vs previous event`:`down ${-diff} ${-diff===1?'place':'places'} vs previous event`;
  return `<div class="rank-donut-layout">
   <div class="rank-donut-graphic"><svg viewBox="0 0 200 200" role="img" aria-label="Alliance ranking distribution: ${esc(summary)}">
     <circle cx="100" cy="100" r="68" fill="none" stroke="#343941" stroke-width="24"/>
     ${segments}
    </svg><div class="rank-donut-center" aria-hidden="true"><strong>${fmt(total)}</strong><span>events</span></div></div>
   <ul class="rank-donut-legend" aria-label="Alliance ranking legend">${legend}</ul>
- </div>`;
+ </div><div class="chart-metric-foot rank-donut-foot">Latest placement: <strong>${esc(latestRank||"—")}</strong> · ${esc(comparison)} · slices show the share of recorded events at each placement</div>`;
 }
 
 /* Trends are derived from the deployed event and player data, never a separate data source. */
