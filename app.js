@@ -29,9 +29,9 @@ function sortTable(tableId,col,type){
   if(active) active.classList.add(direction==="asc"?"sort-asc":"sort-desc");
 }
 function sortHead(label,table,col,type="text"){
- const alignRight=type==="number" && label!=="#" && !(label==="Rank" && table==="eventPlayersTable");
+ const alignRight=type==="number" && label!=="#" && !(label==="Rank" && table==="eventPlayersTable") && !(label==="Event" && table==="playerEventsTable");
  const sortIcon='<span class="sort-icon" aria-hidden="true">↕</span>';
- return `<th class="sortable${alignRight?' num':''}" data-table="${table}" data-col="${col}" data-type="${type}"><button type="button">${label}${sortIcon}</button></th>`;
+ return `<th class="sortable${table==="playerEventsTable"&&col===0?' sort-desc':''}${alignRight?' num':''}" data-table="${table}" data-col="${col}" data-type="${type}"><button type="button">${label}${sortIcon}</button></th>`;
 }
 
 
@@ -52,7 +52,7 @@ function sortPlayers(col){playerSort.dir=playerSort.col===col&&playerSort.dir===
 function nav(view){ document.querySelectorAll(".nav-btn").forEach(b=>b.classList.toggle("active",b.dataset.view===view)); }
 function playerById(id){return D.players.find(p=>p.id===decodeURIComponent(id));}
 function eventById(id){return D.events.find(e=>e.id===id);}
-function playerRows(p){return p.events.map(x=>`<tr><td>${esc(x.event)}</td><td class="num" data-value="${x.rank}">${rankPill(x.rank)}</td><td class="num">${fmt(x.points)}</td><td class="num">${x.started}</td><td class="num">${x.completed}</td><td class="num">${avg(x.ppq)}</td></tr>`).join("")}
+function playerRows(p){const order=new Map(D.events.map((e,i)=>[e.name,i]));return p.events.slice().sort((a,b)=>(order.get(b.event)??-1)-(order.get(a.event)??-1)).map(x=>`<tr><td data-value="${order.get(x.event)??-1}">${esc(x.event)}</td><td class="num" data-value="${x.rank}">${rankPill(x.rank)}</td><td class="num">${fmt(x.points)}</td><td class="num">${x.started}</td><td class="num">${x.completed}</td><td class="num">${avg(x.ppq)}</td></tr>`).join("")}
 
 function shortEventLabel(name){
  return String(name||'').replace(/^([A-Za-z]{3})[A-Za-z]* (\d{4})$/,(_match,month,year)=>month+" '"+year.slice(2));
@@ -250,7 +250,7 @@ function trendsView(){
   <div class="card"><div class="kpi-label">Active scoring entries</div><div class="kpi-value">${fmt(latest?.active||0)}</div><div class="kpi-note">latest event · entries above zero points</div></div>
   <div class="card"><div class="kpi-label">Players with trend data</div><div class="kpi-value">${eligible.length}</div><div class="kpi-note">eligible governors · ${improvingTotal} improving · ${decliningTotal} declining · ${stable} stable</div></div>
  </section>
- <section class="section-heading trend-section-title"><h2>Alliance trends</h2><span class="muted">Each point represents one recorded event, not a calendar month</span></section>
+ <section class="section-heading trend-section-title"><h2>Alliance trends</h2></section>
  <section class="grid trends-chart-grid">
   <div class="card trend-metric-card"><div class="trend-metric-header"><h2>Quest efficiency</h2>${trendMetricBadge(efficiencyChange)}</div>
    <div class="trend-metric-value">${latest?avg(latest.ppq):'—'}</div>
@@ -324,8 +324,8 @@ function dashboard(){
    <div class="dashboard-side">
     <div class="card chart-card"><div class="table-head compact"><h2>Alliance performance</h2><span class="muted">points by event</span></div>${allianceChart()}</div>
     <div class="card"><div class="table-head compact"><h2>Event history</h2><span class="muted">last 5 events</span></div><div class="event-list" style="grid-template-columns:1fr">
-    ${!history.some(e=>e.id===bestEvent?.id)?`<a class="event-card best-event record-card interactive-card" href="#event/${bestEvent.id}"><div class="event-title"><strong>Kingdom points record</strong><span class="badge gold-badge">All-time best</span></div><div class="event-stat"><span class="muted">${esc(bestEvent.name)}</span><b>${fmt(bestEvent.alliancePoints)}</b></div><div class="event-meta"><span>Top player: <strong>${esc(bestEvent.topPlayer||'—')}</strong></span></div></a>`:''}
-    ${history.map(e=>`<a class="event-card interactive-card ${e.id===bestEvent?.id?'best-event':''}" href="#event/${e.id}"><div class="event-title"><strong>${esc(e.name)}</strong><span class="badge ${e.id===bestEvent?.id?'gold-badge':'alliance-placement-badge'}">${e.id===bestEvent?.id?'All-time best':esc(e.allianceRank)}</span></div><div class="event-stat"><span class="muted">Alliance points</span><b>${fmt(e.alliancePoints)}</b></div><div class="event-meta"><span>Top player: <strong>${esc(e.topPlayer||'—')}</strong></span></div><div class="event-meta"><span>${esc(e.start)} · Reward: ${esc(e.reward||'—')}</span></div></a>`).join("")}
+    ${!history.some(e=>e.id===bestEvent?.id)?`<a class="event-card best-event record-card interactive-card" href="#event/${bestEvent.id}"><div class="event-title"><strong>${esc(bestEvent.name)}</strong><span class="badge gold-badge">All-time best</span></div><div class="event-stat"><span class="muted">Alliance points</span><b>${fmt(bestEvent.alliancePoints)}</b></div><div class="event-meta"><span>Top player: <strong>${esc(bestEvent.topPlayer||'—')}</strong></span></div><div class="event-meta"><span>${esc(bestEvent.start)} → ${esc(bestEvent.end)} · Reward: ${esc(bestEvent.reward||'—')}</span></div></a>`:''}
+    ${history.map(e=>`<a class="event-card interactive-card ${e.id===bestEvent?.id?'best-event':''}" href="#event/${e.id}"><div class="event-title"><strong>${esc(e.name)}</strong><span class="badge ${e.id===bestEvent?.id?'gold-badge':'alliance-placement-badge'}">${e.id===bestEvent?.id?'All-time best':esc(e.allianceRank)}</span></div><div class="event-stat"><span class="muted">Alliance points</span><b>${fmt(e.alliancePoints)}</b></div><div class="event-meta"><span>Top player: <strong>${esc(e.topPlayer||'—')}</strong></span></div><div class="event-meta"><span>${esc(e.start)} → ${esc(e.end)} · Reward: ${esc(e.reward||'—')}</span></div></a>`).join("")}
     </div></div>
    </div>
  </section>`;
@@ -422,7 +422,7 @@ function playerView(id){
    <div class="card"><div class="kpi-label">Events participated</div><div class="kpi-value">${p.eventsParticipated}</div></div>
    <div class="card"><div class="kpi-label">Best event rank</div><div class="kpi-value">${p.bestRank??"—"}</div></div>
    <div class="card"><div class="kpi-label">Quests completed</div><div class="kpi-value">${fmt(p.questsCompleted)}</div></div>
-   <div class="card accent-kpi"><div class="kpi-label">Ø points / quest</div><div class="kpi-value">${avg(p.averagePPQ)}</div><div class="kpi-note">average across events</div></div>
+   <div class="card"><div class="kpi-label">Ø points / quest</div><div class="kpi-value">${avg(p.averagePPQ)}</div><div class="kpi-note">average across events</div></div>
  </section>
  ${momentumPanel}
   <section class="card performance-card"><div class="table-head compact"><h2>Performance badges</h2><span class="muted">exclusive placement tiers · all events</span></div><div class="performance-badges"><div class="performance-badge rank1"><span class="medal">👑</span><strong>${top1}</strong><span>1st place</span></div><div class="performance-badge rank2"><span class="medal">🥈</span><strong>${top2}</strong><span>2nd place</span></div><div class="performance-badge rank3"><span class="medal">🥉</span><strong>${top3}</strong><span>3rd place</span></div><div class="performance-badge rank45"><span class="medal">🏅</span><strong>${top45}</strong><span>4th–5th place</span></div><div class="performance-badge rank10"><span class="medal">⭐</span><strong>${top10}</strong><span>6th–10th place</span></div></div></section>
@@ -433,7 +433,7 @@ function playerView(id){
     <div class="chart-metric-foot">Points by event</div></div>
   <div class="card"><h2>Name history</h2>${p.names.slice().reverse().map((n,i)=>`<div class="name-history-row"><span class="badge ${i===0?'current-name-badge':''}">${i===0?"Current":"Former"}</span> <strong>${esc(n)}</strong></div>`).join("")}</div>
  </section>
- <section class="card table-card" style="margin-top:16px"><div class="table-head"><h2>Event-by-event results</h2></div><div class="table-scroll"><table id="playerEventsTable"><thead><tr>${sortHead("Event","playerEventsTable",0)}${sortHead("Rank","playerEventsTable",1,"number")}${sortHead("Points","playerEventsTable",2,"number")}${sortHead("Started","playerEventsTable",3,"number")}${sortHead("Completed","playerEventsTable",4,"number")}${sortHead("Pts/quest","playerEventsTable",5,"number")}</tr></thead><tbody>${playerRows(p)}</tbody></table></div></section>`;
+ <section class="card table-card" style="margin-top:16px"><div class="table-head"><h2>Event-by-event results</h2></div><div class="table-scroll"><table id="playerEventsTable" data-sort-col="0" data-sort-dir="desc"><thead><tr>${sortHead("Event","playerEventsTable",0,"number")}${sortHead("Rank","playerEventsTable",1,"number")}${sortHead("Points","playerEventsTable",2,"number")}${sortHead("Started","playerEventsTable",3,"number")}${sortHead("Completed","playerEventsTable",4,"number")}${sortHead("Pts/quest","playerEventsTable",5,"number")}</tr></thead><tbody>${playerRows(p)}</tbody></table></div></section>`;
 }
 
 function eventView(id){
@@ -453,7 +453,7 @@ function eventView(id){
   <div class="card"><div class="kpi-label">Levels completed</div><div class="kpi-value">${e.level ?? "—"}</div></div>
   <div class="card"><div class="kpi-label">Minimum requirement</div><div class="kpi-value">${fmt(e.minimumPoints)}</div></div>
   <div class="card"><div class="kpi-label">Reward</div><div class="kpi-value" style="font-size:20px">${esc(e.reward)}</div></div>
-  <div class="card accent-kpi"><div class="kpi-label">Ø points / quest</div><div class="kpi-value">${avg(e.averagePPQ)}</div><div class="kpi-note">all completed quests in this event</div></div>
+  <div class="card"><div class="kpi-label">Ø points / quest</div><div class="kpi-value">${avg(e.averagePPQ)}</div><div class="kpi-note">all completed quests in this event</div></div>
  </section>
  ${eventTrendPanel}
   <section class="card table-card"><div class="table-head event-results-head"><div><h2>Player results</h2><span class="muted">${sorted.length} players · ${sorted.filter(r=>Number(r.points)>=Number(e.minimumPoints)).length} met requirement · ${sorted.filter(r=>Number(r.points)<Number(e.minimumPoints)).length} below requirement</span></div></div><div class="requirement-legend"><span><i class="legend-dot met"></i> Requirement met</span><span><i class="legend-dot unmet"></i> Below requirement</span></div><div class="requirement-filter-row"><button type="button" class="filter-toggle" id="belowRequirementToggle" onclick="toggleBelowRequirement()">Show players below requirement</button></div><div class="table-scroll"><table id="eventPlayersTable"><thead><tr>${sortHead("Rank","eventPlayersTable",0,"number")}${sortHead("Governor","eventPlayersTable",1)}${sortHead("Points","eventPlayersTable",2,"number")}${sortHead("Started","eventPlayersTable",3,"number")}${sortHead("Completed","eventPlayersTable",4,"number")}${sortHead("Pts/quest","eventPlayersTable",5,"number")}</tr></thead><tbody>
