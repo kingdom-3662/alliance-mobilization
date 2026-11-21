@@ -130,12 +130,12 @@ tr[hidden]{display:none}
 .performance-badge.rank2{border-color:var(--place-silver)}
 .performance-badge.rank3{border-color:var(--place-bronze)}
 .performance-badge.rank45{border-color:var(--place-purple)}
-.performance-badge.rank10{border-color:var(--place-turquoise)}
+.performance-badge.rank10{border-color:var(--place-steel-blue)}
 .performance-badge.rank1 strong{color:var(--place-gold)}
 .performance-badge.rank2 strong{color:var(--place-silver)}
 .performance-badge.rank3 strong{color:var(--place-bronze)}
 .performance-badge.rank45 strong{color:var(--place-purple)}
-.performance-badge.rank10 strong{color:var(--place-turquoise)}
+.performance-badge.rank10 strong{color:var(--place-steel-blue)}
 .performance-card + .profile-content{margin-top:16px}
 /* Neutral, gold-accented event bars replace the red-to-green gradient */
 .bar{background:linear-gradient(180deg,#e9c66b,#b88a3e);border:1px solid rgba(255,220,150,.16);border-radius:5px 5px 2px 2px;box-shadow:0 3px 12px rgba(231,189,88,.08)}
@@ -164,7 +164,7 @@ body{background:linear-gradient(180deg,#11151a 0%,#0c0f13 48%,#0a0d11 100%);back
 .mini-rank-badge.rank2{color:var(--place-silver);background:rgba(185,198,216,.09);border-color:var(--place-silver)}
 .mini-rank-badge.rank3{color:var(--place-bronze);background:rgba(180,124,82,.09);border-color:var(--place-bronze)}
 .mini-rank-badge.rank45{color:var(--place-purple);background:rgba(154,127,203,.09);border-color:var(--place-purple)}
-.mini-rank-badge.rank10{color:var(--place-turquoise);background:rgba(75,192,181,.09);border-color:var(--place-turquoise)}
+.mini-rank-badge.rank10{color:var(--place-steel-blue);background:rgba(127,151,188,.1);border-color:var(--place-steel-blue)}
 @media(max-width:600px){.topbar nav{gap:2px;padding:3px}.nav-btn{padding:7px 9px;font-size:12px}}
 
 /* v6 refinements: consistent event modules, clear record highlight and filter placement */
@@ -207,7 +207,7 @@ main,.grid,.card,.profile-content,.profile-content>.card,.dashboard-main,.dashbo
 .rank-pill.rank2{color:var(--place-silver);background:var(--place-fill-silver);border-color:var(--place-silver)}
 .rank-pill.rank3{color:var(--place-bronze);background:var(--place-fill-bronze);border-color:var(--place-bronze)}
 .rank-pill.rank45{color:var(--place-purple);background:var(--place-fill-purple);border-color:var(--place-purple)}
-.rank-pill.rank10{color:var(--place-turquoise);background:var(--place-fill-turquoise);border-color:var(--place-turquoise)}
+.rank-pill.rank10{color:var(--place-steel-blue);background:var(--place-fill-steel-blue);border-color:var(--place-steel-blue)}
 .player-filter-row{padding:0 18px 12px}
 .pagination{flex-wrap:wrap}
 .points-card{overflow:hidden}
@@ -313,21 +313,21 @@ th.sortable.num button{justify-content:flex-end;text-align:right}
  --place-silver:#d5dce7;
  --place-bronze:#d9a77f;
  --place-purple:#c5b4e7;
- --place-turquoise:#63c9bd;
+ --place-steel-blue:#7f97bc;
  --place-neutral:#8793a5;
  /* Muted ranking-circle backgrounds, reused for donut segments. */
  --place-fill-gold:#5b481f;
  --place-fill-silver:#3b4656;
  --place-fill-bronze:#594031;
  --place-fill-purple:#40364e;
- --place-fill-turquoise:#203b40;
+ --place-fill-steel-blue:#2f3f57;
  --place-fill-neutral:#30363f;
  /* Donut uses midpoints between the dark rank-circle fills and light outlines. */
  --place-mid-gold:#a28f46;
  --place-mid-silver:#8892a0;
  --place-mid-bronze:#996f55;
  --place-mid-purple:#8275a3;
- --place-mid-turquoise:#429386;
+ --place-mid-steel-blue:#5f7598;
  --place-mid-neutral:#59606a;
 }
 
