@@ -62,6 +62,23 @@ function allianceChart(){
  return `<div class="chart-summary"><strong>${fmt(last)}</strong><span class="muted">latest alliance points</span></div><svg class="line-chart" viewBox="0 0 ${w} ${h}" role="img" aria-label="Alliance points by event"><defs><linearGradient id="chartFill" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#e5b94f" stop-opacity=".28"/><stop offset="1" stop-color="#e5b94f" stop-opacity="0"/></linearGradient></defs><polygon points="${pad},${h-pad} ${pts} ${w-pad},${h-pad}" fill="url(#chartFill)"/><polyline points="${pts}" fill="none" stroke="#e5b94f" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>${values.map((v,i)=>{const x=pad+i*(w-2*pad)/Math.max(1,values.length-1),y=h-pad-(v-min)/range*(h-2*pad);return `<circle cx="${x}" cy="${y}" r="4" fill="#e5b94f"><title>${esc(D.events[i].name)}: ${fmt(v)}</title></circle>`}).join('')}</svg><div class="chart-labels"><span>${esc(D.events[0].name)}</span><span>${esc(D.events[D.events.length-1].name)}</span></div>`;
 }
 
+function allianceRankingChart(){
+ const frequencies=new Map();
+ D.events.forEach(e=>{
+   const rank=String(e.allianceRank ?? '').trim() || 'Unranked';
+   frequencies.set(rank,(frequencies.get(rank)||0)+1);
+ });
+ if(!frequencies.size) return '<div class="empty">No ranking data</div>';
+ const rankingNumber=rank=>{const n=parseInt(rank,10);return Number.isNaN(n)?Number.MAX_SAFE_INTEGER:n;};
+ const distribution=[...frequencies.entries()].sort((a,b)=>rankingNumber(a[0])-rankingNumber(b[0]) || a[0].localeCompare(b[0]));
+ const maximum=Math.max(...distribution.map(([,count])=>count));
+ const summary=distribution.map(([rank,count])=>`${rank}: ${count} ${count===1?'event':'events'}`).join(', ');
+ return `<div class="chart-summary"><strong>${fmt(D.events.length)}</strong><span class="muted">recorded events</span></div>
+ <div class="rank-distribution-plot" style="--rank-columns:${distribution.length}" role="img" aria-label="Alliance ranking distribution: ${esc(summary)}">
+  ${distribution.map(([rank,count])=>`<div class="rank-distribution-item"><div class="rank-distribution-track"><div class="rank-distribution-bar" style="height:${100*count/maximum}%"><span class="rank-distribution-count">${count}</span></div></div><span class="rank-distribution-label">${esc(rank)}</span></div>`).join('')}
+ </div>`;
+}
+
 function dashboard(){
  nav("dashboard");
  const totalPoints=D.events.reduce((s,e)=>s+e.alliancePoints,0);
@@ -87,7 +104,7 @@ function dashboard(){
  </section>
  <section class="leader-section"><div class="section-heading"><h2>Player leaders</h2><span class="muted">minimum 3 events participated</span></div><div class="grid leader-grid">
  ${leaderCard('Most total points',mostPoints,fmt(mostPoints?.totalPoints),'combined points','💎')}
- ${leaderCard('Best average ranking',bestRank,avg(bestRank?.averageRank),'average event placement · lower is better','🏁')}
+ ${leaderCard('Best average ranking',bestRank,avg(bestRank?.averageRank),'average event placement · lower is better','📈')}
  ${leaderCard('Highest average points / quest',bestPPQ,avg(bestPPQ?.averagePPQ),'average of event-level points / quest','🚀')}
  </div></section>
  <section class="grid dashboard-main">
@@ -110,7 +127,10 @@ function eventsView(){
  nav("events");
  const bestEvent=D.events.reduce((best,e)=>!best || Number(e.alliancePoints)>Number(best.alliancePoints)?e:best,null);
  app.innerHTML=`<section class="hero back-first"><button class="back" onclick="goBack('dashboard')">← Back</button><div><div class="eyebrow">History</div><h1>Events</h1><p class="sub">Every recorded Alliance Mobilization result.</p></div></section>
- <section class="card chart-card event-overview-chart"><div class="table-head compact"><h2>Alliance performance</h2><span class="muted">points by event</span></div>${allianceChart()}</section>
+ <section class="event-overview-charts" aria-label="Alliance event performance charts">
+   <div class="card chart-card event-overview-chart"><div class="table-head compact"><h2>Alliance points</h2><span class="muted">points by event</span></div>${allianceChart()}</div>
+   <div class="card chart-card event-overview-chart"><div class="table-head compact"><h2>Alliance ranking distribution</h2><span class="muted">events by final placement</span></div>${allianceRankingChart()}</div>
+  </section>
  <section class="event-list">${D.events.slice().reverse().map(e=>`
  <article class="card event-card ${e.id===bestEvent?.id?'best-event':''}" onclick="location.hash='event/${e.id}'">
    <div class="event-title"><strong>${esc(e.name)}</strong><span class="badge ${e.id===bestEvent?.id?'gold-badge':''}">${e.id===bestEvent?.id?'All-time best':'Alliance #'+esc(e.allianceRank)}</span></div>
