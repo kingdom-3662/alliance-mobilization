@@ -28,7 +28,11 @@ function sortTable(tableId,col,type){
   const active=table.querySelector(`th.sortable[data-col="${col}"]`);
   if(active) active.classList.add(direction==="asc"?"sort-asc":"sort-desc");
 }
-function sortHead(label,table,col,type="text"){ return `<th class="sortable" data-table="${table}" data-col="${col}" data-type="${type}"><button type="button">${label}<span class="sort-icon">↕</span></button></th>`; }
+function sortHead(label,table,col,type="text"){
+ const alignRight=type==="number" && label!=="#" && !(label==="Rank" && table==="eventPlayersTable");
+ const sortIcon='<span class="sort-icon" aria-hidden="true">↕</span>';
+ return `<th class="sortable${alignRight?' num':''}" data-table="${table}" data-col="${col}" data-type="${type}"><button type="button">${alignRight?sortIcon+label:label+sortIcon}</button></th>`;
+}
 
 
 function rankClass(r){r=Number(r);return r===1?'rank1':r>=2&&r<=3?'rank3':r>=4&&r<=5?'rank5':r>=6&&r<=10?'rank10':''}
@@ -37,10 +41,10 @@ let playerSort={col:0,dir:'asc'};
 function sortedPlayers(query=''){
  const q=query.trim().toLowerCase();
  const list=D.players.map((p,i)=>({...p,originalPosition:i+1})).filter(p=>!q||p.currentName.toLowerCase().includes(q)||p.names.some(n=>n.toLowerCase().includes(q)));
- const get=[p=>p.originalPosition,p=>p.currentName.toLowerCase(),p=>Number(p.totalPoints),p=>Number(p.averagePoints),p=>Number(p.eventsParticipated),p=>p.bestRank==null?Infinity:Number(p.bestRank),p=>p.names.slice(0,-1).join(' → ').toLowerCase()][playerSort.col];
+ const get=[p=>p.originalPosition,p=>p.currentName.toLowerCase(),p=>Number(p.totalPoints),p=>Number(p.eventsParticipated),p=>Number(p.averagePoints),p=>Number(p.averagePPQ),p=>p.bestRank==null?Infinity:Number(p.bestRank)][playerSort.col];
  return list.sort((a,b)=>((get(a)<get(b)?-1:get(a)>get(b)?1:0)*(playerSort.dir==='asc'?1:-1))||a.originalPosition-b.originalPosition);
 }
-function playerTableRow(p){return `<tr class="clickable" onclick="location.hash='player/${encodeURIComponent(p.id)}'"><td data-value="${p.originalPosition}">${rankPill(p.originalPosition)}</td><td><button class="player-link">${esc(p.currentName)}</button></td><td class="num">${fmt(p.totalPoints)}</td><td class="num">${fmt(p.averagePoints)}</td><td class="num">${p.eventsParticipated}</td><td class="num">${p.bestRank??'—'}</td><td class="muted">${p.names.length>1?esc(p.names.slice(0,-1).join(' → ')):'—'}</td></tr>`;}
+function playerTableRow(p){return `<tr class="clickable" onclick="location.hash='player/${encodeURIComponent(p.id)}'"><td data-value="${p.originalPosition}">${rankPill(p.originalPosition)}</td><td><button class="player-link">${esc(p.currentName)}</button></td><td class="num">${fmt(p.totalPoints)}</td><td class="num">${p.eventsParticipated}</td><td class="num">${fmt(p.averagePoints)}</td><td class="num">${avg(p.averagePPQ)}</td><td class="num">${p.bestRank??'—'}</td></tr>`;}
 function playerPagination(page,pages){return Array.from({length:pages},(_,i)=>`<button class="${i===page?'active':''}" onclick="sessionStorage.setItem('playerPage',${i});filterPlayersLive(document.getElementById('playerFilter').value)">${i+1}</button>`).join('')}
 function updatePlayerSortHeaders(){document.querySelectorAll('#playersTable th.sortable').forEach(th=>{th.classList.remove('sort-asc','sort-desc');if(Number(th.dataset.col)===playerSort.col)th.classList.add(playerSort.dir==='asc'?'sort-asc':'sort-desc')})}
 function sortPlayers(col){playerSort.dir=playerSort.col===col&&playerSort.dir==='asc'?'desc':'asc';playerSort.col=col;sessionStorage.setItem('playerPage','0');filterPlayersLive(document.getElementById('playerFilter')?.value||'')}
@@ -123,7 +127,7 @@ function playersView(query=''){
  app.innerHTML=`<section class="hero back-first"><button class="back" onclick="goBack('dashboard')">← Back</button><div><div class="eyebrow">Player index</div><h1>Players</h1><p class="sub" id="playersCount">${list.length} matching unique identities</p></div></section>
  <section class="card table-card"><div class="table-head"><h2>All governors</h2><span class="muted">click a player for the full profile</span></div>
  <div class="filter-row player-filter-row"><input id="playerFilter" value="${esc(query)}" placeholder="Filter players…" oninput="sessionStorage.setItem('playerPage','0');filterPlayersLive(this.value)"></div>
- <div class="table-scroll"><table id="playersTable"><thead><tr>${sortHead('#','playersTable',0,'number')}${sortHead('Governor','playersTable',1)}${sortHead('Total','playersTable',2,'number')}${sortHead('Avg/event','playersTable',3,'number')}${sortHead('Events','playersTable',4,'number')}${sortHead('Best rank','playersTable',5,'number')}${sortHead('Former names','playersTable',6)}</tr></thead><tbody id="playersTbody">${list.slice(page*size,(page+1)*size).map(playerTableRow).join('')}</tbody></table></div><div class="pagination" id="playersPagination">${playerPagination(page,pages)}</div></section>`;
+ <div class="table-scroll"><table id="playersTable"><thead><tr>${sortHead('#','playersTable',0,'number')}${sortHead('Governor','playersTable',1)}${sortHead('Total','playersTable',2,'number')}${sortHead('Events','playersTable',3,'number')}${sortHead('Avg/event','playersTable',4,'number')}${sortHead('Ø Pts/Quest','playersTable',5,'number')}${sortHead('Best rank','playersTable',6,'number')}</tr></thead><tbody id="playersTbody">${list.slice(page*size,(page+1)*size).map(playerTableRow).join('')}</tbody></table></div><div class="pagination" id="playersPagination">${playerPagination(page,pages)}</div></section>`;
  updatePlayerSortHeaders();
 }
 function filterPlayersLive(query=''){
