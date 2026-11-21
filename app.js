@@ -54,14 +54,42 @@ function playerById(id){return D.players.find(p=>p.id===decodeURIComponent(id));
 function eventById(id){return D.events.find(e=>e.id===id);}
 function playerRows(p){return p.events.map(x=>`<tr><td>${esc(x.event)}</td><td class="num" data-value="${x.rank}">${rankPill(x.rank)}</td><td class="num">${fmt(x.points)}</td><td class="num">${x.started}</td><td class="num">${x.completed}</td><td class="num">${avg(x.ppq)}</td></tr>`).join("")}
 
+function shortEventLabel(name){
+ return String(name||'').replace(/^([A-Za-z]{3})[A-Za-z]* (\d{4})$/,(_match,month,year)=>month+" '"+year.slice(2));
+}
 function allianceChart(){
- const values=D.events.map(e=>Number(e.alliancePoints)||0); if(!values.length) return '<div class="empty">No event data</div>';
- const w=620,h=180,pad=24,min=Math.min(...values),max=Math.max(...values),range=max-min||1;
- const pts=values.map((v,i)=>`${pad+i*(w-2*pad)/Math.max(1,values.length-1)},${h-pad-(v-min)/range*(h-2*pad)}`).join(' ');
+ const values=D.events.map(e=>Number(e.alliancePoints)||0);
+ if(!values.length)return '<div class="empty">No event data</div>';
+ const w=660,h=228,left=65,right=16,top=17,bottom=183;
+ const smallest=Math.min(...values),largest=Math.max(...values);
+ const axisMin=Math.floor(smallest/10000)*10000;
+ const axisMax=Math.max(axisMin+10000,Math.ceil(largest/10000)*10000);
+ const range=axisMax-axisMin;
+ const x=i=>left+i*(w-left-right)/Math.max(1,values.length-1);
+ const y=v=>bottom-(v-axisMin)/range*(bottom-top);
+ const pts=values.map((v,i)=>`${x(i)},${y(v)}`).join(' ');
  const last=values[values.length-1],previous=values[values.length-2];
- const change=values.length>1 && previous>0?100*(last-previous)/previous:null;
+ const change=values.length>1&&previous>0?100*(last-previous)/previous:null;
  const latestName=esc(D.events[D.events.length-1].name);
- return `<div class="chart-metric-head"><div class="chart-summary"><strong>${fmt(last)}</strong><span class="muted">alliance points · ${latestName}</span></div>${trendMetricBadge(change)}</div><svg class="line-chart" viewBox="0 0 ${w} ${h}" role="img" aria-label="Alliance points by event"><defs><linearGradient id="chartFill" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#e5b94f" stop-opacity=".28"/><stop offset="1" stop-color="#e5b94f" stop-opacity="0"/></linearGradient></defs><polygon points="${pad},${h-pad} ${pts} ${w-pad},${h-pad}" fill="url(#chartFill)"/><polyline points="${pts}" fill="none" stroke="#e5b94f" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>${values.map((v,i)=>{const x=pad+i*(w-2*pad)/Math.max(1,values.length-1),y=h-pad-(v-min)/range*(h-2*pad);return `<circle cx="${x}" cy="${y}" r="4" fill="#e5b94f"><title>${esc(D.events[i].name)}: ${fmt(v)}</title></circle>`}).join('')}</svg><div class="chart-labels"><span>${esc(D.events[0].name)}</span><span>${latestName}</span></div><div class="chart-metric-foot">Change in alliance points vs previous recorded event · each dot represents one recorded event</div>`;
+ const axisTicks=Array.from({length:5},(_,i)=>{
+  const value=axisMin+range*i/4,yy=y(value);
+  return `<line x1="${left}" y1="${yy}" x2="${w-right}" y2="${yy}" class="metric-grid-line"/><text class="metric-axis-tick" text-anchor="end" x="${left-10}" y="${yy+4}">${fmt(value)}</text>`;
+ }).join('');
+ const marks=values.map((value,i)=>{
+  const name=D.events[i].name,xx=x(i),yy=y(value);
+  return `<circle cx="${xx}" cy="${yy}" r="4.5" fill="var(--gold)"><title>${esc(name)}: ${fmt(value)} alliance points</title></circle><text class="metric-data-label" x="${xx}" y="${Math.max(12,yy-11)}" text-anchor="middle">${(value/1000).toFixed(1)}k</text><text class="metric-axis-event" x="${xx}" y="${h-14}" text-anchor="middle">${esc(shortEventLabel(name))}</text>`;
+ }).join('');
+ return `<div class="chart-metric-head"><div class="chart-summary"><strong>${fmt(last)}</strong><span class="muted">alliance points · ${latestName}</span></div>${trendMetricBadge(change)}</div>
+  <div class="chart-axis-scroll"><svg class="line-chart metric-axis-chart" viewBox="0 0 ${w} ${h}" role="img" aria-label="Alliance points by recorded event, with axes and numeric point labels">
+   <defs><linearGradient id="chartFill" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#e5b94f" stop-opacity=".28"/><stop offset="1" stop-color="#e5b94f" stop-opacity="0"/></linearGradient></defs>
+   ${axisTicks}
+   <line class="metric-axis-line" x1="${left}" y1="${top}" x2="${left}" y2="${bottom}"/>
+   <line class="metric-axis-line" x1="${left}" y1="${bottom}" x2="${w-right}" y2="${bottom}"/>
+   <polygon points="${left},${bottom} ${pts} ${x(values.length-1)},${bottom}" fill="url(#chartFill)"/>
+   <polyline points="${pts}" fill="none" stroke="var(--gold)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+   ${marks}
+  </svg></div>
+  <div class="chart-metric-foot">X: recorded events · Y: alliance points. Comparison is versus the preceding recorded event.</div>`;
 }
 
 function allianceRankingChart(){
