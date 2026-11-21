@@ -57,39 +57,57 @@ function playerRows(p){return p.events.map(x=>`<tr><td>${esc(x.event)}</td><td c
 function shortEventLabel(name){
  return String(name||'').replace(/^([A-Za-z]{3})[A-Za-z]* (\d{4})$/,(_match,month,year)=>month+" '"+year.slice(2));
 }
+/* Shared responsive line-chart renderer used throughout the site. */
+function unifiedLineChart(values,options={}){
+ if(!values.length)return '<div class="empty">No event data</div>';
+ const nums=values.map(v=>Number(v)||0);
+ const labels=options.labels||D.events.map(e=>e.name);
+ const format=options.format||'number';
+ const tone=['gold','purple','steel-blue'].includes(options.tone)?options.tone:'gold';
+ const exact=v=>format==='decimal'?v.toFixed(1):fmt(v);
+ const short=v=>format==='decimal'?v.toFixed(1):(Math.abs(v)>=1000?(v/1000).toFixed(Math.abs(v)>=100000?0:1)+'k':fmt(v));
+ const minimum=Math.min(...nums),maximum=Math.max(...nums),spread=maximum-minimum||Math.max(1,Math.abs(maximum)*.1);
+ const rawStep=spread/3.5;
+ const power=Math.pow(10,Math.floor(Math.log10(rawStep)));
+ const normalized=rawStep/power;
+ const nice=normalized<=1?1:normalized<=2?2:normalized<=2.5?2.5:normalized<=5?5:10;
+ const step=nice*power;
+ const axisMin=Math.max(0,Math.floor((minimum-step*.25)/step)*step);
+ const axisMax=Math.max(axisMin+step,Math.ceil((maximum+step*.25)/step)*step);
+ const w=620,h=192,left=55,right=14,top=16,bottom=150;
+ const x=i=>left+i*(w-left-right)/Math.max(1,nums.length-1);
+ const y=v=>bottom-(v-axisMin)/(axisMax-axisMin)*(bottom-top);
+ const pts=nums.map((v,i)=>`${x(i)},${y(v)}`).join(' ');
+ const gradientId='unified-line-'+tone;
+ const grid=Array.from({length:5},(_,i)=>{
+  const value=axisMin+(axisMax-axisMin)*i/4,yy=y(value);
+  return `<line class="unified-chart-grid" x1="${left}" x2="${w-right}" y1="${yy}" y2="${yy}"/><text class="unified-chart-y" text-anchor="end" x="${left-9}" y="${yy+4}">${short(value)}</text>`;
+ }).join('');
+ // First / middle / last labels stay readable in compact cards.
+ const labelPositions=[0,Math.floor((nums.length-1)/2),nums.length-1].filter((v,i,a)=>a.indexOf(v)===i);
+ const xLabels=labelPositions.map(i=>`<text class="unified-chart-x" text-anchor="${i===0?'start':i===nums.length-1?'end':'middle'}" x="${x(i)}" y="${h-9}">${esc(shortEventLabel(labels[i]))}</text>`).join('');
+ const marks=nums.map((v,i)=>`<circle cx="${x(i)}" cy="${y(v)}" r="${i===nums.length-1?5.5:3.5}" class="unified-chart-point"><title>${esc(labels[i])}: ${esc(exact(v))} ${esc(options.unit||'')}</title></circle>`).join('');
+ const lastX=x(nums.length-1),lastY=y(nums[nums.length-1]);
+ return `<svg class="unified-line-chart tone-${tone}" viewBox="0 0 ${w} ${h}" role="img" aria-label="${esc(options.label||'Recorded event trend')}; values: ${esc(nums.map(exact).join(', '))}">
+ <defs><linearGradient id="${gradientId}" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="var(--chart-line-color)" stop-opacity=".22"/><stop offset="1" stop-color="var(--chart-line-color)" stop-opacity="0"/></linearGradient></defs>
+ ${grid}
+ <line class="unified-chart-axis" x1="${left}" x2="${left}" y1="${top}" y2="${bottom}"/>
+ <line class="unified-chart-axis" x1="${left}" x2="${w-right}" y1="${bottom}" y2="${bottom}"/>
+ <polygon points="${left},${bottom} ${pts} ${lastX},${bottom}" fill="url(#${gradientId})"/>
+ <polyline points="${pts}" fill="none" stroke="var(--chart-line-color)" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
+ ${marks}
+ <circle cx="${lastX}" cy="${lastY}" r="9" stroke="var(--chart-line-color)" stroke-width="4" opacity=".18" fill="none"/>
+ ${xLabels}
+ </svg>`;
+}
 function allianceChart(){
  const values=D.events.map(e=>Number(e.alliancePoints)||0);
  if(!values.length)return '<div class="empty">No event data</div>';
- const w=660,h=228,left=65,right=16,top=17,bottom=183;
- const smallest=Math.min(...values),largest=Math.max(...values);
- const axisMin=Math.floor(smallest/10000)*10000;
- const axisMax=Math.max(axisMin+10000,Math.ceil(largest/10000)*10000);
- const range=axisMax-axisMin;
- const x=i=>left+i*(w-left-right)/Math.max(1,values.length-1);
- const y=v=>bottom-(v-axisMin)/range*(bottom-top);
- const pts=values.map((v,i)=>`${x(i)},${y(v)}`).join(' ');
+ const latest=D.events[D.events.length-1];
  const last=values[values.length-1],previous=values[values.length-2];
  const change=values.length>1&&previous>0?100*(last-previous)/previous:null;
- const latestName=esc(D.events[D.events.length-1].name);
- const axisTicks=Array.from({length:5},(_,i)=>{
-  const value=axisMin+range*i/4,yy=y(value);
-  return `<line x1="${left}" y1="${yy}" x2="${w-right}" y2="${yy}" class="metric-grid-line"/><text class="metric-axis-tick" text-anchor="end" x="${left-10}" y="${yy+4}">${fmt(value)}</text>`;
- }).join('');
- const marks=values.map((value,i)=>{
-  const name=D.events[i].name,xx=x(i),yy=y(value);
-  return `<circle cx="${xx}" cy="${yy}" r="4.5" fill="var(--gold)"><title>${esc(name)}: ${fmt(value)} alliance points</title></circle><text class="metric-data-label" x="${xx}" y="${Math.max(12,yy-11)}" text-anchor="middle">${(value/1000).toFixed(1)}k</text><text class="metric-axis-event" x="${xx}" y="${h-14}" text-anchor="middle">${esc(shortEventLabel(name))}</text>`;
- }).join('');
- return `<div class="chart-metric-head"><div class="chart-summary"><strong>${fmt(last)}</strong><span class="muted">alliance points · ${latestName}</span></div>${trendMetricBadge(change)}</div>
-  <div class="chart-axis-scroll"><svg class="line-chart metric-axis-chart" style="min-width:${w}px" viewBox="0 0 ${w} ${h}" role="img" aria-label="Alliance points by recorded event, with axes and numeric point labels">
-   <defs><linearGradient id="chartFill" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#e5b94f" stop-opacity=".28"/><stop offset="1" stop-color="#e5b94f" stop-opacity="0"/></linearGradient></defs>
-   ${axisTicks}
-   <line class="metric-axis-line" x1="${left}" y1="${top}" x2="${left}" y2="${bottom}"/>
-   <line class="metric-axis-line" x1="${left}" y1="${bottom}" x2="${w-right}" y2="${bottom}"/>
-   <polygon points="${left},${bottom} ${pts} ${x(values.length-1)},${bottom}" fill="url(#chartFill)"/>
-   <polyline points="${pts}" fill="none" stroke="var(--gold)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-   ${marks}
-  </svg></div>
-  <div class="chart-metric-foot">X: recorded events · Y: alliance points. Comparison is versus the preceding recorded event.</div>`;
+ return `<div class="chart-metric-head"><div class="chart-summary"><strong>${fmt(last)}</strong><span class="muted">alliance points · ${esc(latest.name)}</span></div>${trendMetricBadge(change)}</div>
+ ${unifiedLineChart(values,{tone:'gold',unit:'points',label:'Alliance points by event'})}`;
 }
 
 function allianceRankingChart(){
@@ -142,7 +160,7 @@ function allianceRankingChart(){
     ${segments}
    </svg><div class="rank-donut-center" aria-hidden="true"><strong>${fmt(total)}</strong><span>events</span></div></div>
   <ul class="rank-donut-legend" aria-label="Alliance ranking legend">${legend}</ul>
- </div><div class="chart-metric-foot rank-donut-foot">Latest placement: <strong>${esc(latestRank||"—")}</strong> · ${esc(comparison)} · slices show the share of recorded events at each placement</div>`;
+ </div><div class="chart-metric-foot rank-donut-foot">Latest placement: <strong>${esc(latestRank||"—")}</strong> · ${esc(comparison)}</div>`;
 }
 
 /* Trends are derived from the deployed event and player data, never a separate data source. */
@@ -185,23 +203,7 @@ function trendMetricBadge(change,unit='%',decimals=1){
  return `<span class="trend-metric-badge ${status}"><span class="trend-metric-prefix">last:</span> ${sign}${rounded.toFixed(decimals)}${unit}</span>`;
 }
 function trendLine(values,caption,format='number',tone='gold'){
- if(!values.length)return '<div class="empty">No event data yet.</div>';
- const numeric=values.map(v=>Number(v)||0);
- const low=Math.min(...numeric),high=Math.max(...numeric),range=high-low||1,w=650,h=144,p=16;
- const points=numeric.map((v,i)=>[p+i*(w-2*p)/Math.max(1,numeric.length-1),h-p-(v-low)/range*(h-2*p)]);
- const path=points.map(([x,y])=>`${x},${y}`).join(' ');
- const area=`${p},${h-p} ${path} ${w-p},${h-p}`;
- const fmtValue=v=>format==='pct'?v.toFixed(1)+'%':format==='decimal'?v.toFixed(1):fmt(v);
- const safeTone=['gold','purple','steel-blue'].includes(tone)?tone:'gold',gradientId='trend-fill-'+safeTone;
- const last=points[points.length-1];
- return `<svg viewBox="0 0 ${w} ${h}" class="trend-line-svg tone-${safeTone}" role="img" aria-label="${esc(caption)}. Values in recorded event order: ${esc(numeric.map(fmtValue).join(', '))}">
-  <defs><linearGradient id="${gradientId}" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="var(--trend-chart-color)" stop-opacity=".34"/><stop offset="1" stop-color="var(--trend-chart-color)" stop-opacity="0"/></linearGradient></defs>
-  ${[.25,.5,.75,1].map(f=>`<line class="trend-gridline" x1="${p}" x2="${w-p}" y1="${p+(1-f)*(h-2*p)}" y2="${p+(1-f)*(h-2*p)}"/>`).join('')}
-  <polygon points="${area}" fill="url(#${gradientId})"/>
-  <polyline points="${path}" fill="none" stroke="var(--trend-chart-color)" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
-  ${points.map(([x,y],i)=>`<circle cx="${x}" cy="${y}" r="${i===points.length-1?6:3.2}" fill="var(--trend-chart-color)" stroke="${i===points.length-1?'var(--panel)':'none'}" stroke-width="2"><title>${esc(D.events[i]?.name||'Event')}: ${esc(fmtValue(numeric[i]))}</title></circle>`).join('')}
-  <circle cx="${last[0]}" cy="${last[1]}" r="10" fill="none" stroke="var(--trend-chart-color)" opacity=".22" stroke-width="5"/>
- </svg>`;
+ return unifiedLineChart(values,{format,tone,label:caption,unit:format==='decimal'?'points per quest':'entries'});
 }
 function trendsView(){
  nav('trends');
@@ -254,19 +256,19 @@ function trendsView(){
    <div class="trend-metric-value">${latest?avg(latest.ppq):'—'}</div>
    <div class="trend-metric-caption">Points per completed quest · ${esc(latest?.event.name||'latest event')}</div>
    ${trendLine(eventStats.map(st=>st.ppq),'Alliance average points per quest','decimal','purple')}
-   <div class="chart-labels"><span>${esc(D.events[0]?.name||'')}</span><span>${esc(latest?.event.name||'')}</span></div>
-   <div class="trend-metric-foot">Relative change vs previous recorded event</div></div>
+   
+   <div class="trend-metric-foot">Compared with the last event</div></div>
   <div class="card trend-metric-card"><div class="trend-metric-header"><h2>Active participation</h2>${trendMetricBadge(activeChange)}</div>
    <div class="trend-metric-value">${fmt(latest?.active||0)} <small>active entries</small></div>
    <div class="trend-metric-caption">${participationRate===null?'—':participationRate.toFixed(1)+'%'} of ${fmt(latest?.total||0)} recorded entries · latest event</div>
    ${trendLine(eventStats.map(st=>st.active),'Active scoring entries','number','steel-blue')}
-   <div class="chart-labels"><span>${esc(D.events[0]?.name||'')}</span><span>${esc(latest?.event.name||'')}</span></div>
-   <div class="trend-metric-foot">Relative change in active entries vs previous event</div></div>
+   
+   <div class="trend-metric-foot">Compared with the last event</div></div>
   <div class="card trends-wide trend-metric-card"><div class="trend-metric-header"><h2>Minimum requirement completion</h2>${trendMetricBadge(completionPointChange,' percentage points')}</div>
    <div class="trend-metric-value">${rateText}</div>
    <div class="trend-metric-caption">${fmt(latest?.qualifying||0)} of ${fmt(latest?.total||0)} entries met the minimum · latest event</div>
    <div class="trend-bar-scroll"><div class="trend-bar-chart">${rateBars}</div></div>
-   <div class="trend-metric-foot">Change in percentage points vs previous event. Minimum thresholds vary. Includes all result rows, including zero-point accounts.</div></div>
+   <div class="trend-metric-foot">Compared with the last event. Minimum requirements can vary between events.</div></div>
  </section>
  <section class="section-heading trend-section-title"><h2>Player momentum</h2><span class="muted">last 3 scoring results vs. previous 3 scoring results</span></section>
  <p class="muted trend-method">Requires at least 6 scoring results per governor; scoring exceptions are respected. A change greater than +5% counts as improving, below −5% as declining, and otherwise stable. The comparison measures average points per event, not calendar-time growth.</p>
@@ -428,7 +430,7 @@ function playerView(id){
   <div class="card points-card"><div class="chart-metric-head"><h2>Points over time</h2>${trendMetricBadge(pointsDelta)}</div>
     <div class="player-points-summary"><strong>${recentPoints===null?'—':fmt(recentPoints)}</strong><span class="muted">points · ${esc(recentEvent?.event||'no event')}</span></div>
     ${playerPointsChart(p)}
-    <div class="chart-metric-foot">Points scored in each recorded event · change vs previous scoring result</div></div>
+    <div class="chart-metric-foot">Points by event</div></div>
   <div class="card"><h2>Name history</h2>${p.names.slice().reverse().map((n,i)=>`<div class="name-history-row"><span class="badge ${i===0?'current-name-badge':''}">${i===0?"Current":"Former"}</span> <strong>${esc(n)}</strong></div>`).join("")}</div>
  </section>
  <section class="card table-card" style="margin-top:16px"><div class="table-head"><h2>Event-by-event results</h2></div><div class="table-scroll"><table id="playerEventsTable"><thead><tr>${sortHead("Event","playerEventsTable",0)}${sortHead("Rank","playerEventsTable",1,"number")}${sortHead("Points","playerEventsTable",2,"number")}${sortHead("Started","playerEventsTable",3,"number")}${sortHead("Completed","playerEventsTable",4,"number")}${sortHead("Pts/quest","playerEventsTable",5,"number")}</tr></thead><tbody>${playerRows(p)}</tbody></table></div></section>`;
