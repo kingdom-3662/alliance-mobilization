@@ -160,7 +160,7 @@ function allianceRankingChart(){
     ${segments}
    </svg><div class="rank-donut-center" aria-hidden="true"><strong>${fmt(total)}</strong><span>events</span></div></div>
   <ul class="rank-donut-legend" aria-label="Alliance ranking legend">${legend}</ul>
- </div><div class="chart-metric-foot rank-donut-foot">Latest placement: <strong>${esc(latestRank||"—")}</strong> · ${esc(comparison)} · slices show the share of recorded events at each placement</div>`;
+ </div><div class="chart-metric-foot rank-donut-foot">Latest placement: <strong>${esc(latestRank||"—")}</strong> · ${esc(comparison)}</div>`;
 }
 
 /* Trends are derived from the deployed event and player data, never a separate data source. */
@@ -257,18 +257,18 @@ function trendsView(){
    <div class="trend-metric-caption">Points per completed quest · ${esc(latest?.event.name||'latest event')}</div>
    ${trendLine(eventStats.map(st=>st.ppq),'Alliance average points per quest','decimal','purple')}
    
-   <div class="trend-metric-foot">Relative change vs previous recorded event</div></div>
+   <div class="trend-metric-foot">Compared with the last event</div></div>
   <div class="card trend-metric-card"><div class="trend-metric-header"><h2>Active participation</h2>${trendMetricBadge(activeChange)}</div>
    <div class="trend-metric-value">${fmt(latest?.active||0)} <small>active entries</small></div>
    <div class="trend-metric-caption">${participationRate===null?'—':participationRate.toFixed(1)+'%'} of ${fmt(latest?.total||0)} recorded entries · latest event</div>
    ${trendLine(eventStats.map(st=>st.active),'Active scoring entries','number','steel-blue')}
    
-   <div class="trend-metric-foot">Relative change in active entries vs previous event</div></div>
+   <div class="trend-metric-foot">Compared with the last event</div></div>
   <div class="card trends-wide trend-metric-card"><div class="trend-metric-header"><h2>Minimum requirement completion</h2>${trendMetricBadge(completionPointChange,' percentage points')}</div>
    <div class="trend-metric-value">${rateText}</div>
    <div class="trend-metric-caption">${fmt(latest?.qualifying||0)} of ${fmt(latest?.total||0)} entries met the minimum · latest event</div>
    <div class="trend-bar-scroll"><div class="trend-bar-chart">${rateBars}</div></div>
-   <div class="trend-metric-foot">Change in percentage points vs previous event. Minimum thresholds vary. Includes all result rows, including zero-point accounts.</div></div>
+   <div class="trend-metric-foot">Compared with the last event. Minimum requirements can vary between events.</div></div>
  </section>
  <section class="section-heading trend-section-title"><h2>Player momentum</h2><span class="muted">last 3 scoring results vs. previous 3 scoring results</span></section>
  <p class="muted trend-method">Requires at least 6 scoring results per governor; scoring exceptions are respected. A change greater than +5% counts as improving, below −5% as declining, and otherwise stable. The comparison measures average points per event, not calendar-time growth.</p>
@@ -430,7 +430,7 @@ function playerView(id){
   <div class="card points-card"><div class="chart-metric-head"><h2>Points over time</h2>${trendMetricBadge(pointsDelta)}</div>
     <div class="player-points-summary"><strong>${recentPoints===null?'—':fmt(recentPoints)}</strong><span class="muted">points · ${esc(recentEvent?.event||'no event')}</span></div>
     ${playerPointsChart(p)}
-    <div class="chart-metric-foot">Points scored in each recorded event · change vs previous scoring result</div></div>
+    <div class="chart-metric-foot">Points by event</div></div>
   <div class="card"><h2>Name history</h2>${p.names.slice().reverse().map((n,i)=>`<div class="name-history-row"><span class="badge ${i===0?'current-name-badge':''}">${i===0?"Current":"Former"}</span> <strong>${esc(n)}</strong></div>`).join("")}</div>
  </section>
  <section class="card table-card" style="margin-top:16px"><div class="table-head"><h2>Event-by-event results</h2></div><div class="table-scroll"><table id="playerEventsTable"><thead><tr>${sortHead("Event","playerEventsTable",0)}${sortHead("Rank","playerEventsTable",1,"number")}${sortHead("Points","playerEventsTable",2,"number")}${sortHead("Started","playerEventsTable",3,"number")}${sortHead("Completed","playerEventsTable",4,"number")}${sortHead("Pts/quest","playerEventsTable",5,"number")}</tr></thead><tbody>${playerRows(p)}</tbody></table></div></section>`;
