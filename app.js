@@ -58,8 +58,10 @@ function allianceChart(){
  const values=D.events.map(e=>Number(e.alliancePoints)||0); if(!values.length) return '<div class="empty">No event data</div>';
  const w=620,h=180,pad=24,min=Math.min(...values),max=Math.max(...values),range=max-min||1;
  const pts=values.map((v,i)=>`${pad+i*(w-2*pad)/Math.max(1,values.length-1)},${h-pad-(v-min)/range*(h-2*pad)}`).join(' ');
- const last=values[values.length-1];
- return `<div class="chart-summary"><strong>${fmt(last)}</strong><span class="muted">latest alliance points</span></div><svg class="line-chart" viewBox="0 0 ${w} ${h}" role="img" aria-label="Alliance points by event"><defs><linearGradient id="chartFill" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#e5b94f" stop-opacity=".28"/><stop offset="1" stop-color="#e5b94f" stop-opacity="0"/></linearGradient></defs><polygon points="${pad},${h-pad} ${pts} ${w-pad},${h-pad}" fill="url(#chartFill)"/><polyline points="${pts}" fill="none" stroke="#e5b94f" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>${values.map((v,i)=>{const x=pad+i*(w-2*pad)/Math.max(1,values.length-1),y=h-pad-(v-min)/range*(h-2*pad);return `<circle cx="${x}" cy="${y}" r="4" fill="#e5b94f"><title>${esc(D.events[i].name)}: ${fmt(v)}</title></circle>`}).join('')}</svg><div class="chart-labels"><span>${esc(D.events[0].name)}</span><span>${esc(D.events[D.events.length-1].name)}</span></div>`;
+ const last=values[values.length-1],previous=values[values.length-2];
+ const change=values.length>1 && previous>0?100*(last-previous)/previous:null;
+ const latestName=esc(D.events[D.events.length-1].name);
+ return `<div class="chart-metric-head"><div class="chart-summary"><strong>${fmt(last)}</strong><span class="muted">alliance points · ${latestName}</span></div>${trendMetricBadge(change)}</div><svg class="line-chart" viewBox="0 0 ${w} ${h}" role="img" aria-label="Alliance points by event"><defs><linearGradient id="chartFill" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#e5b94f" stop-opacity=".28"/><stop offset="1" stop-color="#e5b94f" stop-opacity="0"/></linearGradient></defs><polygon points="${pad},${h-pad} ${pts} ${w-pad},${h-pad}" fill="url(#chartFill)"/><polyline points="${pts}" fill="none" stroke="#e5b94f" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>${values.map((v,i)=>{const x=pad+i*(w-2*pad)/Math.max(1,values.length-1),y=h-pad-(v-min)/range*(h-2*pad);return `<circle cx="${x}" cy="${y}" r="4" fill="#e5b94f"><title>${esc(D.events[i].name)}: ${fmt(v)}</title></circle>`}).join('')}</svg><div class="chart-labels"><span>${esc(D.events[0].name)}</span><span>${latestName}</span></div><div class="chart-metric-foot">Change in alliance points vs previous recorded event · each dot represents one recorded event</div>`;
 }
 
 function allianceRankingChart(){
@@ -100,13 +102,19 @@ function allianceRankingChart(){
    return `<li class="rank-donut-legend-item"><span class="rank-donut-legend-dot" style="background:${colorFor(rank)}" aria-hidden="true"></span><span class="rank-donut-legend-content"><span class="rank-donut-legend-label">${esc(label)}</span><span class="rank-donut-legend-detail">${count} ${count===1?'event':'events'} · ${percent}%</span></span></li>`;
  }).join('');
  const summary=distribution.map(([rank,count])=>`${rank}: ${count} ${count===1?'event':'events'}`).join(', ');
+ const latestRank=D.events[D.events.length-1]?.allianceRank;
+ const previousRank=D.events[D.events.length-2]?.allianceRank;
+ const currentPlace=rankNumber(String(latestRank||''));
+ const previousPlace=rankNumber(String(previousRank||''));
+ const diff=currentPlace!==Number.MAX_SAFE_INTEGER&&previousPlace!==Number.MAX_SAFE_INTEGER?previousPlace-currentPlace:null;
+ const comparison=diff===null?'No earlier placement':diff===0?'unchanged vs previous event':diff>0?`up ${diff} ${diff===1?'place':'places'} vs previous event`:`down ${-diff} ${-diff===1?'place':'places'} vs previous event`;
  return `<div class="rank-donut-layout">
   <div class="rank-donut-graphic"><svg viewBox="0 0 200 200" role="img" aria-label="Alliance ranking distribution: ${esc(summary)}">
     <circle cx="100" cy="100" r="68" fill="none" stroke="#343941" stroke-width="24"/>
     ${segments}
    </svg><div class="rank-donut-center" aria-hidden="true"><strong>${fmt(total)}</strong><span>events</span></div></div>
   <ul class="rank-donut-legend" aria-label="Alliance ranking legend">${legend}</ul>
- </div>`;
+ </div><div class="chart-metric-foot rank-donut-foot">Latest placement: <strong>${esc(latestRank||"—")}</strong> · ${esc(comparison)} · slices show the share of recorded events at each placement</div>`;
 }
 
 /* Trends are derived from the deployed event and player data, never a separate data source. */
@@ -156,7 +164,7 @@ function trendLine(values,caption,format='number',tone='gold'){
  const path=points.map(([x,y])=>`${x},${y}`).join(' ');
  const area=`${p},${h-p} ${path} ${w-p},${h-p}`;
  const fmtValue=v=>format==='pct'?v.toFixed(1)+'%':format==='decimal'?v.toFixed(1):fmt(v);
- const safeTone=['gold','purple','turquoise'].includes(tone)?tone:'gold',gradientId='trend-fill-'+safeTone;
+ const safeTone=['gold','purple','steel-blue'].includes(tone)?tone:'gold',gradientId='trend-fill-'+safeTone;
  const last=points[points.length-1];
  return `<svg viewBox="0 0 ${w} ${h}" class="trend-line-svg tone-${safeTone}" role="img" aria-label="${esc(caption)}. Values in recorded event order: ${esc(numeric.map(fmtValue).join(', '))}">
   <defs><linearGradient id="${gradientId}" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="var(--trend-chart-color)" stop-opacity=".34"/><stop offset="1" stop-color="var(--trend-chart-color)" stop-opacity="0"/></linearGradient></defs>
@@ -223,7 +231,7 @@ function trendsView(){
   <div class="card trend-metric-card"><div class="trend-metric-header"><h2>Active participation</h2>${trendMetricBadge(activeChange)}</div>
    <div class="trend-metric-value">${fmt(latest?.active||0)} <small>active entries</small></div>
    <div class="trend-metric-caption">${participationRate===null?'—':participationRate.toFixed(1)+'%'} of ${fmt(latest?.total||0)} recorded entries · latest event</div>
-   ${trendLine(eventStats.map(st=>st.active),'Active scoring entries','number','turquoise')}
+   ${trendLine(eventStats.map(st=>st.active),'Active scoring entries','number','steel-blue')}
    <div class="chart-labels"><span>${esc(D.events[0]?.name||'')}</span><span>${esc(latest?.event.name||'')}</span></div>
    <div class="trend-metric-foot">Relative change in active entries vs previous event</div></div>
   <div class="card trends-wide trend-metric-card"><div class="trend-metric-header"><h2>Minimum requirement completion</h2>${trendMetricBadge(completionPointChange,' percentage points')}</div>
@@ -336,6 +344,18 @@ function playerView(id){
  const p=playerById(id); if(!p){dashboard();return}
  nav("");
  const max=Math.max(...p.events.map(e=>e.points),1);
+ const recentEvent=p.events[p.events.length-1],previousEvent=p.events[p.events.length-2];
+ const recentPoints=recentEvent?Number(recentEvent.points)||0:null;
+ const previousEventPoints=previousEvent?Number(previousEvent.points)||0:null;
+ const pointsDelta=previousEventPoints>0?100*(recentPoints-previousEventPoints)/previousEventPoints:null;
+ const playerPointBars=p.events.map(e=>{
+  const pts=Number(e.points)||0,height=Math.max(2,pts/max*84);
+  return `<div class="bar-wrap" title="${esc(e.event)}: ${fmt(pts)} points">
+    <div class="player-bar-plot"><div class="player-bar-number" style="bottom:calc(${height}% + 5px)">${fmt(pts)}</div>
+      <div class="bar" style="height:${height}%"></div></div>
+    <div class="bar-label">${esc(e.event.replace(/^([A-Za-z]{3})[A-Za-z]* (\d{4})$/,(_all,month,year)=>month+" '"+year.slice(2)))}</div>
+   </div>`;
+ }).join('');
  const placements=p.events.map(e=>Number(e.rank)).filter(Number.isFinite);
  // Mutually exclusive placement tiers: 1st, 2nd, 3rd, 4th–5th, 6th–10th.
  const top1=placements.filter(r=>r===1).length;
@@ -358,7 +378,10 @@ function playerView(id){
  ${momentumPanel}
   <section class="card performance-card"><div class="table-head compact"><h2>Performance badges</h2><span class="muted">exclusive placement tiers · all events</span></div><div class="performance-badges"><div class="performance-badge rank1"><span class="medal">👑</span><strong>${top1}</strong><span>1st place</span></div><div class="performance-badge rank2"><span class="medal">🥈</span><strong>${top2}</strong><span>2nd place</span></div><div class="performance-badge rank3"><span class="medal">🥉</span><strong>${top3}</strong><span>3rd place</span></div><div class="performance-badge rank45"><span class="medal">🏅</span><strong>${top45}</strong><span>4th–5th place</span></div><div class="performance-badge rank10"><span class="medal">⭐</span><strong>${top10}</strong><span>6th–10th place</span></div></div></section>
  <section class="grid two profile-content">
-  <div class="card points-card"><h2>Points over time</h2><div class="chart-viewport"><div class="chart">${p.events.map(e=>`<div class="bar-wrap" title="${esc(e.event)}: ${fmt(e.points)} points"><div class="bar" style="height:${Math.max(2,e.points/max*100)}%"></div><div class="bar-label">${esc(e.event.replace("2026","").replace("2025",""))}</div></div>`).join("")}</div></div></div>
+  <div class="card points-card"><div class="chart-metric-head"><h2>Points over time</h2>${trendMetricBadge(pointsDelta)}</div>
+    <div class="player-points-summary"><strong>${recentPoints===null?'—':fmt(recentPoints)}</strong><span class="muted">points · ${esc(recentEvent?.event||'no event')}</span></div>
+    <div class="chart-viewport"><div class="chart">${playerPointBars||'<div class="empty">No event results yet</div>'}</div></div>
+    <div class="chart-metric-foot">Points scored in each recorded event · change vs previous scoring result</div></div>
   <div class="card"><h2>Name history</h2>${p.names.slice().reverse().map((n,i)=>`<div class="name-history-row"><span class="badge ${i===0?'current-name-badge':''}">${i===0?"Current":"Former"}</span> <strong>${esc(n)}</strong></div>`).join("")}</div>
  </section>
  <section class="card table-card" style="margin-top:16px"><div class="table-head"><h2>Event-by-event results</h2></div><div class="table-scroll"><table id="playerEventsTable"><thead><tr>${sortHead("Event","playerEventsTable",0)}${sortHead("Rank","playerEventsTable",1,"number")}${sortHead("Points","playerEventsTable",2,"number")}${sortHead("Started","playerEventsTable",3,"number")}${sortHead("Completed","playerEventsTable",4,"number")}${sortHead("Pts/quest","playerEventsTable",5,"number")}</tr></thead><tbody>${playerRows(p)}</tbody></table></div></section>`;
