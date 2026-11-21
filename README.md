@@ -30,6 +30,25 @@ All former names in a chain are merged into one player profile. For example:
 
 `RamONa → Aresツ → ✗ Ares ✗ → • Iceball •`
 
+## Scoring exceptions (optional worksheet)
+
+The workbook may contain an additional sheet named **Scoring exceptions**, without changing any of the nine event sheets. The builder reads these columns beginning at the row headed **Event / Player / Treatment** in **B / C / D** (column A can hold a row number):
+
+| Event | Player | Treatment |
+| --- | --- | --- |
+| June 2026 | ✗ Ares ✗ | Include |
+| June 2026 | Aresツ | Exclude |
+| July 2026 | ✗ Ares ✗ | Include |
+| July 2026 | Aresツ | Exclude |
+
+- **Include** explicitly keeps that event/account row in the canonical player's individual history and statistics (the normal default).
+- **Exclude** removes only that particular account's result from the canonical player's history and statistics; the original event result is **preserved** in the event page and underlying event data.
+- Names must match the event-sheet player name (the display name) exactly. The builder reports a clear error for missing rows, ambiguous duplicate matches, or invalid Treatment values.
+- For safety, when the sheet exists, the build fails if two included event rows map to the same canonical player in a single event; resolve this with an explicit exception entry.
+- This sheet is optional; the website remains compatible with older workbooks without it.
+
+The scoring sheet is **not** treated as an Alliance Mobilization event. It is processed before individual player statistics are calculated. Names on the separate **Name changes** sheet remain the authoritative alias mappings.
+
 ## GitHub automatic deployment
 
 The repository includes `.github/workflows/update-data.yml`.
