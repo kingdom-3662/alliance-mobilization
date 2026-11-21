@@ -292,7 +292,7 @@ function dashboard(){
  const top=D.players.slice(0,25);
  const bestEvent=D.events.reduce((best,e)=>!best || e.alliancePoints>best.alliancePoints?e:best,null);
  const history=D.events.slice(-5).reverse();
- // Leaderboards require participation in at least three events (events with > 0 points).
+ // Leaderboards require at least three included event results, including zero-point entries.
  const eligibleLeaders=D.players.filter(p=>Number(p.eventsParticipated)>=3);
  const mostPoints=eligibleLeaders.slice().sort((a,b)=>b.totalPoints-a.totalPoints)[0];
  const bestRank=eligibleLeaders.filter(p=>Number(p.averageRank)>0).sort((a,b)=>a.averageRank-b.averageRank)[0];
@@ -324,8 +324,8 @@ function dashboard(){
    <div class="dashboard-side">
     <div class="card chart-card"><div class="table-head compact"><h2>Alliance performance</h2><span class="muted">points by event</span></div>${allianceChart()}</div>
     <div class="card"><div class="table-head compact"><h2>Event history</h2><span class="muted">last 5 events</span></div><div class="event-list" style="grid-template-columns:1fr">
-    ${!history.some(e=>e.id===bestEvent?.id)?`<a class="event-card best-event record-card interactive-card" href="#event/${bestEvent.id}"><div class="event-title"><strong>Kingdom points record</strong><span class="badge gold-badge">All-time best</span></div><div class="event-stat"><span class="muted">${esc(bestEvent.name)}</span><b>${fmt(bestEvent.alliancePoints)}</b></div><div class="event-meta"><span>Top player: <strong>${esc(bestEvent.topPlayer||'—')}</strong></span></div></div>`:''}
-    ${history.map(e=>`<a class="event-card interactive-card ${e.id===bestEvent?.id?'best-event':''}" href="#event/${e.id}"><div class="event-title"><strong>${esc(e.name)}</strong><span class="badge ${e.id===bestEvent?.id?'gold-badge':'alliance-placement-badge'}">${e.id===bestEvent?.id?'All-time best':esc(e.allianceRank)}</span></div><div class="event-stat"><span class="muted">Alliance points</span><b>${fmt(e.alliancePoints)}</b></div><div class="event-meta"><span>Top player: <strong>${esc(e.topPlayer||'—')}</strong></span></div><div class="event-meta"><span>${esc(e.start)} · Reward: ${esc(e.reward||'—')}</span></div></div>`).join("")}
+    ${!history.some(e=>e.id===bestEvent?.id)?`<a class="event-card best-event record-card interactive-card" href="#event/${bestEvent.id}"><div class="event-title"><strong>Kingdom points record</strong><span class="badge gold-badge">All-time best</span></div><div class="event-stat"><span class="muted">${esc(bestEvent.name)}</span><b>${fmt(bestEvent.alliancePoints)}</b></div><div class="event-meta"><span>Top player: <strong>${esc(bestEvent.topPlayer||'—')}</strong></span></div></a>`:''}
+    ${history.map(e=>`<a class="event-card interactive-card ${e.id===bestEvent?.id?'best-event':''}" href="#event/${e.id}"><div class="event-title"><strong>${esc(e.name)}</strong><span class="badge ${e.id===bestEvent?.id?'gold-badge':'alliance-placement-badge'}">${e.id===bestEvent?.id?'All-time best':esc(e.allianceRank)}</span></div><div class="event-stat"><span class="muted">Alliance points</span><b>${fmt(e.alliancePoints)}</b></div><div class="event-meta"><span>Top player: <strong>${esc(e.topPlayer||'—')}</strong></span></div><div class="event-meta"><span>${esc(e.start)} · Reward: ${esc(e.reward||'—')}</span></div></a>`).join("")}
     </div></div>
    </div>
  </section>`;
@@ -341,12 +341,12 @@ function eventsView(){
   </section>
  ${trendsCta()}
  <section class="event-list">${D.events.slice().reverse().map(e=>`
- <article class="card event-card ${e.id===bestEvent?.id?'best-event':''}" onclick="location.hash='event/${e.id}'">
+ <a href="#event/${e.id}" class="card event-card interactive-card ${e.id===bestEvent?.id?'best-event':''}">
    <div class="event-title"><strong>${esc(e.name)}</strong><span class="badge ${e.id===bestEvent?.id?'gold-badge':'alliance-placement-badge'}">${e.id===bestEvent?.id?'All-time best':esc(e.allianceRank)}</span></div>
    <div class="event-stat"><span class="muted">Alliance points</span><b>${fmt(e.alliancePoints)}</b></div>
    <div class="event-meta"><span>${esc(e.start)} → ${esc(e.end)}</span><span>Minimum requirement: ${fmt(e.minimumPoints)}</span><span>Levels completed: ${e.level ?? "—"}</span></div>
    <div class="event-top-player"><span class="muted">Top scorer</span><strong>${esc(e.topPlayer||"—")}</strong><span>${fmt(e.topPlayerPoints)} pts</span></div>
- </article>`).join("")}</section>`;
+ </a>`).join("")}</section>`;
 }
 
 function playersView(query=''){
@@ -413,8 +413,8 @@ function playerView(id){
  const top45=placements.filter(r=>r>=4 && r<=5).length;
  const top10=placements.filter(r=>r>=6 && r<=10).length;
  const momentum=playerMomentum(p);
- const momentumPanel=momentum?`<section class="card profile-trend-card"><div><span class="kpi-label">Recent momentum · last 3 events vs prior 3</span><div class="trend-profile-value">${trendChange(momentum.pct)} <span class="muted">average points / event</span></div><span class="kpi-note">${fmt(momentum.prior)} → ${fmt(momentum.recent)} points · average rank ${avg(momentum.priorRank)} → ${avg(momentum.recentRank)} (lower is better)</span></div><a href="#trends">Explore all trends →</a></section>`:
- `<section class="card profile-trend-card"><div><span class="kpi-label">Recent momentum</span><p class="muted">Available after 6 recorded event results. No trend classification yet.</p></div><a href="#trends">Trends overview →</a></section>`;
+ const momentumPanel=momentum?`<a href="#trends" class="card profile-trend-card interactive-card"><div><span class="kpi-label">Recent momentum · last 3 events vs prior 3</span><div class="trend-profile-value">${trendChange(momentum.pct)} <span class="muted">average points / event</span></div><span class="kpi-note">${fmt(momentum.prior)} → ${fmt(momentum.recent)} points · average rank ${avg(momentum.priorRank)} → ${avg(momentum.recentRank)} (lower is better)</span></div><span class="trend-promo-action">Explore all trends →</span></a>`:
+ `<a href="#trends" class="card profile-trend-card interactive-card"><div><span class="kpi-label">Recent momentum</span><p class="muted">Available after 6 recorded event results. No trend classification yet.</p></div><span class="trend-promo-action">Trends overview →</span></a>`;
  app.innerHTML=`<section class="detail-head back-first"><button class="back" onclick="goBack('players')">← Back</button><div><div class="eyebrow">Player profile</div><h1>${esc(p.currentName)}</h1><p class="sub">${p.names.length>1?"Former names: "+esc(p.names.slice(0,-1).join(" → ")):"No recorded name changes"}</p></div></section>
  <section class="stat-grid">
    <div class="card"><div class="kpi-label">Total points</div><div class="kpi-value">${fmt(p.totalPoints)}</div></div>
@@ -444,8 +444,8 @@ function eventView(id){
  const previousPoints=Number(prev?.alliancePoints)||0;
  const pointsDelta=prev&&previousPoints?100*(Number(e.alliancePoints)-previousPoints)/previousPoints:null;
  const ppqChange=prev?Number(e.averagePPQ)-Number(prev.averagePPQ):null;
- const eventTrendPanel=prev?`<section class="card event-trend-card"><div><span class="kpi-label">Change vs. previous recorded event · ${esc(prev.name)}</span><div class="event-trend-metrics"><span>Alliance points ${trendChange(pointsDelta)}</span><span>Points / quest <strong>${ppqChange>=0?'+':''}${avg(ppqChange)}</strong></span></div></div><a href="#trends">Explore event trends →</a></section>`:
- `<section class="card event-trend-card"><div><span class="kpi-label">Event trends</span><span class="muted">First recorded event · no earlier event available</span></div><a href="#trends">Trends overview →</a></section>`;
+ const eventTrendPanel=prev?`<a href="#trends" class="card event-trend-card interactive-card"><div><span class="kpi-label">Change vs. previous recorded event · ${esc(prev.name)}</span><div class="event-trend-metrics"><span>Alliance points ${trendChange(pointsDelta)}</span><span>Points / quest <strong>${ppqChange>=0?'+':''}${avg(ppqChange)}</strong></span></div></div><span class="trend-promo-action">Explore event trends →</span></a>`:
+ `<a href="#trends" class="card event-trend-card interactive-card"><div><span class="kpi-label">Event trends</span><span class="muted">First recorded event · no earlier event available</span></div><span class="trend-promo-action">Trends overview →</span></a>`;
  app.innerHTML=`<section class="detail-head back-first"><button class="back" onclick="goBack('events')">← Back</button><div><div class="eyebrow">Event detail</div><h1>${esc(e.name)}</h1><p class="sub">${esc(e.start)} → ${esc(e.end)}</p></div></section>
  <section class="stat-grid">
   <div class="card"><div class="kpi-label">Alliance points</div><div class="kpi-value">${fmt(e.alliancePoints)}</div></div>
@@ -496,14 +496,21 @@ function goBack(fallback){
  else location.hash=fallback;
 }
 function closeMobileMenu(){document.querySelector('.topbar')?.classList.remove('menu-open');document.getElementById('mobileMenuButton')?.setAttribute('aria-expanded','false')}
+function setPageTitle(label){document.title=label+' · Alliance Mobilization · Kingdom 3662';}
 function route(){
  const h=location.hash.replace(/^#/,'');
- if(h.startsWith('player/'))playerView(h.slice(7));
- else if(h.startsWith('event/'))eventView(h.slice(6));
- else if(h==='players')playersView();
- else if(h==='events')eventsView();
- else if(h==='trends')trendsView();
- else dashboard();
+ if(h.startsWith('player/')){
+  const id=h.slice(7),player=playerById(id);
+  if(player){playerView(id);setPageTitle('Player: '+player.currentName);}
+  else{dashboard();setPageTitle('Dashboard');}
+ }else if(h.startsWith('event/')){
+  const id=h.slice(6),event=eventById(id);
+  if(event){eventView(id);setPageTitle('Event: '+event.name);}
+  else{dashboard();setPageTitle('Dashboard');}
+ }else if(h==='players'){playersView();setPageTitle('Players');}
+ else if(h==='events'){eventsView();setPageTitle('Events');}
+ else if(h==='trends'){trendsView();setPageTitle('Trends');}
+ else{dashboard();setPageTitle('Dashboard');}
  closeMobileMenu();
 }
 document.querySelectorAll('.nav-btn').forEach(b=>b.onclick=()=>{location.hash=b.dataset.view;closeMobileMenu()});
