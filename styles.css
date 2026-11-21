@@ -203,11 +203,11 @@ main,.grid,.card,.profile-content,.profile-content>.card,.dashboard-main,.dashbo
 .leader-name{display:block;font-size:15px;margin:10px 0 3px;overflow-wrap:anywhere}
 .leader-value{font-weight:800;color:var(--gold);line-height:1.2}
 .rank-pill{display:inline-flex;align-items:center;justify-content:center;width:29px;height:29px;border-radius:50%;font-size:12px;font-weight:800;color:var(--text);background:#30363f;border:1px solid #454b55;font-variant-numeric:tabular-nums}
-.rank-pill.rank1{color:var(--place-gold);background:#5b481f;border-color:var(--place-gold)}
-.rank-pill.rank2{color:var(--place-silver);background:#3b4656;border-color:var(--place-silver)}
-.rank-pill.rank3{color:var(--place-bronze);background:#594031;border-color:var(--place-bronze)}
-.rank-pill.rank45{color:var(--place-purple);background:#40364e;border-color:var(--place-purple)}
-.rank-pill.rank10{color:var(--place-turquoise);background:#203b40;border-color:var(--place-turquoise)}
+.rank-pill.rank1{color:var(--place-gold);background:var(--place-fill-gold);border-color:var(--place-gold)}
+.rank-pill.rank2{color:var(--place-silver);background:var(--place-fill-silver);border-color:var(--place-silver)}
+.rank-pill.rank3{color:var(--place-bronze);background:var(--place-fill-bronze);border-color:var(--place-bronze)}
+.rank-pill.rank45{color:var(--place-purple);background:var(--place-fill-purple);border-color:var(--place-purple)}
+.rank-pill.rank10{color:var(--place-turquoise);background:var(--place-fill-turquoise);border-color:var(--place-turquoise)}
 .player-filter-row{padding:0 18px 12px}
 .pagination{flex-wrap:wrap}
 .points-card{overflow:hidden}
@@ -315,6 +315,13 @@ th.sortable.num button{justify-content:flex-end;text-align:right}
  --place-purple:#c5b4e7;
  --place-turquoise:#63c9bd;
  --place-neutral:#8793a5;
+ /* Muted ranking-circle backgrounds, reused for donut segments. */
+ --place-fill-gold:#5b481f;
+ --place-fill-silver:#3b4656;
+ --place-fill-bronze:#594031;
+ --place-fill-purple:#40364e;
+ --place-fill-turquoise:#203b40;
+ --place-fill-neutral:#30363f;
 }
 
 
@@ -367,3 +374,34 @@ th.sortable.num button{justify-content:flex-end;text-align:right}
 @media(max-width:1250px){.performance-badges{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(max-width:800px){.performance-badges{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:420px){.performance-badges{grid-template-columns:minmax(0,1fr)}}
+
+
+/* Screenshot-inspired performance tracker cards: shared hierarchy and subtle glowing lines. */
+.trend-metric-card{--trend-chart-color:var(--gold);position:relative;overflow:hidden;border-color:rgba(232,198,109,.24);padding:18px 20px 17px}
+.trend-metric-card:before{content:"";position:absolute;left:0;top:18px;bottom:18px;width:3px;border-radius:0 4px 4px 0;background:linear-gradient(180deg,var(--gold),rgba(232,198,109,.1))}
+.trend-metric-header{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px;flex-wrap:wrap}
+.trend-metric-header h2{font-size:13px;text-transform:uppercase;letter-spacing:.055em;color:var(--gold);margin:0;font-weight:750}
+.trend-metric-value{font-size:clamp(27px,3vw,41px);line-height:1.1;letter-spacing:-.035em;font-weight:800;color:#ebc977;font-variant-numeric:tabular-nums}
+.trend-metric-value small{font-size:12px;letter-spacing:0;color:var(--muted);font-weight:500}
+.trend-metric-caption{font-size:12px;color:var(--muted);margin:5px 0 8px}
+.trend-metric-foot{font-size:11px;color:var(--muted);margin-top:12px;line-height:1.5}
+.trend-metric-badge{display:inline-flex;align-items:center;justify-content:center;white-space:nowrap;font-size:12px;line-height:1.4;font-weight:800;border-radius:999px;padding:3px 9px;border:1px solid transparent;font-variant-numeric:tabular-nums}
+.trend-metric-badge.positive{color:#93e7bd;background:rgba(39,136,86,.2);border-color:rgba(80,176,126,.18)}
+.trend-metric-badge.negative{color:#f4a6a6;background:rgba(160,64,76,.19);border-color:rgba(221,99,109,.17)}
+.trend-metric-badge.neutral{color:#b7bec8;background:rgba(125,135,150,.12);border-color:rgba(125,135,150,.12)}
+.trend-line-svg.tone-gold{--trend-chart-color:#e8c66d}
+.trend-line-svg.tone-turquoise{--trend-chart-color:#63c9bd}
+.trend-metric-card .trend-line-svg{height:150px;margin:15px 0 8px}
+.trend-gridline{stroke:rgba(175,187,204,.16);stroke-dasharray:5 6;stroke-width:1}
+.trend-metric-card .chart-labels{font-size:10px}
+.trend-bar-scroll{width:100%;max-width:100%;overflow-x:auto;scrollbar-width:thin;padding-bottom:4px}
+.trend-metric-card .trend-bar-chart{min-width:600px;height:240px;gap:clamp(8px,1.5vw,18px);padding-top:8px}
+.trend-metric-card .trend-bar-item{color:var(--muted);font-size:10px;gap:7px}
+.trend-metric-card .trend-bar-percent{height:23px;font-size:12px;line-height:23px;font-weight:750;color:#e8c66d;font-variant-numeric:tabular-nums;white-space:nowrap}
+.trend-metric-card .trend-bar-track{height:181px;border-radius:6px;background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.055)}
+.trend-metric-card .trend-bar-fill{min-height:0;background:linear-gradient(180deg,#f0d586,#8c6c30);box-shadow:0 0 12px rgba(232,198,109,.1);transition:filter .2s}
+.trend-metric-card .trend-bar-item:hover .trend-bar-fill{filter:brightness(1.17)}
+.trend-metric-card .trend-bar-label{font-size:10px}
+.rank-donut-graphic svg{filter:drop-shadow(0 2px 5px rgba(0,0,0,.13))}
+@media(max-width:800px){.trend-metric-card{padding:16px}.trend-metric-card .trend-line-svg{height:auto;max-height:150px}}
+@media(max-width:560px){.trend-metric-card .trend-bar-chart{min-width:540px}.trend-metric-card .trend-bar-percent{font-size:11px}.trend-metric-value{font-size:29px}}
