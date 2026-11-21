@@ -344,6 +344,18 @@ function playerView(id){
  const p=playerById(id); if(!p){dashboard();return}
  nav("");
  const max=Math.max(...p.events.map(e=>e.points),1);
+ const recentEvent=p.events[p.events.length-1],previousEvent=p.events[p.events.length-2];
+ const recentPoints=recentEvent?Number(recentEvent.points)||0:null;
+ const previousEventPoints=previousEvent?Number(previousEvent.points)||0:null;
+ const pointsDelta=previousEventPoints>0?100*(recentPoints-previousEventPoints)/previousEventPoints:null;
+ const playerPointBars=p.events.map(e=>{
+  const pts=Number(e.points)||0,height=Math.max(2,pts/max*84);
+  return `<div class="bar-wrap" title="${esc(e.event)}: ${fmt(pts)} points">
+    <div class="player-bar-plot"><div class="player-bar-number" style="bottom:calc(${height}% + 5px)">${fmt(pts)}</div>
+      <div class="bar" style="height:${height}%"></div></div>
+    <div class="bar-label">${esc(e.event.replace(/^([A-Za-z]{3})[A-Za-z]* (\d{4})$/,(_all,month,year)=>month+" '"+year.slice(2)))}</div>
+   </div>`;
+ }).join('');
  const placements=p.events.map(e=>Number(e.rank)).filter(Number.isFinite);
  // Mutually exclusive placement tiers: 1st, 2nd, 3rd, 4th–5th, 6th–10th.
  const top1=placements.filter(r=>r===1).length;
@@ -366,7 +378,10 @@ function playerView(id){
  ${momentumPanel}
   <section class="card performance-card"><div class="table-head compact"><h2>Performance badges</h2><span class="muted">exclusive placement tiers · all events</span></div><div class="performance-badges"><div class="performance-badge rank1"><span class="medal">👑</span><strong>${top1}</strong><span>1st place</span></div><div class="performance-badge rank2"><span class="medal">🥈</span><strong>${top2}</strong><span>2nd place</span></div><div class="performance-badge rank3"><span class="medal">🥉</span><strong>${top3}</strong><span>3rd place</span></div><div class="performance-badge rank45"><span class="medal">🏅</span><strong>${top45}</strong><span>4th–5th place</span></div><div class="performance-badge rank10"><span class="medal">⭐</span><strong>${top10}</strong><span>6th–10th place</span></div></div></section>
  <section class="grid two profile-content">
-  <div class="card points-card"><h2>Points over time</h2><div class="chart-viewport"><div class="chart">${p.events.map(e=>`<div class="bar-wrap" title="${esc(e.event)}: ${fmt(e.points)} points"><div class="bar" style="height:${Math.max(2,e.points/max*100)}%"></div><div class="bar-label">${esc(e.event.replace("2026","").replace("2025",""))}</div></div>`).join("")}</div></div></div>
+  <div class="card points-card"><div class="chart-metric-head"><h2>Points over time</h2>${trendMetricBadge(pointsDelta)}</div>
+    <div class="player-points-summary"><strong>${recentPoints===null?'—':fmt(recentPoints)}</strong><span class="muted">points · ${esc(recentEvent?.event||'no event')}</span></div>
+    <div class="chart-viewport"><div class="chart">${playerPointBars||'<div class="empty">No event results yet</div>'}</div></div>
+    <div class="chart-metric-foot">Points scored in each recorded event · change vs previous scoring result</div></div>
   <div class="card"><h2>Name history</h2>${p.names.slice().reverse().map((n,i)=>`<div class="name-history-row"><span class="badge ${i===0?'current-name-badge':''}">${i===0?"Current":"Former"}</span> <strong>${esc(n)}</strong></div>`).join("")}</div>
  </section>
  <section class="card table-card" style="margin-top:16px"><div class="table-head"><h2>Event-by-event results</h2></div><div class="table-scroll"><table id="playerEventsTable"><thead><tr>${sortHead("Event","playerEventsTable",0)}${sortHead("Rank","playerEventsTable",1,"number")}${sortHead("Points","playerEventsTable",2,"number")}${sortHead("Started","playerEventsTable",3,"number")}${sortHead("Completed","playerEventsTable",4,"number")}${sortHead("Pts/quest","playerEventsTable",5,"number")}</tr></thead><tbody>${playerRows(p)}</tbody></table></div></section>`;
