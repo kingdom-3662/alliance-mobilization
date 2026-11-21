@@ -48,13 +48,38 @@ if matching_sheet:
                 explicit_aliases[old] = current
             name_chains.append({"currentName": current, "formerNames": olds})
 
+# Optional scoring overrides from the user's simplified workbook.
+# Columns B/C/D = Event / Player as displayed in that event / Include or Exclude.
+# These only affect aggregated player results: event listings stay untouched.
+scoring_exceptions = {}
+if "Scoring exceptions" in wb.sheetnames:
+    exception_sheet = wb["Scoring exceptions"]
+    header_row = next((r for r in range(1, exception_sheet.max_row + 1)
+                       if clean(exception_sheet.cell(r, 2).value).lower() == "event"
+                       and clean(exception_sheet.cell(r, 3).value).lower() == "player"
+                       and clean(exception_sheet.cell(r, 4).value).lower() == "treatment"), None)
+    if header_row is None:
+        raise ValueError("Scoring exceptions: expected Event, Player, Treatment headers in B:D")
+    for r in range(header_row + 1, exception_sheet.max_row + 1):
+        event_name = clean(exception_sheet.cell(r, 2).value)
+        player_name = clean(exception_sheet.cell(r, 3).value)
+        treatment = clean(exception_sheet.cell(r, 4).value).lower()
+        if not event_name and not player_name and not treatment:
+            continue
+        if not event_name or not player_name or treatment not in {"include", "exclude"}:
+            raise ValueError(f"Scoring exceptions row {r}: supply Event, Player and Include/Exclude")
+        key = (event_name, player_name)
+        if key in scoring_exceptions:
+            raise ValueError(f"Scoring exceptions row {r}: duplicate assignment for {key!r}")
+        scoring_exceptions[key] = treatment == "include"
+
 # Also read inline "New Name (Old Name)" values from event sheets. This keeps
 # the workbook backward-compatible even if a new change has not yet been added
 # to the matching sheet.
 events = []
 inline_aliases = {}
 for ws in wb.worksheets:
-    if ws.title == "Name changes":
+    if ws.title in {"Name changes", "Scoring exceptions"}:
         continue
     # Metadata labels are not always in the same column: most labels are in B,
     # while "Level completed" is in C. Find each label across B:D and take
@@ -104,6 +129,23 @@ for ws in wb.worksheets:
         "rows": rows,
     })
 
+# Validate every override against one unambiguous row in the original event sheet.
+# Set the flag on the raw event result, but do not delete it from the event list.
+matched_exceptions = set()
+for event in events:
+    for row in event["rows"]:
+        key = (event["name"], row["displayName"])
+        if key not in scoring_exceptions:
+            continue
+        if key in matched_exceptions:
+            raise ValueError(f"Scoring exceptions: {key!r} matches multiple event rows; cannot identify the intended row")
+        matched_exceptions.add(key)
+        if not scoring_exceptions[key]:
+            row["includeInPlayerStats"] = False
+unmatched = set(scoring_exceptions) - matched_exceptions
+if unmatched:
+    raise ValueError(f"Scoring exceptions: no matching event row for {sorted(unmatched)!r}")
+
 # Matching sheet wins when both sources contain a relationship.
 aliases = dict(inline_aliases)
 aliases.update(explicit_aliases)
@@ -121,9 +163,26 @@ for event in events:
     for row in event["rows"]:
         row["playerId"] = canonical(row["displayName"])
 
+# Fail fast if two included account rows resolve to one player in the same event.
+# This guards against accidental double counting after a name change.
+if "Scoring exceptions" in wb.sheetnames:
+    for event in events:
+        seen_players = {}
+        for row in event["rows"]:
+            if row.get("includeInPlayerStats") is False:
+                continue
+            pid = row["playerId"]
+            if pid in seen_players:
+                raise ValueError(f"{event['name']}: {pid!r} has multiple included account rows "
+                                 f"({seen_players[pid]!r}, {row['displayName']!r}). "
+                                 "Add a Scoring exceptions assignment to resolve this.")
+            seen_players[pid] = row["displayName"]
+
 players = {}
 for event_index, event in enumerate(events):
     for row in event["rows"]:
+        if row.get("includeInPlayerStats") is False:
+            continue
         pid = row["playerId"]
         if pid not in players:
             players[pid] = {"id": pid, "names": [], "events": []}
