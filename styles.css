@@ -238,3 +238,34 @@ main,.grid,.card,.profile-content,.profile-content>.card,.dashboard-main,.dashbo
  footer{gap:10px;flex-wrap:wrap;padding:16px}
 }
 @media(max-width:370px){.topbar{gap:6px;padding:0 8px}.search-wrap input{padding:9px 7px}.kpi-value{font-size:1.25rem}}
+
+
+/* Secondary pages: place Back consistently above the kicker and page title. */
+.hero.back-first,
+.detail-head.back-first{
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start;
+  justify-content:flex-start;
+  gap:14px;
+}
+.hero.back-first>.back,
+.detail-head.back-first>.back{
+  align-self:flex-start;
+  flex:0 0 auto;
+  margin:0;
+}
+.hero.back-first>div,
+.detail-head.back-first>div{
+  width:100%;
+  min-width:0;
+}
+@media(max-width:680px){
+  .hero.back-first,
+  .detail-head.back-first{
+    display:flex;
+    flex-direction:column;
+    align-items:flex-start;
+    gap:12px;
+  }
+}
