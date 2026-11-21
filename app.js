@@ -35,7 +35,7 @@ function sortHead(label,table,col,type="text"){
 }
 
 
-function rankClass(r){r=Number(r);return r===1?'rank1':r>=2&&r<=3?'rank3':r>=4&&r<=5?'rank5':r>=6&&r<=10?'rank10':''}
+function rankClass(r){r=Number(r);return r===1?'rank1':r===2?'rank2':r===3?'rank3':r>=4&&r<=5?'rank45':r>=6&&r<=10?'rank10':''}
 function rankPill(r){return `<span class="rank-pill ${rankClass(r)}">${esc(r)}</span>`}
 let playerSort={col:0,dir:'asc'};
 function sortedPlayers(query=''){
@@ -79,10 +79,9 @@ function allianceRankingChart(){
    const place=rankNumber(rank);
    if(place===1) return 'var(--place-gold)';
    if(place===2) return 'var(--place-silver)';
-   if(place===3) return 'var(--place-silver-dark)';
-   if(place===4) return 'var(--place-bronze)';
-   if(place===5) return 'var(--place-bronze-dark)';
-   if(place>=6 && place<=10) return place%2===0?'var(--place-purple)':'var(--place-purple-dark)';
+   if(place===3) return 'var(--place-bronze)';
+   if(place===4 || place===5) return 'var(--place-purple)';
+   if(place>=6 && place<=10) return 'var(--place-turquoise)';
    return 'var(--place-neutral)';
  };
  let offset=0;
@@ -213,6 +212,10 @@ function trendsView(){
  <table id="trendsEventTable"><thead><tr>${sortHead('Event','trendsEventTable',0)}${sortHead('Alliance points','trendsEventTable',1,'number')}${sortHead('Points change','trendsEventTable',2,'number')}${sortHead('Alliance rank','trendsEventTable',3,'number')}${sortHead('Active entries','trendsEventTable',4,'number')}${sortHead('Met minimum','trendsEventTable',5,'number')}${sortHead('Ø Pts/Quest','trendsEventTable',6,'number')}</tr></thead><tbody>${eventRows}</tbody></table></div></section>`;
 }
 
+function trendsCta(){
+ return '<a href="#trends" class="trend-promo card"><span><strong>📈 Trends & momentum</strong><span class="muted">Explore player momentum, alliance efficiency and event progression</span></span><span class="trend-promo-action">Explore trends →</span></a>';
+}
+
 function dashboard(){
  nav("dashboard");
  const totalPoints=D.events.reduce((s,e)=>s+e.alliancePoints,0);
@@ -236,12 +239,13 @@ function dashboard(){
    <div class="card"><div class="kpi-label">All event points</div><div class="kpi-value">${fmt(totalPoints)}</div><div class="kpi-note">sum of alliance totals</div></div>
    <div class="card accent-kpi"><div class="kpi-label">Ø points / quest</div><div class="kpi-value">${avg(D.averagePPQ)}</div><div class="kpi-note">average across recorded events</div></div>
  </section>
+ ${trendsCta()}
  <section class="leader-section"><div class="section-heading"><h2>Player leaders</h2><span class="muted">minimum 3 events participated</span></div><div class="grid leader-grid">
  ${leaderCard('Most total points',mostPoints,fmt(mostPoints?.totalPoints),'combined points','💎')}
  ${leaderCard('Best average ranking',bestRank,avg(bestRank?.averageRank),'average event placement · lower is better','📈')}
  ${leaderCard('Highest average points / quest',bestPPQ,avg(bestPPQ?.averagePPQ),'average of event-level points / quest','🚀')}
  </div></section>
- <a href="#trends" class="trend-promo card"><span><strong>📈 Trends & momentum</strong><span class="muted">Explore player momentum, alliance efficiency and event progression</span></span><span class="trend-promo-action">Explore trends →</span></a>
+
   <section class="grid dashboard-main">
    <div class="card table-card"><div class="table-head"><h2>Top 25 players · total points</h2><span class="muted">all recorded events</span></div>
     <div class="table-scroll"><table id="dashboardTopTable"><thead><tr>${sortHead("#","dashboardTopTable",0,"number")}${sortHead("Governor","dashboardTopTable",1)}${sortHead("Points","dashboardTopTable",2,"number")}${sortHead("Events","dashboardTopTable",3,"number")}${sortHead("Avg/event","dashboardTopTable",4,"number")}${sortHead("Ø Pts/Quest","dashboardTopTable",5,"number")}</tr></thead><tbody>
@@ -262,11 +266,11 @@ function eventsView(){
  nav("events");
  const bestEvent=D.events.reduce((best,e)=>!best || Number(e.alliancePoints)>Number(best.alliancePoints)?e:best,null);
  app.innerHTML=`<section class="hero back-first"><button class="back" onclick="goBack('dashboard')">← Back</button><div><div class="eyebrow">History</div><h1>Events</h1><p class="sub">Every recorded Alliance Mobilization result.</p></div></section>
- <div class="trend-inline-link"><a href="#trends">Explore event trends and participation →</a></div>
  <section class="event-overview-charts" aria-label="Alliance event performance charts">
    <div class="card chart-card event-overview-chart"><div class="table-head compact"><h2>Alliance points</h2><span class="muted">points by event</span></div>${allianceChart()}</div>
    <div class="card chart-card event-overview-chart"><div class="table-head compact"><h2>Alliance ranking distribution</h2><span class="muted">events by final placement</span></div>${allianceRankingChart()}</div>
   </section>
+ ${trendsCta()}
  <section class="event-list">${D.events.slice().reverse().map(e=>`
  <article class="card event-card ${e.id===bestEvent?.id?'best-event':''}" onclick="location.hash='event/${e.id}'">
    <div class="event-title"><strong>${esc(e.name)}</strong><span class="badge ${e.id===bestEvent?.id?'gold-badge':''}">${e.id===bestEvent?.id?'All-time best':'Alliance #'+esc(e.allianceRank)}</span></div>
@@ -281,6 +285,7 @@ function playersView(query=''){
  const list=sortedPlayers(query),size=25,pages=Math.max(1,Math.ceil(list.length/size));
  const page=Math.min(Math.max(0,Number(sessionStorage.getItem('playerPage')||0)),pages-1);
  app.innerHTML=`<section class="hero back-first"><button class="back" onclick="goBack('dashboard')">← Back</button><div><div class="eyebrow">Player index</div><h1>Players</h1><p class="sub" id="playersCount">${list.length} matching unique identities</p></div></section>
+ ${trendsCta()}
  <section class="card table-card"><div class="table-head"><h2>All governors</h2><span class="muted">click a player for the full profile</span></div>
  <div class="filter-row player-filter-row"><input id="playerFilter" value="${esc(query)}" placeholder="Filter players…" oninput="sessionStorage.setItem('playerPage','0');filterPlayersLive(this.value)"></div>
  <div class="table-scroll"><table id="playersTable"><thead><tr>${sortHead('#','playersTable',0,'number')}${sortHead('Governor','playersTable',1)}${sortHead('Total','playersTable',2,'number')}${sortHead('Events','playersTable',3,'number')}${sortHead('Avg/event','playersTable',4,'number')}${sortHead('Ø Pts/Quest','playersTable',5,'number')}${sortHead('Best rank','playersTable',6,'number')}</tr></thead><tbody id="playersTbody">${list.slice(page*size,(page+1)*size).map(playerTableRow).join('')}</tbody></table></div><div class="pagination" id="playersPagination">${playerPagination(page,pages)}</div></section>`;
@@ -301,10 +306,11 @@ function playerView(id){
  nav("");
  const max=Math.max(...p.events.map(e=>e.points),1);
  const placements=p.events.map(e=>Number(e.rank)).filter(Number.isFinite);
- // Mutually exclusive placement tiers: Top 1, 2nd–3rd, 4th–5th, 6th–10th.
+ // Mutually exclusive placement tiers: 1st, 2nd, 3rd, 4th–5th, 6th–10th.
  const top1=placements.filter(r=>r===1).length;
- const top3=placements.filter(r=>r>=2 && r<=3).length;
- const top5=placements.filter(r=>r>=4 && r<=5).length;
+ const top2=placements.filter(r=>r===2).length;
+ const top3=placements.filter(r=>r===3).length;
+ const top45=placements.filter(r=>r>=4 && r<=5).length;
  const top10=placements.filter(r=>r>=6 && r<=10).length;
  const momentum=playerMomentum(p);
  const momentumPanel=momentum?`<section class="card profile-trend-card"><div><span class="kpi-label">Recent momentum · last 3 scoring results vs prior 3</span><div class="trend-profile-value">${trendChange(momentum.pct)} <span class="muted">average points / event</span></div><span class="kpi-note">${fmt(momentum.prior)} → ${fmt(momentum.recent)} points · average rank ${avg(momentum.priorRank)} → ${avg(momentum.recentRank)} (lower is better)</span></div><a href="#trends">Explore all trends →</a></section>`:
@@ -319,7 +325,7 @@ function playerView(id){
    <div class="card accent-kpi"><div class="kpi-label">Ø points / quest</div><div class="kpi-value">${avg(p.averagePPQ)}</div><div class="kpi-note">average across events</div></div>
  </section>
  ${momentumPanel}
-  <section class="card performance-card"><div class="table-head compact"><h2>Performance badges</h2><span class="muted">exclusive placement tiers · all events</span></div><div class="performance-badges"><div class="performance-badge rank1"><span class="medal">👑</span><strong>${top1}</strong><span>Top 1 finish</span></div><div class="performance-badge rank3"><span class="medal">🥉</span><strong>${top3}</strong><span>2nd–3rd place</span></div><div class="performance-badge rank5"><span class="medal">🏅</span><strong>${top5}</strong><span>4th–5th place</span></div><div class="performance-badge rank10"><span class="medal">⭐</span><strong>${top10}</strong><span>6th–10th place</span></div></div></section>
+  <section class="card performance-card"><div class="table-head compact"><h2>Performance badges</h2><span class="muted">exclusive placement tiers · all events</span></div><div class="performance-badges"><div class="performance-badge rank1"><span class="medal">👑</span><strong>${top1}</strong><span>1st place</span></div><div class="performance-badge rank2"><span class="medal">🥈</span><strong>${top2}</strong><span>2nd place</span></div><div class="performance-badge rank3"><span class="medal">🥉</span><strong>${top3}</strong><span>3rd place</span></div><div class="performance-badge rank45"><span class="medal">🏅</span><strong>${top45}</strong><span>4th–5th place</span></div><div class="performance-badge rank10"><span class="medal">⭐</span><strong>${top10}</strong><span>6th–10th place</span></div></div></section>
  <section class="grid two profile-content">
   <div class="card points-card"><h2>Points over time</h2><div class="chart-viewport"><div class="chart">${p.events.map(e=>`<div class="bar-wrap" title="${esc(e.event)}: ${fmt(e.points)} points"><div class="bar" style="height:${Math.max(2,e.points/max*100)}%"></div><div class="bar-label">${esc(e.event.replace("2026","").replace("2025",""))}</div></div>`).join("")}</div></div></div>
   <div class="card"><h2>Name history</h2>${p.names.slice().reverse().map((n,i)=>`<div class="name-history-row"><span class="badge ${i===0?'current-name-badge':''}">${i===0?"Current":"Former"}</span> <strong>${esc(n)}</strong></div>`).join("")}</div>
