@@ -73,15 +73,15 @@ function allianceRankingChart(){
  const distribution=[...frequencies.entries()].sort((a,b)=>rankNumber(a[0])-rankNumber(b[0]) || a[0].localeCompare(b[0]));
  const total=distribution.reduce((sum,[,count])=>sum+count,0);
  const circumference=2*Math.PI*68;
- // Match the existing 1 / 2–3 / 4–5 / 6–10 ranking-circle palette.
- // Use slightly different tones within a tier so adjacent donut slices stay distinct.
+ // Use the shared ranking palette: gold / silver / bronze / purple / steel blue.
+ // The donut uses midtones between each ranking circle's dark fill and light border.
  const colorFor=rank=>{
    const place=rankNumber(rank);
    if(place===1) return 'var(--place-mid-gold)';
    if(place===2) return 'var(--place-mid-silver)';
    if(place===3) return 'var(--place-mid-bronze)';
    if(place===4 || place===5) return 'var(--place-mid-purple)';
-   if(place>=6 && place<=10) return 'var(--place-mid-turquoise)';
+   if(place>=6 && place<=10) return 'var(--place-mid-steel-blue)';
    return 'var(--place-mid-neutral)';
  };
  let offset=0;
