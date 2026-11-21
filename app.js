@@ -77,12 +77,12 @@ function allianceRankingChart(){
  // Use slightly different tones within a tier so adjacent donut slices stay distinct.
  const colorFor=rank=>{
    const place=rankNumber(rank);
-   if(place===1) return 'var(--place-gold)';
-   if(place===2) return 'var(--place-silver)';
-   if(place===3) return 'var(--place-bronze)';
-   if(place===4 || place===5) return 'var(--place-purple)';
-   if(place>=6 && place<=10) return 'var(--place-turquoise)';
-   return 'var(--place-neutral)';
+   if(place===1) return 'var(--place-fill-gold)';
+   if(place===2) return 'var(--place-fill-silver)';
+   if(place===3) return 'var(--place-fill-bronze)';
+   if(place===4 || place===5) return 'var(--place-fill-purple)';
+   if(place>=6 && place<=10) return 'var(--place-fill-turquoise)';
+   return 'var(--place-fill-neutral)';
  };
  let offset=0;
  const segments=distribution.map(([rank,count],index)=>{
