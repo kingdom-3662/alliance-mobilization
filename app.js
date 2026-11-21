@@ -106,7 +106,7 @@ function allianceRankingChart(){
  const previousRank=D.events[D.events.length-2]?.allianceRank;
  const currentPlace=rankNumber(String(latestRank||''));
  const previousPlace=rankNumber(String(previousRank||''));
- const diff=Number.isSafeInteger(currentPlace)&&Number.isSafeInteger(previousPlace)?previousPlace-currentPlace:null;
+ const diff=currentPlace!==Number.MAX_SAFE_INTEGER&&previousPlace!==Number.MAX_SAFE_INTEGER?previousPlace-currentPlace:null;
  const comparison=diff===null?'No earlier placement':diff===0?'unchanged vs previous event':diff>0?`up ${diff} ${diff===1?'place':'places'} vs previous event`:`down ${-diff} ${-diff===1?'place':'places'} vs previous event`;
  return `<div class="rank-donut-layout">
   <div class="rank-donut-graphic"><svg viewBox="0 0 200 200" role="img" aria-label="Alliance ranking distribution: ${esc(summary)}">
