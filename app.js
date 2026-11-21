@@ -31,7 +31,7 @@ function sortTable(tableId,col,type){
 function sortHead(label,table,col,type="text"){
  const alignRight=type==="number" && label!=="#" && !(label==="Rank" && table==="eventPlayersTable");
  const sortIcon='<span class="sort-icon" aria-hidden="true">↕</span>';
- return `<th class="sortable${alignRight?' num':''}" data-table="${table}" data-col="${col}" data-type="${type}"><button type="button">${alignRight?sortIcon+label:label+sortIcon}</button></th>`;
+ return `<th class="sortable${alignRight?' num':''}" data-table="${table}" data-col="${col}" data-type="${type}"><button type="button">${label}${sortIcon}</button></th>`;
 }
 
 
