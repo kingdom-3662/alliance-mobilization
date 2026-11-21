@@ -77,12 +77,12 @@ function allianceRankingChart(){
  // Use slightly different tones within a tier so adjacent donut slices stay distinct.
  const colorFor=rank=>{
    const place=rankNumber(rank);
-   if(place===1) return 'var(--place-fill-gold)';
-   if(place===2) return 'var(--place-fill-silver)';
-   if(place===3) return 'var(--place-fill-bronze)';
-   if(place===4 || place===5) return 'var(--place-fill-purple)';
-   if(place>=6 && place<=10) return 'var(--place-fill-turquoise)';
-   return 'var(--place-fill-neutral)';
+   if(place===1) return 'var(--place-mid-gold)';
+   if(place===2) return 'var(--place-mid-silver)';
+   if(place===3) return 'var(--place-mid-bronze)';
+   if(place===4 || place===5) return 'var(--place-mid-purple)';
+   if(place>=6 && place<=10) return 'var(--place-mid-turquoise)';
+   return 'var(--place-mid-neutral)';
  };
  let offset=0;
  const segments=distribution.map(([rank,count],index)=>{
@@ -156,7 +156,7 @@ function trendLine(values,caption,format='number',tone='gold'){
  const path=points.map(([x,y])=>`${x},${y}`).join(' ');
  const area=`${p},${h-p} ${path} ${w-p},${h-p}`;
  const fmtValue=v=>format==='pct'?v.toFixed(1)+'%':format==='decimal'?v.toFixed(1):fmt(v);
- const safeTone=tone==='turquoise'?'turquoise':'gold',gradientId='trend-fill-'+safeTone;
+ const safeTone=['gold','purple','turquoise'].includes(tone)?tone:'gold',gradientId='trend-fill-'+safeTone;
  const last=points[points.length-1];
  return `<svg viewBox="0 0 ${w} ${h}" class="trend-line-svg tone-${safeTone}" role="img" aria-label="${esc(caption)}. Values in recorded event order: ${esc(numeric.map(fmtValue).join(', '))}">
   <defs><linearGradient id="${gradientId}" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="var(--trend-chart-color)" stop-opacity=".34"/><stop offset="1" stop-color="var(--trend-chart-color)" stop-opacity="0"/></linearGradient></defs>
@@ -217,7 +217,7 @@ function trendsView(){
   <div class="card trend-metric-card"><div class="trend-metric-header"><h2>Quest efficiency</h2>${trendMetricBadge(efficiencyChange)}</div>
    <div class="trend-metric-value">${latest?avg(latest.ppq):'—'}</div>
    <div class="trend-metric-caption">Points per completed quest · ${esc(latest?.event.name||'latest event')}</div>
-   ${trendLine(eventStats.map(st=>st.ppq),'Alliance average points per quest','decimal','gold')}
+   ${trendLine(eventStats.map(st=>st.ppq),'Alliance average points per quest','decimal','purple')}
    <div class="chart-labels"><span>${esc(D.events[0]?.name||'')}</span><span>${esc(latest?.event.name||'')}</span></div>
    <div class="trend-metric-foot">Relative change vs previous recorded event</div></div>
   <div class="card trend-metric-card"><div class="trend-metric-header"><h2>Active participation</h2>${trendMetricBadge(activeChange)}</div>
@@ -226,7 +226,7 @@ function trendsView(){
    ${trendLine(eventStats.map(st=>st.active),'Active scoring entries','number','turquoise')}
    <div class="chart-labels"><span>${esc(D.events[0]?.name||'')}</span><span>${esc(latest?.event.name||'')}</span></div>
    <div class="trend-metric-foot">Relative change in active entries vs previous event</div></div>
-  <div class="card trends-wide trend-metric-card"><div class="trend-metric-header"><h2>Minimum requirement completion</h2>${trendMetricBadge(completionPointChange,' pp')}</div>
+  <div class="card trends-wide trend-metric-card"><div class="trend-metric-header"><h2>Minimum requirement completion</h2>${trendMetricBadge(completionPointChange,' percentage points')}</div>
    <div class="trend-metric-value">${rateText}</div>
    <div class="trend-metric-caption">${fmt(latest?.qualifying||0)} of ${fmt(latest?.total||0)} entries met the minimum · latest event</div>
    <div class="trend-bar-scroll"><div class="trend-bar-chart">${rateBars}</div></div>
@@ -287,7 +287,7 @@ function dashboard(){
     <div class="card chart-card"><div class="table-head compact"><h2>Alliance performance</h2><span class="muted">points by event</span></div>${allianceChart()}</div>
     <div class="card"><div class="table-head compact"><h2>Event history</h2><span class="muted">last 5 events</span></div><div class="event-list" style="grid-template-columns:1fr">
     ${!history.some(e=>e.id===bestEvent?.id)?`<div class="event-card best-event record-card" onclick="location.hash='event/${bestEvent.id}'"><div class="event-title"><strong>Kingdom points record</strong><span class="badge gold-badge">All-time best</span></div><div class="event-stat"><span class="muted">${esc(bestEvent.name)}</span><b>${fmt(bestEvent.alliancePoints)}</b></div><div class="event-meta"><span>Top player: <strong>${esc(bestEvent.topPlayer||'—')}</strong></span></div></div>`:''}
-    ${history.map(e=>`<div class="event-card ${e.id===bestEvent?.id?'best-event':''}" onclick="location.hash='event/${e.id}'"><div class="event-title"><strong>${esc(e.name)}</strong><span class="badge ${e.id===bestEvent?.id?'gold-badge':''}">${e.id===bestEvent?.id?'All-time best':'#'+esc(e.allianceRank)}</span></div><div class="event-stat"><span class="muted">Alliance points</span><b>${fmt(e.alliancePoints)}</b></div><div class="event-meta"><span>Top player: <strong>${esc(e.topPlayer||'—')}</strong></span></div><div class="event-meta"><span>${esc(e.start)} · Reward: ${esc(e.reward||'—')}</span></div></div>`).join("")}
+    ${history.map(e=>`<div class="event-card ${e.id===bestEvent?.id?'best-event':''}" onclick="location.hash='event/${e.id}'"><div class="event-title"><strong>${esc(e.name)}</strong><span class="badge ${e.id===bestEvent?.id?'gold-badge':'alliance-placement-badge'}">${e.id===bestEvent?.id?'All-time best':esc(e.allianceRank)}</span></div><div class="event-stat"><span class="muted">Alliance points</span><b>${fmt(e.alliancePoints)}</b></div><div class="event-meta"><span>Top player: <strong>${esc(e.topPlayer||'—')}</strong></span></div><div class="event-meta"><span>${esc(e.start)} · Reward: ${esc(e.reward||'—')}</span></div></div>`).join("")}
     </div></div>
    </div>
  </section>`;
@@ -304,7 +304,7 @@ function eventsView(){
  ${trendsCta()}
  <section class="event-list">${D.events.slice().reverse().map(e=>`
  <article class="card event-card ${e.id===bestEvent?.id?'best-event':''}" onclick="location.hash='event/${e.id}'">
-   <div class="event-title"><strong>${esc(e.name)}</strong><span class="badge ${e.id===bestEvent?.id?'gold-badge':''}">${e.id===bestEvent?.id?'All-time best':'Alliance #'+esc(e.allianceRank)}</span></div>
+   <div class="event-title"><strong>${esc(e.name)}</strong><span class="badge ${e.id===bestEvent?.id?'gold-badge':'alliance-placement-badge'}">${e.id===bestEvent?.id?'All-time best':esc(e.allianceRank)}</span></div>
    <div class="event-stat"><span class="muted">Alliance points</span><b>${fmt(e.alliancePoints)}</b></div>
    <div class="event-meta"><span>${esc(e.start)} → ${esc(e.end)}</span><span>Minimum requirement: ${fmt(e.minimumPoints)}</span><span>Levels completed: ${e.level ?? "—"}</span></div>
    <div class="event-top-player"><span class="muted">Top scorer</span><strong>${esc(e.topPlayer||"—")}</strong><span>${fmt(e.topPlayerPoints)} pts</span></div>

@@ -322,6 +322,13 @@ th.sortable.num button{justify-content:flex-end;text-align:right}
  --place-fill-purple:#40364e;
  --place-fill-turquoise:#203b40;
  --place-fill-neutral:#30363f;
+ /* Donut uses midpoints between the dark rank-circle fills and light outlines. */
+ --place-mid-gold:#a28f46;
+ --place-mid-silver:#8892a0;
+ --place-mid-bronze:#996f55;
+ --place-mid-purple:#8275a3;
+ --place-mid-turquoise:#429386;
+ --place-mid-neutral:#59606a;
 }
 
 
@@ -378,18 +385,19 @@ th.sortable.num button{justify-content:flex-end;text-align:right}
 
 /* Screenshot-inspired performance tracker cards: shared hierarchy and subtle glowing lines. */
 .trend-metric-card{--trend-chart-color:var(--gold);position:relative;overflow:hidden;border-color:rgba(232,198,109,.24);padding:18px 20px 17px}
-.trend-metric-card:before{content:"";position:absolute;left:0;top:18px;bottom:18px;width:3px;border-radius:0 4px 4px 0;background:linear-gradient(180deg,var(--gold),rgba(232,198,109,.1))}
+
 .trend-metric-header{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px;flex-wrap:wrap}
 .trend-metric-header h2{font-size:13px;text-transform:uppercase;letter-spacing:.055em;color:var(--gold);margin:0;font-weight:750}
 .trend-metric-value{font-size:clamp(27px,3vw,41px);line-height:1.1;letter-spacing:-.035em;font-weight:800;color:#ebc977;font-variant-numeric:tabular-nums}
 .trend-metric-value small{font-size:12px;letter-spacing:0;color:var(--muted);font-weight:500}
 .trend-metric-caption{font-size:12px;color:var(--muted);margin:5px 0 8px}
 .trend-metric-foot{font-size:11px;color:var(--muted);margin-top:12px;line-height:1.5}
-.trend-metric-badge{display:inline-flex;align-items:center;justify-content:center;white-space:nowrap;font-size:12px;line-height:1.4;font-weight:800;border-radius:999px;padding:3px 9px;border:1px solid transparent;font-variant-numeric:tabular-nums}
+.trend-metric-badge{display:inline-flex;align-items:center;justify-content:center;white-space:normal;text-align:center;font-size:12px;line-height:1.4;font-weight:800;border-radius:999px;padding:3px 9px;border:1px solid transparent;font-variant-numeric:tabular-nums}
 .trend-metric-badge.positive{color:#93e7bd;background:rgba(39,136,86,.2);border-color:rgba(80,176,126,.18)}
 .trend-metric-badge.negative{color:#f4a6a6;background:rgba(160,64,76,.19);border-color:rgba(221,99,109,.17)}
 .trend-metric-badge.neutral{color:#b7bec8;background:rgba(125,135,150,.12);border-color:rgba(125,135,150,.12)}
 .trend-line-svg.tone-gold{--trend-chart-color:#e8c66d}
+.trend-line-svg.tone-purple{--trend-chart-color:var(--place-purple)}
 .trend-line-svg.tone-turquoise{--trend-chart-color:#63c9bd}
 .trend-metric-card .trend-line-svg{height:150px;margin:15px 0 8px}
 .trend-gridline{stroke:rgba(175,187,204,.16);stroke-dasharray:5 6;stroke-width:1}
@@ -405,3 +413,16 @@ th.sortable.num button{justify-content:flex-end;text-align:right}
 .rank-donut-graphic svg{filter:drop-shadow(0 2px 5px rgba(0,0,0,.13))}
 @media(max-width:800px){.trend-metric-card{padding:16px}.trend-metric-card .trend-line-svg{height:auto;max-height:150px}}
 @media(max-width:560px){.trend-metric-card .trend-bar-chart{min-width:540px}.trend-metric-card .trend-bar-percent{font-size:11px}.trend-metric-value{font-size:29px}}
+
+
+/* Alliance placements are neutral results, never the red warning treatment. */
+.badge.alliance-placement-badge,
+.event-list .event-card .badge.alliance-placement-badge{
+  background:var(--place-fill-neutral);
+  color:#d8dee8;
+  border:1px solid #505964;
+  font-weight:700;
+}
+/* Progress is the point of these cards: no decorative left stripe. */
+.trend-metric-card{border-color:var(--line)}
+@media(max-width:560px){.trend-metric-header{align-items:flex-start}.trend-metric-badge{max-width:100%}}
