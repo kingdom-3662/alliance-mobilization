@@ -518,3 +518,7 @@ th.sortable.num button{justify-content:flex-end;text-align:right}
 .trend-promo,.profile-trend-card,.event-trend-card{border-color:rgba(232,198,109,.35)}
 .trend-promo .trend-promo-action,.profile-trend-card .trend-promo-action,.event-trend-card .trend-promo-action{color:var(--gold);font-weight:700}
 @media(prefers-reduced-motion:reduce){.interactive-card{transition:none}.interactive-card:hover,.interactive-card:focus-visible{transform:none}}
+
+/* Compact completion heading on mobile keeps the comparison percentage alongside its title. */
+.requirement-completion-title .mobile-title{display:none}
+@media(max-width:560px){.requirement-completion-title .desktop-title{display:none}.requirement-completion-title .mobile-title{display:inline}.trend-metric-header:has(.requirement-completion-title){flex-wrap:nowrap;gap:6px}.trend-metric-header:has(.requirement-completion-title) .trend-metric-badge{flex-shrink:0;font-size:11px;padding:3px 6px}}
