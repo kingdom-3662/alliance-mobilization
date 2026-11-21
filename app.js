@@ -282,7 +282,7 @@ function trendsView(){
 }
 
 function trendsCta(){
- return '<a href="#trends" class="trend-promo card"><span><strong>📈 Trends & momentum</strong><span class="muted">Explore player momentum, alliance efficiency and event progression</span></span><span class="trend-promo-action">Explore trends →</span></a>';
+ return '<a href="#trends" class="trend-promo interactive-card card"><span><strong>📈 Trends & momentum</strong><span class="muted">Explore player momentum, alliance efficiency and event progression</span></span><span class="trend-promo-action">Explore trends →</span></a>';
 }
 
 function dashboard(){
@@ -297,10 +297,10 @@ function dashboard(){
  const mostPoints=eligibleLeaders.slice().sort((a,b)=>b.totalPoints-a.totalPoints)[0];
  const bestRank=eligibleLeaders.filter(p=>Number(p.averageRank)>0).sort((a,b)=>a.averageRank-b.averageRank)[0];
  const bestPPQ=eligibleLeaders.filter(p=>p.questsCompleted>0).sort((a,b)=>b.averagePPQ-a.averagePPQ)[0];
- const leaderCard=(label,p,value,note,icon)=>`<div class="card leader-card" ${p?`onclick="location.hash='player/${encodeURIComponent(p.id)}'"`:''}><span class="leader-icon">${icon}</span><div class="leader-label">${label}</div><strong class="leader-name">${p?esc(p.currentName):'—'}</strong><div class="leader-value">${p?value:'—'}</div><span class="kpi-note">${note}</span></div>`;
+ const leaderCard=(label,p,value,note,icon)=>`<${p?'a':'div'} ${p?`href="#player/${encodeURIComponent(p.id)}"`:''} class="card leader-card ${p?'interactive-card':''}"><span class="leader-icon">${icon}</span><div class="leader-label">${label}</div><strong class="leader-name">${p?esc(p.currentName):'—'}</strong><div class="leader-value">${p?value:'—'}</div><span class="kpi-note">${note}</span></${p?'a':'div'}>`;
  app.innerHTML=`
  <section class="hero"><div><div class="eyebrow">Rise of Kingdoms · Kingdom 3662</div><h1>Alliance Mobilization</h1><p class="sub">${D.events.length} recorded events · latest: ${esc(latest.name)}</p></div>
- <div class="badge good">Data through ${esc(D.updatedFromWorkbook)}</div></section>
+ <div class="badge alliance-placement-badge">Data through ${esc(D.updatedFromWorkbook)}</div></section>
  <section class="grid kpis">
    <div class="card"><div class="kpi-label">Events</div><div class="kpi-value">${D.events.length}</div><div class="kpi-note">recorded in the dataset</div></div>
    <div class="card"><div class="kpi-label">Players</div><div class="kpi-value">${D.players.length}</div><div class="kpi-note">unique identities</div></div>
@@ -324,8 +324,8 @@ function dashboard(){
    <div class="dashboard-side">
     <div class="card chart-card"><div class="table-head compact"><h2>Alliance performance</h2><span class="muted">points by event</span></div>${allianceChart()}</div>
     <div class="card"><div class="table-head compact"><h2>Event history</h2><span class="muted">last 5 events</span></div><div class="event-list" style="grid-template-columns:1fr">
-    ${!history.some(e=>e.id===bestEvent?.id)?`<div class="event-card best-event record-card" onclick="location.hash='event/${bestEvent.id}'"><div class="event-title"><strong>Kingdom points record</strong><span class="badge gold-badge">All-time best</span></div><div class="event-stat"><span class="muted">${esc(bestEvent.name)}</span><b>${fmt(bestEvent.alliancePoints)}</b></div><div class="event-meta"><span>Top player: <strong>${esc(bestEvent.topPlayer||'—')}</strong></span></div></div>`:''}
-    ${history.map(e=>`<div class="event-card ${e.id===bestEvent?.id?'best-event':''}" onclick="location.hash='event/${e.id}'"><div class="event-title"><strong>${esc(e.name)}</strong><span class="badge ${e.id===bestEvent?.id?'gold-badge':'alliance-placement-badge'}">${e.id===bestEvent?.id?'All-time best':esc(e.allianceRank)}</span></div><div class="event-stat"><span class="muted">Alliance points</span><b>${fmt(e.alliancePoints)}</b></div><div class="event-meta"><span>Top player: <strong>${esc(e.topPlayer||'—')}</strong></span></div><div class="event-meta"><span>${esc(e.start)} · Reward: ${esc(e.reward||'—')}</span></div></div>`).join("")}
+    ${!history.some(e=>e.id===bestEvent?.id)?`<a class="event-card best-event record-card interactive-card" href="#event/${bestEvent.id}"><div class="event-title"><strong>Kingdom points record</strong><span class="badge gold-badge">All-time best</span></div><div class="event-stat"><span class="muted">${esc(bestEvent.name)}</span><b>${fmt(bestEvent.alliancePoints)}</b></div><div class="event-meta"><span>Top player: <strong>${esc(bestEvent.topPlayer||'—')}</strong></span></div></div>`:''}
+    ${history.map(e=>`<a class="event-card interactive-card ${e.id===bestEvent?.id?'best-event':''}" href="#event/${e.id}"><div class="event-title"><strong>${esc(e.name)}</strong><span class="badge ${e.id===bestEvent?.id?'gold-badge':'alliance-placement-badge'}">${e.id===bestEvent?.id?'All-time best':esc(e.allianceRank)}</span></div><div class="event-stat"><span class="muted">Alliance points</span><b>${fmt(e.alliancePoints)}</b></div><div class="event-meta"><span>Top player: <strong>${esc(e.topPlayer||'—')}</strong></span></div><div class="event-meta"><span>${esc(e.start)} · Reward: ${esc(e.reward||'—')}</span></div></div>`).join("")}
     </div></div>
    </div>
  </section>`;
