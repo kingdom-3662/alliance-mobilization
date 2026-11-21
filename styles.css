@@ -274,3 +274,19 @@ main,.grid,.card,.profile-content,.profile-content>.card,.dashboard-main,.dashbo
 /* Sortable numeric headings share their column's right edge with the values. */
 th.sortable.num{text-align:right}
 th.sortable.num button{justify-content:flex-end;text-align:right}
+
+
+/* Events overview: balanced compact comparison charts on desktop. */
+.event-overview-charts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-bottom:18px;align-items:stretch}
+.event-overview-charts>.card{min-width:0;margin-bottom:0}
+.event-overview-charts .chart-summary{margin-bottom:10px}
+.event-overview-charts .line-chart{width:100%;height:180px;max-height:180px}
+.event-overview-charts .chart-labels{gap:10px;flex-wrap:wrap}
+.rank-distribution-plot{height:202px;display:grid;grid-template-columns:repeat(var(--rank-columns),minmax(0,1fr));gap:clamp(8px,2vw,24px);align-items:stretch;padding:8px 8px 0}
+.rank-distribution-item{min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:8px}
+.rank-distribution-track{height:165px;width:100%;max-width:75px;display:flex;align-items:flex-end;justify-content:center}
+.rank-distribution-bar{width:100%;max-width:64px;min-height:28px;border:1px solid rgba(255,220,150,.2);border-radius:7px 7px 2px 2px;background:linear-gradient(180deg,#e9c66b,#9f783b);position:relative;display:flex;justify-content:center;align-items:flex-start;box-shadow:0 3px 12px rgba(231,189,88,.08)}
+.rank-distribution-count{font-size:13px;font-weight:800;line-height:1.2;color:#14171b;margin-top:7px;font-variant-numeric:tabular-nums}
+.rank-distribution-label{font-size:12px;font-weight:650;color:var(--muted);white-space:nowrap;text-align:center}
+@media(max-width:900px){.event-overview-charts{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:680px){.event-overview-charts{gap:12px}.event-overview-charts .line-chart{height:auto;max-height:180px}.rank-distribution-plot{gap:10px}}
