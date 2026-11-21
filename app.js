@@ -54,14 +54,42 @@ function playerById(id){return D.players.find(p=>p.id===decodeURIComponent(id));
 function eventById(id){return D.events.find(e=>e.id===id);}
 function playerRows(p){return p.events.map(x=>`<tr><td>${esc(x.event)}</td><td class="num" data-value="${x.rank}">${rankPill(x.rank)}</td><td class="num">${fmt(x.points)}</td><td class="num">${x.started}</td><td class="num">${x.completed}</td><td class="num">${avg(x.ppq)}</td></tr>`).join("")}
 
+function shortEventLabel(name){
+ return String(name||'').replace(/^([A-Za-z]{3})[A-Za-z]* (\d{4})$/,(_match,month,year)=>month+" '"+year.slice(2));
+}
 function allianceChart(){
- const values=D.events.map(e=>Number(e.alliancePoints)||0); if(!values.length) return '<div class="empty">No event data</div>';
- const w=620,h=180,pad=24,min=Math.min(...values),max=Math.max(...values),range=max-min||1;
- const pts=values.map((v,i)=>`${pad+i*(w-2*pad)/Math.max(1,values.length-1)},${h-pad-(v-min)/range*(h-2*pad)}`).join(' ');
+ const values=D.events.map(e=>Number(e.alliancePoints)||0);
+ if(!values.length)return '<div class="empty">No event data</div>';
+ const w=660,h=228,left=65,right=16,top=17,bottom=183;
+ const smallest=Math.min(...values),largest=Math.max(...values);
+ const axisMin=Math.floor(smallest/10000)*10000;
+ const axisMax=Math.max(axisMin+10000,Math.ceil(largest/10000)*10000);
+ const range=axisMax-axisMin;
+ const x=i=>left+i*(w-left-right)/Math.max(1,values.length-1);
+ const y=v=>bottom-(v-axisMin)/range*(bottom-top);
+ const pts=values.map((v,i)=>`${x(i)},${y(v)}`).join(' ');
  const last=values[values.length-1],previous=values[values.length-2];
- const change=values.length>1 && previous>0?100*(last-previous)/previous:null;
+ const change=values.length>1&&previous>0?100*(last-previous)/previous:null;
  const latestName=esc(D.events[D.events.length-1].name);
- return `<div class="chart-metric-head"><div class="chart-summary"><strong>${fmt(last)}</strong><span class="muted">alliance points · ${latestName}</span></div>${trendMetricBadge(change)}</div><svg class="line-chart" viewBox="0 0 ${w} ${h}" role="img" aria-label="Alliance points by event"><defs><linearGradient id="chartFill" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#e5b94f" stop-opacity=".28"/><stop offset="1" stop-color="#e5b94f" stop-opacity="0"/></linearGradient></defs><polygon points="${pad},${h-pad} ${pts} ${w-pad},${h-pad}" fill="url(#chartFill)"/><polyline points="${pts}" fill="none" stroke="#e5b94f" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>${values.map((v,i)=>{const x=pad+i*(w-2*pad)/Math.max(1,values.length-1),y=h-pad-(v-min)/range*(h-2*pad);return `<circle cx="${x}" cy="${y}" r="4" fill="#e5b94f"><title>${esc(D.events[i].name)}: ${fmt(v)}</title></circle>`}).join('')}</svg><div class="chart-labels"><span>${esc(D.events[0].name)}</span><span>${latestName}</span></div><div class="chart-metric-foot">Change in alliance points vs previous recorded event · each dot represents one recorded event</div>`;
+ const axisTicks=Array.from({length:5},(_,i)=>{
+  const value=axisMin+range*i/4,yy=y(value);
+  return `<line x1="${left}" y1="${yy}" x2="${w-right}" y2="${yy}" class="metric-grid-line"/><text class="metric-axis-tick" text-anchor="end" x="${left-10}" y="${yy+4}">${fmt(value)}</text>`;
+ }).join('');
+ const marks=values.map((value,i)=>{
+  const name=D.events[i].name,xx=x(i),yy=y(value);
+  return `<circle cx="${xx}" cy="${yy}" r="4.5" fill="var(--gold)"><title>${esc(name)}: ${fmt(value)} alliance points</title></circle><text class="metric-data-label" x="${xx}" y="${Math.max(12,yy-11)}" text-anchor="middle">${(value/1000).toFixed(1)}k</text><text class="metric-axis-event" x="${xx}" y="${h-14}" text-anchor="middle">${esc(shortEventLabel(name))}</text>`;
+ }).join('');
+ return `<div class="chart-metric-head"><div class="chart-summary"><strong>${fmt(last)}</strong><span class="muted">alliance points · ${latestName}</span></div>${trendMetricBadge(change)}</div>
+  <div class="chart-axis-scroll"><svg class="line-chart metric-axis-chart" style="min-width:${w}px" viewBox="0 0 ${w} ${h}" role="img" aria-label="Alliance points by recorded event, with axes and numeric point labels">
+   <defs><linearGradient id="chartFill" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#e5b94f" stop-opacity=".28"/><stop offset="1" stop-color="#e5b94f" stop-opacity="0"/></linearGradient></defs>
+   ${axisTicks}
+   <line class="metric-axis-line" x1="${left}" y1="${top}" x2="${left}" y2="${bottom}"/>
+   <line class="metric-axis-line" x1="${left}" y1="${bottom}" x2="${w-right}" y2="${bottom}"/>
+   <polygon points="${left},${bottom} ${pts} ${x(values.length-1)},${bottom}" fill="url(#chartFill)"/>
+   <polyline points="${pts}" fill="none" stroke="var(--gold)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+   ${marks}
+  </svg></div>
+  <div class="chart-metric-foot">X: recorded events · Y: alliance points. Comparison is versus the preceding recorded event.</div>`;
 }
 
 function allianceRankingChart(){
@@ -218,7 +246,7 @@ function trendsView(){
   <div class="card"><div class="kpi-label">Latest quest efficiency</div><div class="kpi-value">${latest?avg(latest.ppq):'—'}</div><div class="kpi-note">points per completed quest ${prior?'· previously '+avg(prior.ppq):''}</div></div>
   <div class="card"><div class="kpi-label">Minimum requirement met</div><div class="kpi-value">${rateText}</div><div class="kpi-note">of ${latest?.total||0} recorded result rows · latest event</div></div>
   <div class="card"><div class="kpi-label">Active scoring entries</div><div class="kpi-value">${fmt(latest?.active||0)}</div><div class="kpi-note">latest event · entries above zero points</div></div>
-  <div class="card accent-kpi"><div class="kpi-label">Player momentum</div><div class="kpi-value">${eligible.length}</div><div class="kpi-note">eligible governors · ${improvingTotal} improving · ${decliningTotal} declining · ${stable} stable</div></div>
+  <div class="card"><div class="kpi-label">Player momentum</div><div class="kpi-value">${eligible.length}</div><div class="kpi-note">eligible governors · ${improvingTotal} improving · ${decliningTotal} declining · ${stable} stable</div></div>
  </section>
  <section class="section-heading trend-section-title"><h2>Alliance trends</h2><span class="muted">Each point represents one recorded event, not a calendar month</span></section>
  <section class="grid trends-chart-grid">
@@ -276,7 +304,7 @@ function dashboard(){
    <div class="card"><div class="kpi-label">Players</div><div class="kpi-value">${D.players.length}</div><div class="kpi-note">unique identities</div></div>
    <div class="card"><div class="kpi-label">Latest alliance points</div><div class="kpi-value">${fmt(latest.alliancePoints)}</div><div class="kpi-note">Rank ${esc(latest.allianceRank)}</div></div>
    <div class="card"><div class="kpi-label">All event points</div><div class="kpi-value">${fmt(totalPoints)}</div><div class="kpi-note">sum of alliance totals</div></div>
-   <div class="card accent-kpi"><div class="kpi-label">Ø points / quest</div><div class="kpi-value">${avg(D.averagePPQ)}</div><div class="kpi-note">average across recorded events</div></div>
+   <div class="card"><div class="kpi-label">Ø points / quest</div><div class="kpi-value">${avg(D.averagePPQ)}</div></div>
  </section>
  ${trendsCta()}
  <section class="leader-section"><div class="section-heading"><h2>Player leaders</h2><span class="muted">minimum 3 events participated</span></div><div class="grid leader-grid">
@@ -286,7 +314,7 @@ function dashboard(){
  </div></section>
 
   <section class="grid dashboard-main">
-   <div class="card table-card"><div class="table-head"><h2>Top 25 players · total points</h2><span class="muted">all recorded events</span></div>
+   <div class="card table-card"><div class="table-head"><h2>Top 25 players · total points</h2></div>
     <div class="table-scroll"><table id="dashboardTopTable"><thead><tr>${sortHead("#","dashboardTopTable",0,"number")}${sortHead("Governor","dashboardTopTable",1)}${sortHead("Points","dashboardTopTable",2,"number")}${sortHead("Events","dashboardTopTable",3,"number")}${sortHead("Avg/event","dashboardTopTable",4,"number")}${sortHead("Ø Pts/Quest","dashboardTopTable",5,"number")}</tr></thead><tbody>
     ${top.map((p,i)=>`<tr class="clickable" onclick="location.hash='player/${encodeURIComponent(p.id)}'"><td class="rank" data-value="${i+1}">${rankPill(i+1)}</td><td><button class="player-link">${esc(p.currentName)}</button></td><td class="num">${fmt(p.totalPoints)}</td><td class="num">${p.eventsParticipated}</td><td class="num">${fmt(p.averagePoints)}</td><td class="num">${avg(p.averagePPQ)}</td></tr>`).join("")}
     </tbody></table></div>
@@ -340,22 +368,41 @@ function filterPlayersLive(query=''){
  updatePlayerSortHeaders();
 }
 
+/* Player results: a zero-based bar plot with named axes and event-value labels. */
+function playerPointsChart(p){
+ const events=p.events||[];
+ if(!events.length)return '<div class="empty">No scoring event results yet.</div>';
+ const values=events.map(e=>Number(e.points)||0);
+ const max=Math.max(...values,1),step=Math.max(250,Math.ceil(max/4/250)*250),ceiling=4*step;
+ const w=Math.max(550,86+events.length*68),h=242,left=65,right=18,top=25,bottom=195;
+ const y=v=>bottom-(v/ceiling)*(bottom-top);
+ const plotWidth=w-left-right;
+ const gap=plotWidth/events.length;
+ const barWidth=Math.min(37,gap*.6);
+ const ticks=Array.from({length:5},(_,i)=>{
+  const v=i*step,yy=y(v);
+  return `<line class="metric-grid-line" x1="${left}" x2="${w-right}" y1="${yy}" y2="${yy}"/><text class="metric-axis-tick" x="${left-9}" y="${yy+4}" text-anchor="end">${fmt(v)}</text>`;
+ }).join('');
+ const bars=events.map((event,i)=>{
+  const value=values[i],x=left+gap*(i+.5),yy=y(value),barHeight=Math.max(0,bottom-yy);
+  return `<rect x="${x-barWidth/2}" y="${yy}" width="${barWidth}" height="${barHeight}" rx="3" fill="url(#playerChartFill)"><title>${esc(event.event)}: ${fmt(value)} points</title></rect><text class="metric-data-label" x="${x}" y="${Math.max(top-7,yy-8)}" text-anchor="middle">${fmt(value)}</text><text class="metric-axis-event" x="${x}" y="${h-17}" text-anchor="middle">${esc(shortEventLabel(event.event))}</text>`;
+ }).join('');
+ return `<div class="chart-axis-scroll player-axis-scroll"><svg class="metric-axis-chart player-axis-chart" style="min-width:${w}px" viewBox="0 0 ${w} ${h}" role="img" aria-label="Player points by scoring event with point values, event axis, and a zero-based numeric axis">
+  <defs><linearGradient id="playerChartFill" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#e9c66b"/><stop offset="1" stop-color="#a27d36"/></linearGradient></defs>
+  ${ticks}
+  <line class="metric-axis-line" x1="${left}" y1="${top}" x2="${left}" y2="${bottom}"/>
+  <line class="metric-axis-line" x1="${left}" y1="${bottom}" x2="${w-right}" y2="${bottom}"/>
+  ${bars}
+ </svg></div>`;
+}
+
 function playerView(id){
  const p=playerById(id); if(!p){dashboard();return}
  nav("");
- const max=Math.max(...p.events.map(e=>e.points),1);
  const recentEvent=p.events[p.events.length-1],previousEvent=p.events[p.events.length-2];
  const recentPoints=recentEvent?Number(recentEvent.points)||0:null;
  const previousEventPoints=previousEvent?Number(previousEvent.points)||0:null;
  const pointsDelta=previousEventPoints>0?100*(recentPoints-previousEventPoints)/previousEventPoints:null;
- const playerPointBars=p.events.map(e=>{
-  const pts=Number(e.points)||0,height=Math.max(2,pts/max*84);
-  return `<div class="bar-wrap" title="${esc(e.event)}: ${fmt(pts)} points">
-    <div class="player-bar-plot"><div class="player-bar-number" style="bottom:calc(${height}% + 5px)">${fmt(pts)}</div>
-      <div class="bar" style="height:${height}%"></div></div>
-    <div class="bar-label">${esc(e.event.replace(/^([A-Za-z]{3})[A-Za-z]* (\d{4})$/,(_all,month,year)=>month+" '"+year.slice(2)))}</div>
-   </div>`;
- }).join('');
  const placements=p.events.map(e=>Number(e.rank)).filter(Number.isFinite);
  // Mutually exclusive placement tiers: 1st, 2nd, 3rd, 4th–5th, 6th–10th.
  const top1=placements.filter(r=>r===1).length;
@@ -380,7 +427,7 @@ function playerView(id){
  <section class="grid two profile-content">
   <div class="card points-card"><div class="chart-metric-head"><h2>Points over time</h2>${trendMetricBadge(pointsDelta)}</div>
     <div class="player-points-summary"><strong>${recentPoints===null?'—':fmt(recentPoints)}</strong><span class="muted">points · ${esc(recentEvent?.event||'no event')}</span></div>
-    <div class="chart-viewport"><div class="chart">${playerPointBars||'<div class="empty">No event results yet</div>'}</div></div>
+    ${playerPointsChart(p)}
     <div class="chart-metric-foot">Points scored in each recorded event · change vs previous scoring result</div></div>
   <div class="card"><h2>Name history</h2>${p.names.slice().reverse().map((n,i)=>`<div class="name-history-row"><span class="badge ${i===0?'current-name-badge':''}">${i===0?"Current":"Former"}</span> <strong>${esc(n)}</strong></div>`).join("")}</div>
  </section>

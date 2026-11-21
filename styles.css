@@ -447,3 +447,36 @@ th.sortable.num button{justify-content:flex-end;text-align:right}
 .player-bar-number{position:absolute;left:50%;transform:translateX(-50%);font-size:10px;line-height:1.2;color:#f1d58b;white-space:nowrap;font-weight:750;font-variant-numeric:tabular-nums;text-shadow:0 1px 2px #11151a}
 .points-card .bar-label{min-height:16px}
 @media(max-width:680px){.chart-metric-head{gap:7px}.player-bar-number{font-size:9px}.points-card .chart{min-width:430px}}
+
+
+/* Consistent numerical hierarchy: metrics > chart summaries > supporting results. */
+:root{
+ --number-feature:clamp(1.85rem,2.75vw,2.3rem);
+ --number-primary:clamp(1.48rem,2vw,1.82rem);
+ --number-secondary:clamp(1.17rem,1.5vw,1.48rem);
+ --number-detail:0.9rem;
+}
+.kpi-value,.trend-kpis .kpi-value{font-size:var(--number-primary);line-height:1.18;letter-spacing:-.025em;font-weight:800;font-variant-numeric:tabular-nums;color:var(--text)}
+.trend-metric-value{font-size:var(--number-feature);line-height:1.1;letter-spacing:-.035em;font-variant-numeric:tabular-nums}
+.chart-metric-head .chart-summary strong,.player-points-summary strong,.rank-donut-center strong{font-size:var(--number-primary);font-weight:800;line-height:1.18;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.leader-value,.event-stat b,.performance-badge strong,.trend-profile-value .trend-delta{font-size:var(--number-secondary);line-height:1.2;letter-spacing:-.01em;font-weight:800;font-variant-numeric:tabular-nums}
+.event-stat b,.performance-badge strong{color:var(--text)}
+.player-bar-number,.metric-data-label,.metric-axis-tick{font-variant-numeric:tabular-nums}
+.trend-metric-card .trend-metric-value{font-size:var(--number-feature)}
+
+/* Explicit axes and values on the Dashboard, Events and player charts. */
+.chart-axis-scroll{width:100%;max-width:100%;min-width:0;overflow-x:auto;overflow-y:hidden;overscroll-behavior-x:contain;scrollbar-width:thin;padding-top:7px}
+.chart-axis-scroll .metric-axis-chart{display:block;width:100%;min-width:620px;height:auto;max-width:none;max-height:none;overflow:visible}
+.chart-axis-scroll.player-axis-scroll .metric-axis-chart{min-width:550px}
+.event-overview-charts .chart-axis-scroll .line-chart{width:100%;height:auto;max-height:none;max-width:none}
+.metric-grid-line{stroke:rgba(177,188,205,.22);stroke-width:1;stroke-dasharray:3 5}
+.metric-axis-line{stroke:rgba(177,188,205,.4);stroke-width:1.1}
+.metric-axis-tick,.metric-axis-event{font-size:11px;fill:#a9b3c2;font-family:inherit}
+.metric-data-label{font-size:10px;font-weight:800;fill:#f4d990;font-family:inherit;paint-order:stroke;stroke:#15191e;stroke-width:2.2;stroke-linejoin:round}
+.player-axis-chart .metric-data-label{font-size:10px}
+.chart-axis-scroll .metric-axis-chart:focus{outline:2px solid var(--gold)}
+@media(max-width:680px){
+ .chart-axis-scroll .metric-axis-chart{min-width:620px}
+ .chart-axis-scroll.player-axis-scroll .metric-axis-chart{min-width:550px}
+ .trend-metric-value{font-size:var(--number-feature)}
+}

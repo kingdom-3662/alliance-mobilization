@@ -141,3 +141,12 @@ The dashboard Alliance performance chart and Events overview Alliance points cha
 On player profiles, the Points over time bar chart shows each recorded scoring event's point total directly above the bar, including a month/year label, plus a latest-result summary and `last:` percentage change from that player's previous recorded scoring result. Missing prior results display `last: No comparison`, with no fabricated percentage.
 
 The Active participation trend is **steel blue**, using the site's shared `--place-steel-blue` color token; Quest efficiency remains purple. These chart enhancements use only generated `data.js` values and do not change the workbook builder, scoring exceptions, or statistics.
+
+
+### Consistent number hierarchy and chart axes
+
+Number styling is shared across the website through CSS tokens: **feature metrics** (main Trends chart values), **primary metrics** (KPI cards, alliance-point and player-point summaries, donut total) and **secondary metrics** (event values, leaderboards and performance badges). Ranking pill text retains its compact size. This is a styling change, not a change in any calculated data.
+
+Outside the Trends page, the Dashboard and Events Alliance points line graphs include a numbered Y axis in alliance points, an X axis with abbreviated month and year for every recorded event, and visible point values; the graph remains scrollable when needed on mobile. Player-profile Points over time charts include a **zero-based** points axis, event labels and the point total above each bar. The donut is a categorical distribution rather than a Cartesian chart: it retains its counts, percentages and legend rather than inventing axes.
+
+The Dashboard's "all recorded events" table subtitle has been removed, and both the Dashboard's "Ø points / quest" KPI and Trends' "Player momentum" KPI now use normal, unaccented cards.
