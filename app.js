@@ -190,10 +190,10 @@ function trendsView(){
  const completionPointChange=rate!=null&&previousRate!=null?rate-previousRate:null;
  const rateBars=eventStats.map(st=>{
   const value=st.requirementRate,pct=value===null?'—':value.toFixed(1)+'%';
+  const shortName=st.event.name.replace(/^([A-Za-z]{3})[A-Za-z]* (\d{4})$/,(_whole,month,year)=>month+" '"+year.slice(2));
   return `<a href="#event/${encodeURIComponent(st.event.id)}" class="trend-bar-item" aria-label="${esc(st.event.name)}: ${pct} met the minimum">
-   <div class="trend-bar-percent">${pct}</div>
-   <div class="trend-bar-track"><div class="trend-bar-fill" style="height:${value===null?0:value}%"></div></div>
-   <span class="trend-bar-label">${esc(st.event.name.replace(/ \d{4}$/,''))}</span>
+   <div class="trend-bar-track"><div class="trend-bar-fill" style="height:${value===null?0:value}%"><span class="trend-bar-percent">${pct}</span></div></div>
+   <span class="trend-bar-label">${esc(shortName)}</span>
   </a>`;
  }).join('');
  const eventRows=eventStats.slice().reverse().map(st=>`<tr class="clickable" onclick="location.hash='event/${encodeURIComponent(st.event.id)}'">
