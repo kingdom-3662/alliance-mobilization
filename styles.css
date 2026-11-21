@@ -496,3 +496,25 @@ th.sortable.num button{justify-content:flex-end;text-align:right}
 .chart-card .unified-line-chart,.event-overview-charts .unified-line-chart{width:100%;max-width:100%;height:auto;max-height:none;overflow:visible}
 .trend-metric-card .unified-line-chart{width:100%;max-width:100%;height:auto;max-height:none;margin:12px 0 4px}
 @media(max-width:680px){.unified-line-chart{width:100%;max-width:100%;height:auto}}
+
+
+/* Shared hover, keyboard focus and link appearance for every clickable card.
+   One source of truth for leaders, event cards and Trends/momentum cards. */
+.interactive-card{
+ color:var(--text);
+ text-decoration:none;
+ cursor:pointer;
+ transition:border-color .15s ease,transform .15s ease,box-shadow .15s ease;
+}
+.interactive-card:hover,.interactive-card:focus-visible,
+.event-list .interactive-card:hover,.event-list .interactive-card:focus-visible{
+ border-color:var(--gold)!important;
+ transform:translateY(-1px);
+ box-shadow:0 13px 32px rgba(0,0,0,.25),0 0 0 1px rgba(232,198,109,.2)!important;
+}
+.interactive-card:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
+.interactive-card:visited{color:var(--text)}
+.leader-card:not(.interactive-card){cursor:default}
+.trend-promo,.profile-trend-card,.event-trend-card{border-color:rgba(232,198,109,.35)}
+.trend-promo .trend-promo-action,.profile-trend-card .trend-promo-action,.event-trend-card .trend-promo-action{color:var(--gold);font-weight:700}
+@media(prefers-reduced-motion:reduce){.interactive-card{transition:none}.interactive-card:hover,.interactive-card:focus-visible{transform:none}}
