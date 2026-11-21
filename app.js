@@ -69,13 +69,35 @@ function allianceRankingChart(){
    frequencies.set(rank,(frequencies.get(rank)||0)+1);
  });
  if(!frequencies.size) return '<div class="empty">No ranking data</div>';
- const rankingNumber=rank=>{const n=parseInt(rank,10);return Number.isNaN(n)?Number.MAX_SAFE_INTEGER:n;};
- const distribution=[...frequencies.entries()].sort((a,b)=>rankingNumber(a[0])-rankingNumber(b[0]) || a[0].localeCompare(b[0]));
- const maximum=Math.max(...distribution.map(([,count])=>count));
+ const rankNumber=rank=>{const n=parseInt(rank,10);return Number.isNaN(n)?Number.MAX_SAFE_INTEGER:n;};
+ const distribution=[...frequencies.entries()].sort((a,b)=>rankNumber(a[0])-rankNumber(b[0]) || a[0].localeCompare(b[0]));
+ const total=distribution.reduce((sum,[,count])=>sum+count,0);
+ const circumference=2*Math.PI*68;
+ const rankedColors={'1st':'#e8c66d','2nd':'#b9c4d2','3rd':'#c99573','4th':'#8793a5'};
+ const additionalColors=['#81b5a5','#b59aca','#93a9d2','#d2a47e'];
+ const colorFor=(rank,index)=>rankedColors[rank] || additionalColors[index%additionalColors.length];
+ let offset=0;
+ const segments=distribution.map(([rank,count],index)=>{
+   const length=circumference*count/total;
+   const gap=distribution.length>1?Math.min(4,length*.12):0;
+   const dash=Math.max(0,length-gap);
+   const color=colorFor(rank,index);
+   const segment=`<circle cx="100" cy="100" r="68" fill="none" stroke="${color}" stroke-width="24" stroke-dasharray="${dash} ${circumference-dash}" stroke-dashoffset="${-offset}" transform="rotate(-90 100 100)"><title>${esc(rank)}: ${count} ${count===1?'event':'events'}</title></circle>`;
+   offset+=length;
+   return segment;
+ }).join('');
+ const legend=distribution.map(([rank,count],index)=>{
+   const percent=(100*count/total).toFixed(1);
+   const label=rank==='Unranked'?rank:`${rank} place`;
+   return `<li class="rank-donut-legend-item"><span class="rank-donut-legend-dot" style="background:${colorFor(rank,index)}" aria-hidden="true"></span><span class="rank-donut-legend-content"><span class="rank-donut-legend-label">${esc(label)}</span><span class="rank-donut-legend-detail">${count} ${count===1?'event':'events'} · ${percent}%</span></span></li>`;
+ }).join('');
  const summary=distribution.map(([rank,count])=>`${rank}: ${count} ${count===1?'event':'events'}`).join(', ');
- return `<div class="chart-summary"><strong>${fmt(D.events.length)}</strong><span class="muted">recorded events</span></div>
- <div class="rank-distribution-plot" style="--rank-columns:${distribution.length}" role="img" aria-label="Alliance ranking distribution: ${esc(summary)}">
-  ${distribution.map(([rank,count])=>`<div class="rank-distribution-item"><div class="rank-distribution-track"><div class="rank-distribution-bar" style="height:${100*count/maximum}%"><span class="rank-distribution-count">${count}</span></div></div><span class="rank-distribution-label">${esc(rank)}</span></div>`).join('')}
+ return `<div class="rank-donut-layout">
+  <div class="rank-donut-graphic"><svg viewBox="0 0 200 200" role="img" aria-label="Alliance ranking distribution: ${esc(summary)}">
+    <circle cx="100" cy="100" r="68" fill="none" stroke="#343941" stroke-width="24"/>
+    ${segments}
+   </svg><div class="rank-donut-center" aria-hidden="true"><strong>${fmt(total)}</strong><span>events</span></div></div>
+  <ul class="rank-donut-legend" aria-label="Alliance ranking legend">${legend}</ul>
  </div>`;
 }
 

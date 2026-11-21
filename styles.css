@@ -282,11 +282,19 @@ th.sortable.num button{justify-content:flex-end;text-align:right}
 .event-overview-charts .chart-summary{margin-bottom:10px}
 .event-overview-charts .line-chart{width:100%;height:180px;max-height:180px}
 .event-overview-charts .chart-labels{gap:10px;flex-wrap:wrap}
-.rank-distribution-plot{height:202px;display:grid;grid-template-columns:repeat(var(--rank-columns),minmax(0,1fr));gap:clamp(8px,2vw,24px);align-items:stretch;padding:8px 8px 0}
-.rank-distribution-item{min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:8px}
-.rank-distribution-track{height:165px;width:100%;max-width:75px;display:flex;align-items:flex-end;justify-content:center}
-.rank-distribution-bar{width:100%;max-width:64px;min-height:28px;border:1px solid rgba(255,220,150,.2);border-radius:7px 7px 2px 2px;background:linear-gradient(180deg,#e9c66b,#9f783b);position:relative;display:flex;justify-content:center;align-items:flex-start;box-shadow:0 3px 12px rgba(231,189,88,.08)}
-.rank-distribution-count{font-size:13px;font-weight:800;line-height:1.2;color:#14171b;margin-top:7px;font-variant-numeric:tabular-nums}
-.rank-distribution-label{font-size:12px;font-weight:650;color:var(--muted);white-space:nowrap;text-align:center}
+/* Compact and accessible ranking distribution donut with descriptive legend. */
+.rank-donut-layout{min-height:202px;display:flex;align-items:center;justify-content:center;gap:clamp(12px,2vw,30px);padding:0 4px}
+.rank-donut-graphic{position:relative;flex:0 1 212px;width:min(212px,48%);aspect-ratio:1;min-width:0}
+.rank-donut-graphic svg{width:100%;height:100%;display:block}
+.rank-donut-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none}
+.rank-donut-center strong{font-size:clamp(22px,2.3vw,32px);line-height:1.15;color:var(--text);font-variant-numeric:tabular-nums}
+.rank-donut-center span{color:var(--muted);font-size:12px}
+.rank-donut-legend{flex:1;min-width:0;max-width:220px;margin:0;padding:0;list-style:none;display:grid;gap:12px}
+.rank-donut-legend-item{display:flex;gap:10px;align-items:center;min-width:0}
+.rank-donut-legend-dot{width:11px;height:11px;border-radius:3px;flex:0 0 11px}
+.rank-donut-legend-content{min-width:0;display:flex;flex-direction:column;line-height:1.4}
+.rank-donut-legend-label{font-size:13px;color:var(--text);font-weight:650}
+.rank-donut-legend-detail{font-size:11px;color:var(--muted);white-space:nowrap}
 @media(max-width:900px){.event-overview-charts{grid-template-columns:minmax(0,1fr)}}
-@media(max-width:680px){.event-overview-charts{gap:12px}.event-overview-charts .line-chart{height:auto;max-height:180px}.rank-distribution-plot{gap:10px}}
+@media(max-width:680px){.event-overview-charts{gap:12px}.event-overview-charts .line-chart{height:auto;max-height:180px}.rank-donut-layout{gap:10px}.rank-donut-graphic{flex-basis:195px}.rank-donut-legend{gap:8px}}
+@media(max-width:400px){.rank-donut-layout{flex-direction:column}.rank-donut-graphic{width:185px;flex:none}.rank-donut-legend{grid-template-columns:repeat(2,minmax(0,1fr));max-width:none;width:100%;gap:10px}.rank-donut-legend-item{gap:7px}.rank-donut-legend-detail{white-space:normal}}
