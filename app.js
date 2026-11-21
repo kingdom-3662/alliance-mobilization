@@ -103,44 +103,35 @@ function dashboard(){
 function eventsView(){
  nav("events");
  const bestEvent=D.events.reduce((best,e)=>!best || Number(e.alliancePoints)>Number(best.alliancePoints)?e:best,null);
- app.innerHTML=`<section class="hero"><div><div class="eyebrow">History</div><h1>Events</h1><p class="sub">Every recorded Alliance Mobilization result.</p></div></section>
+ app.innerHTML=`<section class="hero"><div><div class="eyebrow">History</div><h1>Events</h1><p class="sub">Every recorded Alliance Mobilization result.</p></div><button class="back" onclick="goBack('dashboard')">← Back</button></section>
+ <section class="card chart-card event-overview-chart"><div class="table-head compact"><h2>Alliance performance</h2><span class="muted">points by event</span></div>${allianceChart()}</section>
  <section class="event-list">${D.events.slice().reverse().map(e=>`
  <article class="card event-card ${e.id===bestEvent?.id?'best-event':''}" onclick="location.hash='event/${e.id}'">
-   <div class="event-title"><strong>${esc(e.name)}</strong><span class="badge ${e.id===bestEvent?.id?'gold-badge':''}">${e.id===bestEvent?.id?'Highest alliance points':'Alliance #'+esc(e.allianceRank)}</span></div>
+   <div class="event-title"><strong>${esc(e.name)}</strong><span class="badge ${e.id===bestEvent?.id?'gold-badge':''}">${e.id===bestEvent?.id?'All-time best':'Alliance #'+esc(e.allianceRank)}</span></div>
    <div class="event-stat"><span class="muted">Alliance points</span><b>${fmt(e.alliancePoints)}</b></div>
    <div class="event-meta"><span>${esc(e.start)} → ${esc(e.end)}</span><span>Minimum requirement: ${fmt(e.minimumPoints)}</span><span>Levels completed: ${e.level ?? "—"}</span></div>
    <div class="event-top-player"><span class="muted">Top scorer</span><strong>${esc(e.topPlayer||"—")}</strong><span>${fmt(e.topPlayerPoints)} pts</span></div>
  </article>`).join("")}</section>`;
 }
 
-function playersView(query="", preserveInput=false){
- nav("players");
- const q=query.trim().toLowerCase();
- const list=D.players.filter(p=>!q || p.currentName.toLowerCase().includes(q) || p.names.some(n=>n.toLowerCase().includes(q)));
- const page=Number(sessionStorage.getItem("playerPage")||0);
- const size=25, pages=Math.max(1,Math.ceil(list.length/size)), pg=Math.min(page,pages-1);
- const shown=list.slice(pg*size,(pg+1)*size);
- app.innerHTML=`<section class="hero"><div><div class="eyebrow">Player index</div><h1>Players</h1><p class="sub" id="playersCount">${list.length} matching unique identities</p></div></section>
+function playersView(query=''){
+ nav('players');
+ const list=sortedPlayers(query),size=25,pages=Math.max(1,Math.ceil(list.length/size));
+ const page=Math.min(Math.max(0,Number(sessionStorage.getItem('playerPage')||0)),pages-1);
+ app.innerHTML=`<section class="hero"><div><div class="eyebrow">Player index</div><h1>Players</h1><p class="sub" id="playersCount">${list.length} matching unique identities</p></div><button class="back" onclick="goBack('dashboard')">← Back</button></section>
  <section class="card table-card"><div class="table-head"><h2>All governors</h2><span class="muted">click a player for the full profile</span></div>
- <div class="filter-row" style="padding:0 18px 12px"><input id="playerFilter" value="${esc(query)}" placeholder="Filter players…" oninput="filterPlayersLive(this.value)"></div>
- <div class="table-scroll"><table id="playersTable"><thead><tr>${sortHead("#","playersTable",0,"number")}${sortHead("Governor","playersTable",1)}${sortHead("Total","playersTable",2,"number")}${sortHead("Avg/event","playersTable",3,"number")}${sortHead("Events","playersTable",4,"number")}${sortHead("Best rank","playersTable",5,"number")}${sortHead("Former names","playersTable",6)}</tr></thead><tbody id="playersTbody">
- ${shown.map((p,i)=>`<tr class="clickable" onclick="location.hash='player/${encodeURIComponent(p.id)}'"><td>${pg*size+i+1}</td><td><button class="player-link">${esc(p.currentName)}</button></td><td class="num">${fmt(p.totalPoints)}</td><td class="num">${fmt(p.averagePoints)}</td><td class="num">${p.eventsParticipated}</td><td class="num">${p.bestRank??"—"}</td><td class="muted">${p.names.length>1?esc(p.names.slice(0,-1).join(" → ")):"—"}</td></tr>`).join("")}
- </tbody></table></div><div class="pagination" id="playersPagination">${Array.from({length:pages},(_,i)=>`<button class="${i===pg?'active':''}" onclick="event.stopPropagation();sessionStorage.setItem('playerPage',${i});playersView(document.getElementById('playerFilter').value)">${i+1}</button>`).join("")}</div></section>`;
+ <div class="filter-row player-filter-row"><input id="playerFilter" value="${esc(query)}" placeholder="Filter players…" oninput="sessionStorage.setItem('playerPage','0');filterPlayersLive(this.value)"></div>
+ <div class="table-scroll"><table id="playersTable"><thead><tr>${sortHead('#','playersTable',0,'number')}${sortHead('Governor','playersTable',1)}${sortHead('Total','playersTable',2,'number')}${sortHead('Avg/event','playersTable',3,'number')}${sortHead('Events','playersTable',4,'number')}${sortHead('Best rank','playersTable',5,'number')}${sortHead('Former names','playersTable',6)}</tr></thead><tbody id="playersTbody">${list.slice(page*size,(page+1)*size).map(playerTableRow).join('')}</tbody></table></div><div class="pagination" id="playersPagination">${playerPagination(page,pages)}</div></section>`;
+ updatePlayerSortHeaders();
 }
-
-function filterPlayersLive(query=""){
- const q=query.trim().toLowerCase();
- const list=D.players.filter(p=>!q || p.currentName.toLowerCase().includes(q) || p.names.some(n=>n.toLowerCase().includes(q)));
- const size=25, pages=Math.max(1,Math.ceil(list.length/size));
- const page=Math.min(Number(sessionStorage.getItem("playerPage")||0),pages-1);
- const shown=list.slice(page*size,(page+1)*size);
- const table=shown.map((p,i)=>`<tr class="clickable" onclick="location.hash='player/${encodeURIComponent(p.id)}'"><td>${page*size+i+1}</td><td><button class="player-link">${esc(p.currentName)}</button></td><td class="num">${fmt(p.totalPoints)}</td><td class="num">${fmt(p.averagePoints)}</td><td class="num">${p.eventsParticipated}</td><td class="num">${p.bestRank??"—"}</td><td class="muted">${p.names.length>1?esc(p.names.slice(0,-1).join(" → ")):"—"}</td></tr>`).join("");
- const tbody=document.querySelector("#playersTbody");
- const pag=document.querySelector("#playersPagination");
- const count=document.querySelector("#playersCount");
- if(tbody) tbody.innerHTML=table;
- if(pag) pag.innerHTML=Array.from({length:pages},(_,i)=>`<button class="${i===page?'active':''}" onclick="sessionStorage.setItem('playerPage',${i});filterPlayersLive(document.getElementById('playerFilter').value)">${i+1}</button>`).join("");
- if(count) count.textContent=`${list.length} matching unique identities`;
+function filterPlayersLive(query=''){
+ const list=sortedPlayers(query),size=25,pages=Math.max(1,Math.ceil(list.length/size));
+ const page=Math.min(Math.max(0,Number(sessionStorage.getItem('playerPage')||0)),pages-1);
+ const tbody=document.getElementById('playersTbody'),pagination=document.getElementById('playersPagination'),count=document.getElementById('playersCount');
+ if(tbody)tbody.innerHTML=list.slice(page*size,(page+1)*size).map(playerTableRow).join('');
+ if(pagination)pagination.innerHTML=playerPagination(page,pages);
+ if(count)count.textContent=`${list.length} matching unique identities`;
+ updatePlayerSortHeaders();
 }
 
 function playerView(id){
