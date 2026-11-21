@@ -193,17 +193,59 @@ function toggleBelowRequirement(){
  button.classList.toggle("active",!showingOnly);
 }
 
-function route(){
- const h=location.hash.replace(/^#/,"");
- if(h.startsWith("player/")) playerView(h.slice(7));
- else if(h.startsWith("event/")) eventView(h.slice(6));
- else if(h==="players") playersView();
- else if(h==="events") eventsView();
- else dashboard();
+// Preserve per-route view state for in-app Back navigation.
+const routeState=new Map();
+let currentRouteKey=location.hash||'#dashboard';
+const routeTrail=[currentRouteKey];
+let routeTrailPosition=0;
+if('scrollRestoration' in history)history.scrollRestoration='manual';
+function saveRouteState(){
+ routeState.set(currentRouteKey,{scrollY:window.scrollY,playerFilter:document.getElementById('playerFilter')?.value||'',playerPage:sessionStorage.getItem('playerPage')||'0',requirementFilter:document.getElementById('eventPlayersTable')?.dataset.requirementFilter||'all',tableSorts:Array.from(document.querySelectorAll('table[data-sort-col]')).map(t=>({id:t.id,col:Number(t.dataset.sortCol),dir:t.dataset.sortDir,type:t.querySelector('th.sortable[data-col="'+t.dataset.sortCol+'"]')?.dataset.type||'text'}))});
 }
-document.querySelectorAll(".nav-btn").forEach(b=>b.onclick=()=>{location.hash=b.dataset.view});
-document.getElementById("globalSearch").addEventListener("keydown",e=>{if(e.key==="Enter"){location.hash="players";setTimeout(()=>playersView(e.target.value),0)}});
-document.getElementById("footerUpdated").textContent="Source: alliance-mobilization.xlsx · "+D.updatedFromWorkbook;
-document.addEventListener("click", e=>{ const th=e.target.closest("th.sortable"); if(th) sortTable(th.dataset.table,Number(th.dataset.col),th.dataset.type); });
-window.addEventListener("hashchange",route);
+function restoreRouteState(key){
+ const state=routeState.get(key);
+ if(state&&key==='#players'){sessionStorage.setItem('playerPage',state.playerPage);playersView(state.playerFilter)}
+ if(state?.requirementFilter==='below'&&document.getElementById('eventPlayersTable'))toggleBelowRequirement();
+ for(const sort of state?.tableSorts||[]){sortTable(sort.id,sort.col,sort.type);if(sort.dir==='desc')sortTable(sort.id,sort.col,sort.type)}
+ requestAnimationFrame(()=>requestAnimationFrame(()=>window.scrollTo(0,state?.scrollY||0)));
+}
+function goBack(fallback){
+ if(routeTrailPosition>0)history.back();
+ else location.hash=fallback;
+}
+function closeMobileMenu(){document.querySelector('.topbar')?.classList.remove('menu-open');document.getElementById('mobileMenuButton')?.setAttribute('aria-expanded','false')}
+function route(){
+ const h=location.hash.replace(/^#/,'');
+ if(h.startsWith('player/'))playerView(h.slice(7));
+ else if(h.startsWith('event/'))eventView(h.slice(6));
+ else if(h==='players')playersView();
+ else if(h==='events')eventsView();
+ else dashboard();
+ closeMobileMenu();
+}
+document.querySelectorAll('.nav-btn').forEach(b=>b.onclick=()=>{location.hash=b.dataset.view;closeMobileMenu()});
+document.getElementById('mobileMenuButton')?.addEventListener('click',()=>{
+ const open=document.querySelector('.topbar').classList.toggle('menu-open');
+ document.getElementById('mobileMenuButton').setAttribute('aria-expanded',String(open));
+});
+document.getElementById('globalSearch').addEventListener('keydown',e=>{if(e.key==='Enter'){
+ const query=e.target.value;sessionStorage.setItem('playerPage','0');
+ if(location.hash==='#players'){playersView(query);window.scrollTo(0,0)}
+ else{location.hash='players';setTimeout(()=>{playersView(query);window.scrollTo(0,0)},0)}
+ e.target.blur();closeMobileMenu();
+}});
+document.getElementById('footerUpdated').textContent='Source: alliance-mobilization.xlsx · '+D.updatedFromWorkbook;
+document.addEventListener('click',e=>{
+ const th=e.target.closest('th.sortable');
+ if(th){if(th.dataset.table==='playersTable')sortPlayers(Number(th.dataset.col));else sortTable(th.dataset.table,Number(th.dataset.col),th.dataset.type)}
+ const link=e.target.closest('[onclick*="location.hash"],[onclick*="goBack"],.brand,.nav-btn');
+ if(link)saveRouteState();
+},true);
+window.addEventListener('hashchange',()=>{
+ const key=location.hash||'#dashboard';
+ if(routeTrail[routeTrailPosition-1]===key)routeTrailPosition--;
+ else if(routeTrail[routeTrailPosition+1]===key)routeTrailPosition++;
+ else{routeTrail.splice(routeTrailPosition+1);routeTrail.push(key);routeTrailPosition++}
+ currentRouteKey=key;route();restoreRouteState(key);
+});
 route();
