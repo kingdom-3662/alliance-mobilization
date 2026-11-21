@@ -241,7 +241,7 @@ function dashboard(){
  ${leaderCard('Best average ranking',bestRank,avg(bestRank?.averageRank),'average event placement · lower is better','📈')}
  ${leaderCard('Highest average points / quest',bestPPQ,avg(bestPPQ?.averagePPQ),'average of event-level points / quest','🚀')}
  </div></section>
- <section class="trend-promo card" onclick="location.hash='trends'" role="link" tabindex="0" onkeydown="if(event.key==='Enter')location.hash='trends'"><span><strong>📈 Trends & momentum</strong><span class="muted">Explore player momentum, alliance efficiency and event progression</span></span><span class="trend-promo-action">Explore trends →</span></section>
+ <a href="#trends" class="trend-promo card"><span><strong>📈 Trends & momentum</strong><span class="muted">Explore player momentum, alliance efficiency and event progression</span></span><span class="trend-promo-action">Explore trends →</span></a>
   <section class="grid dashboard-main">
    <div class="card table-card"><div class="table-head"><h2>Top 25 players · total points</h2><span class="muted">all recorded events</span></div>
     <div class="table-scroll"><table id="dashboardTopTable"><thead><tr>${sortHead("#","dashboardTopTable",0,"number")}${sortHead("Governor","dashboardTopTable",1)}${sortHead("Points","dashboardTopTable",2,"number")}${sortHead("Events","dashboardTopTable",3,"number")}${sortHead("Avg/event","dashboardTopTable",4,"number")}${sortHead("Ø Pts/Quest","dashboardTopTable",5,"number")}</tr></thead><tbody>
@@ -412,7 +412,7 @@ document.getElementById('footerUpdated').textContent='Source: alliance-mobilizat
 document.addEventListener('click',e=>{
  const th=e.target.closest('th.sortable');
  if(th){if(th.dataset.table==='playersTable')sortPlayers(Number(th.dataset.col));else sortTable(th.dataset.table,Number(th.dataset.col),th.dataset.type)}
- const link=e.target.closest('[onclick*="location.hash"],[onclick*="goBack"],.brand,.nav-btn');
+ const link=e.target.closest('a[href^="#"],[onclick*="location.hash"],[onclick*="goBack"],.brand,.nav-btn');
  if(link)saveRouteState();
 },true);
 window.addEventListener('hashchange',()=>{
