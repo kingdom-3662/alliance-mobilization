@@ -30,10 +30,25 @@ function sortTable(tableId,col,type){
 }
 function sortHead(label,table,col,type="text"){ return `<th class="sortable" data-table="${table}" data-col="${col}" data-type="${type}"><button type="button">${label}<span class="sort-icon">↕</span></button></th>`; }
 
+
+function rankClass(r){r=Number(r);return r===1?'rank1':r>=2&&r<=3?'rank3':r>=4&&r<=5?'rank5':r>=6&&r<=10?'rank10':''}
+function rankPill(r){return `<span class="rank-pill ${rankClass(r)}">${esc(r)}</span>`}
+let playerSort={col:0,dir:'asc'};
+function sortedPlayers(query=''){
+ const q=query.trim().toLowerCase();
+ const list=D.players.map((p,i)=>({...p,originalPosition:i+1})).filter(p=>!q||p.currentName.toLowerCase().includes(q)||p.names.some(n=>n.toLowerCase().includes(q)));
+ const get=[p=>p.originalPosition,p=>p.currentName.toLowerCase(),p=>Number(p.totalPoints),p=>Number(p.averagePoints),p=>Number(p.eventsParticipated),p=>p.bestRank==null?Infinity:Number(p.bestRank),p=>p.names.slice(0,-1).join(' → ').toLowerCase()][playerSort.col];
+ return list.sort((a,b)=>((get(a)<get(b)?-1:get(a)>get(b)?1:0)*(playerSort.dir==='asc'?1:-1))||a.originalPosition-b.originalPosition);
+}
+function playerTableRow(p){return `<tr class="clickable" onclick="location.hash='player/${encodeURIComponent(p.id)}'"><td data-value="${p.originalPosition}">${rankPill(p.originalPosition)}</td><td><button class="player-link">${esc(p.currentName)}</button></td><td class="num">${fmt(p.totalPoints)}</td><td class="num">${fmt(p.averagePoints)}</td><td class="num">${p.eventsParticipated}</td><td class="num">${p.bestRank??'—'}</td><td class="muted">${p.names.length>1?esc(p.names.slice(0,-1).join(' → ')):'—'}</td></tr>`;}
+function playerPagination(page,pages){return Array.from({length:pages},(_,i)=>`<button class="${i===page?'active':''}" onclick="sessionStorage.setItem('playerPage',${i});filterPlayersLive(document.getElementById('playerFilter').value)">${i+1}</button>`).join('')}
+function updatePlayerSortHeaders(){document.querySelectorAll('#playersTable th.sortable').forEach(th=>{th.classList.remove('sort-asc','sort-desc');if(Number(th.dataset.col)===playerSort.col)th.classList.add(playerSort.dir==='asc'?'sort-asc':'sort-desc')})}
+function sortPlayers(col){playerSort.dir=playerSort.col===col&&playerSort.dir==='asc'?'desc':'asc';playerSort.col=col;sessionStorage.setItem('playerPage','0');filterPlayersLive(document.getElementById('playerFilter')?.value||'')}
+
 function nav(view){ document.querySelectorAll(".nav-btn").forEach(b=>b.classList.toggle("active",b.dataset.view===view)); }
 function playerById(id){return D.players.find(p=>p.id===decodeURIComponent(id));}
 function eventById(id){return D.events.find(e=>e.id===id);}
-function playerRows(p){return p.events.map(x=>`<tr><td>${esc(x.event)}</td><td class="num">${x.rank}</td><td class="num">${fmt(x.points)}</td><td class="num">${x.started}</td><td class="num">${x.completed}</td><td class="num">${avg(x.ppq)}</td></tr>`).join("")}
+function playerRows(p){return p.events.map(x=>`<tr><td>${esc(x.event)}</td><td class="num" data-value="${x.rank}">${rankPill(x.rank)}</td><td class="num">${fmt(x.points)}</td><td class="num">${x.started}</td><td class="num">${x.completed}</td><td class="num">${avg(x.ppq)}</td></tr>`).join("")}
 
 function allianceChart(){
  const values=D.events.map(e=>Number(e.alliancePoints)||0); if(!values.length) return '<div class="empty">No event data</div>';
