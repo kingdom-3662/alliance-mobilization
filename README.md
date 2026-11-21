@@ -66,3 +66,24 @@ You therefore only need to replace the Excel workbook for normal data updates, t
 - Removed the leading hash from the Alliance rank statistic.
 - Highlighted the highest-alliance-points event on the Events overview.
 - Matched event overview module backgrounds to the dashboard card styling.
+
+
+## Version 7 — Dashboard, navigation, and responsive design
+
+- Hamburger menu on phones; navigation stays within the screen width.
+- Player profile "Points over time" chart and two-column layout scale to narrow portrait screens.
+- Back buttons on Events, Players, and detail pages preserve previous route, filter, page and scroll position during in-app navigation.
+- Player listings sort the complete filtered dataset before pagination, rather than sorting only 25 displayed entries.
+- Colored rank circles for places 1, 2–3, 4–5, and 6–10; harmonized numeric typography.
+- Dashboard: player leader cards for total points, average ranking and average points/quest; Alliance performance chart above Event history.
+- Events: Alliance performance graph above cards, "All-time best" label, consistent graphite backgrounds and uniform card borders.
+
+## GitHub Pages deployment
+
+This project **must** use **Settings → Pages → Source: GitHub Actions**, not "Deploy from a branch". The existing `.github/workflows/update-data.yml` workflow is intentionally retained, as its build and deployment were confirmed successful on November 21, 2026.
+
+On a commit to `main` that changes the workbook, `build.py` or website assets (according to the workflow's paths filter), Actions regenerates `data.js` from the Excel workbook and publishes a new Pages artifact. It does not commit generated `data.js` back to the repository.
+
+The workflow substitutes the Git commit SHA into `__ASSET_VERSION__` in the **published** HTML. This version marker applies to `data.js`, `app.js`, and `styles.css`. The source `index.html` keeps the placeholder, by design.
+
+For a manual rebuild, open **Actions → Build and deploy → Run workflow** and choose `main`.
