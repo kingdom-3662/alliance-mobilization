@@ -87,8 +87,8 @@ function allianceRankingChart(){
  let offset=0;
  const segments=distribution.map(([rank,count],index)=>{
    const length=circumference*count/total;
-   const gap=distribution.length>1?Math.min(4,length*.12):0;
-   const dash=Math.max(0,length-gap);
+   // No spacing between segments: adjacent arc lengths meet at shared boundaries.
+   const dash=length;
    const color=colorFor(rank);
    const segment=`<circle cx="100" cy="100" r="68" fill="none" stroke="${color}" stroke-width="24" stroke-dasharray="${dash} ${circumference-dash}" stroke-dashoffset="${-offset}" transform="rotate(-90 100 100)"><title>${esc(rank)}: ${count} ${count===1?'event':'events'}</title></circle>`;
    offset+=length;
@@ -144,9 +144,9 @@ function trendChange(pct,decimals=1){
  return `<span class="trend-delta ${state}">${sign}${pct.toFixed(decimals)}%</span>`;
 }
 function trendMetricBadge(change,unit='%',decimals=1){
- if(change===null||change===undefined||!Number.isFinite(change))return '<span class="trend-metric-badge neutral">No comparison</span>';
+ if(change===null||change===undefined||!Number.isFinite(change))return '<span class="trend-metric-badge neutral"><span class="trend-metric-prefix">last:</span> No comparison</span>';
  const rounded=Number(change.toFixed(decimals)),sign=rounded>0?'+':'',status=rounded>0?'positive':rounded<0?'negative':'neutral';
- return `<span class="trend-metric-badge ${status}">${sign}${rounded.toFixed(decimals)}${unit}</span>`;
+ return `<span class="trend-metric-badge ${status}"><span class="trend-metric-prefix">last:</span> ${sign}${rounded.toFixed(decimals)}${unit}</span>`;
 }
 function trendLine(values,caption,format='number',tone='gold'){
  if(!values.length)return '<div class="empty">No event data yet.</div>';
