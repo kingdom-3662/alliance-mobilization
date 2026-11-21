@@ -214,13 +214,13 @@ for p in players.values():
     p["names"] = [n for n in p["names"] if n != p["currentName"]] + [p["currentName"]]
     p["totalPoints"] = sum(x["points"] for x in p["events"])
     p["averagePoints"] = round(p["totalPoints"] / len(p["events"]), 1) if p["events"] else 0
-    p["eventsParticipated"] = sum(x["points"] > 0 for x in p["events"])
+    p["eventsParticipated"] = len(p["events"])  # Zero-point results count; excluded exception rows are already removed.
     p["questsCompleted"] = sum(x["completed"] for x in p["events"])
     p["bestPoints"] = max((x["points"] for x in p["events"]), default=0)
     p["bestRank"] = min((x["rank"] for x in p["events"] if isinstance(x["rank"], (int, float))), default=None)
     ranks = [x["rank"] for x in p["events"] if isinstance(x["rank"], (int, float))]
     p["averageRank"] = round(sum(ranks) / len(ranks), 1) if ranks else 0
-    pp = [x["ppq"] for x in p["events"] if x["completed"] > 0]
+    pp = [x["ppq"] for x in p["events"]]  # All included results count in the per-event average, including zero.
     p["averagePPQ"] = round(sum(pp) / len(pp), 1) if pp else 0
     p["nameHistory"] = p["names"]
 

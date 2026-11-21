@@ -112,7 +112,7 @@ For a manual rebuild, open **Actions → Build and deploy → Run workflow** and
 
 The **Trends** page (available via the website navigation) calculates all metrics at runtime from the generated `data.js`; the Excel workbook and build process do not need additional columns.
 
-- **Player momentum:** compares mean points in the last **three scoring event results** (points > 0) with the preceding **three scoring event results**. A governor needs at least six scoring results before a trend is shown. A change > +5% is tagged Improving; < -5% is Declining; otherwise Stable. This is a comparison across recorded event results, not monthly growth. The builder's `Scoring exceptions` exclusions are respected in player histories.
+- **Player momentum:** compares average points from the last **three included event results** against the preceding **three included event results**, including zero-point results. At least six included event results and a nonzero previous-period average are required for a percentage comparison. A change > +5% means Improving; < -5% Declining; otherwise Stable. These are event-to-event comparisons, not monthly growth. `Scoring exceptions` exclusions are respected.
 - **Alliance quest efficiency:** plots `averagePPQ` from each recorded event.
 - **Active entries:** counts event result rows with more than zero points. These are **account/result entries**, not deduplicated unique governors.
 - **Requirement completion rate:** number of event rows with points at least the event's own minimum requirement, divided by all recorded result rows. This includes zero-point accounts. Event minimum thresholds may differ, so percentages across events are not directly equivalent.
@@ -127,7 +127,7 @@ The charts connect consecutive recorded events, which may be separated by severa
 The Trends page presents Quest efficiency, Active participation, and Minimum requirement completion as visual metric cards inspired by game tracker dashboards:
 
 - **Quest efficiency:** latest average points per quest, a percentage-change pill versus the previous recorded event, and a gold line/area chart.
-- **Active participation:** latest nonzero scoring-entry count, the percentage of all result entries that scored, percentage change in the count versus the previous recorded event, and a turquoise line/area chart.
+- **Active participation:** latest nonzero scoring-entry count, the percentage of all result entries that scored, percentage change in the count versus the previous recorded event, and a steel-blue line/area chart.
 - **Minimum requirement completion:** latest qualifying-entry percentage, an absolute change measured in **percentage points (pp)** versus the previous recorded event, and a per-event column chart with percentage labels inside the bars.
 - Each bar identifies its event, including the year, and links to the event details. Missing earlier comparisons show “No comparison” rather than a made-up percentage.
 - The Events overview donut uses the **dark backgrounds** of the existing ranking circles for its segments; the gold, silver, bronze, purple, and turquoise tier definitions are unchanged.
@@ -150,3 +150,13 @@ Number styling is shared across the website through CSS tokens: **feature metric
 All line charts (Dashboard, Events and the two Trends line series) use one responsive renderer with consistent axes, gridlines, a subtle area fill, point markers and a first/middle/last event-label pattern. They fit their card widths **without horizontal scrolling**, and individual point values appear in accessible hover titles rather than as crowded always-visible number labels. Player-profile Points over time **bar charts** continue to use a zero-based points axis, event labels and values above their bars; narrow player bar charts can scroll to preserve legibility. The ranking donut is a categorical distribution: it retains its total, percentages and legend without Cartesian axes.
 
 The Dashboard's "all recorded events" table subtitle has been removed, and both the Dashboard's "Ø points / quest" KPI and Trends' "Player momentum" KPI now use normal, unaccented cards.
+
+### Counting event participation, including zero points
+
+A player participates whenever they have an **included event result row**, including results with **0 points**. The `Events` column and player-profile `Events participated` KPI count included rows, not only scoring rows. An included zero score contributes to the denominator of `Average / event` and to the average of event-level `Ø points / quest` (as an event with a 0 efficiency result). Only rows explicitly marked `Exclude` in the workbook's `Scoring exceptions` worksheet are removed from individual player statistics and player momentum; their raw event-listing rows are preserved.
+
+The separate `Active scoring entries` metric still measures rows **above zero points** by design; it is not the definition of event participation.
+
+### Consistent clickable cards and browser titles
+
+Player leader cards, Dashboard event history, the Events overview, and Trends/momentum promotion cards use one shared `interactive-card` style with matching gold hover and keyboard-focus effects. Interactive cards are real anchors so their complete surface is clickable and accessible by keyboard. The browser-tab title updates when navigating between Dashboard, Events, Players, Trends and named player/event detail views. The Dashboard's `Data through` badge uses the same neutral graphite palette as ordinary ranking badges.
