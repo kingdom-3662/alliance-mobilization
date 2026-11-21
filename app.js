@@ -225,7 +225,7 @@ function trendsView(){
  const activeChange=prior?.active?100*(latest.active-prior.active)/prior.active:null;
  const participationRate=latest?.total?100*latest.active/latest.total:null;
  const previousRate=prior?.requirementRate;
- const completionPointChange=rate!=null&&previousRate!=null?rate-previousRate:null;
+ const completionRateChange=rate!=null&&previousRate>0?100*(rate-previousRate)/previousRate:null;
  const rateBars=eventStats.map(st=>{
   const value=st.requirementRate,pct=value===null?'—':value.toFixed(1)+'%';
   const shortName=st.event.name.replace(/^([A-Za-z]{3})[A-Za-z]* (\d{4})$/,(_whole,month,year)=>month+" '"+year.slice(2));
@@ -264,7 +264,7 @@ function trendsView(){
    ${trendLine(eventStats.map(st=>st.active),'Active scoring entries','number','steel-blue')}
    
    </div>
-  <div class="card trends-wide trend-metric-card"><div class="trend-metric-header"><h2>Minimum requirement completion</h2>${trendMetricBadge(completionPointChange,' percentage points')}</div>
+  <div class="card trends-wide trend-metric-card"><div class="trend-metric-header"><h2 class="requirement-completion-title"><span class="desktop-title">Minimum requirement completion</span><span class="mobile-title">Min. requirement completion</span></h2>${trendMetricBadge(completionRateChange)}</div>
    <div class="trend-metric-value">${rateText}</div>
    <div class="trend-metric-caption">${fmt(latest?.qualifying||0)} of ${fmt(latest?.total||0)} entries met the minimum · latest event</div>
    <div class="trend-bar-scroll"><div class="trend-bar-chart">${rateBars}</div></div>
