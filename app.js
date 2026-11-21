@@ -368,22 +368,41 @@ function filterPlayersLive(query=''){
  updatePlayerSortHeaders();
 }
 
+/* Player results: a zero-based bar plot with named axes and event-value labels. */
+function playerPointsChart(p){
+ const events=p.events||[];
+ if(!events.length)return '<div class="empty">No scoring event results yet.</div>';
+ const values=events.map(e=>Number(e.points)||0);
+ const max=Math.max(...values,1),step=Math.max(250,Math.ceil(max/4/250)*250),ceiling=4*step;
+ const w=Math.max(550,86+events.length*68),h=242,left=65,right=18,top=25,bottom=195;
+ const y=v=>bottom-(v/ceiling)*(bottom-top);
+ const plotWidth=w-left-right;
+ const gap=plotWidth/events.length;
+ const barWidth=Math.min(37,gap*.6);
+ const ticks=Array.from({length:5},(_,i)=>{
+  const v=i*step,yy=y(v);
+  return `<line class="metric-grid-line" x1="${left}" x2="${w-right}" y1="${yy}" y2="${yy}"/><text class="metric-axis-tick" x="${left-9}" y="${yy+4}" text-anchor="end">${fmt(v)}</text>`;
+ }).join('');
+ const bars=events.map((event,i)=>{
+  const value=values[i],x=left+gap*(i+.5),yy=y(value),barHeight=Math.max(0,bottom-yy);
+  return `<rect x="${x-barWidth/2}" y="${yy}" width="${barWidth}" height="${barHeight}" rx="3" fill="url(#playerChartFill)"><title>${esc(event.event)}: ${fmt(value)} points</title></rect><text class="metric-data-label" x="${x}" y="${Math.max(top-7,yy-8)}" text-anchor="middle">${fmt(value)}</text><text class="metric-axis-event" x="${x}" y="${h-17}" text-anchor="middle">${esc(shortEventLabel(event.event))}</text>`;
+ }).join('');
+ return `<div class="chart-axis-scroll player-axis-scroll"><svg class="metric-axis-chart player-axis-chart" viewBox="0 0 ${w} ${h}" role="img" aria-label="Player points by scoring event with point values, event axis, and a zero-based numeric axis">
+  <defs><linearGradient id="playerChartFill" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#e9c66b"/><stop offset="1" stop-color="#a27d36"/></linearGradient></defs>
+  ${ticks}
+  <line class="metric-axis-line" x1="${left}" y1="${top}" x2="${left}" y2="${bottom}"/>
+  <line class="metric-axis-line" x1="${left}" y1="${bottom}" x2="${w-right}" y2="${bottom}"/>
+  ${bars}
+ </svg></div>`;
+}
+
 function playerView(id){
  const p=playerById(id); if(!p){dashboard();return}
  nav("");
- const max=Math.max(...p.events.map(e=>e.points),1);
  const recentEvent=p.events[p.events.length-1],previousEvent=p.events[p.events.length-2];
  const recentPoints=recentEvent?Number(recentEvent.points)||0:null;
  const previousEventPoints=previousEvent?Number(previousEvent.points)||0:null;
  const pointsDelta=previousEventPoints>0?100*(recentPoints-previousEventPoints)/previousEventPoints:null;
- const playerPointBars=p.events.map(e=>{
-  const pts=Number(e.points)||0,height=Math.max(2,pts/max*84);
-  return `<div class="bar-wrap" title="${esc(e.event)}: ${fmt(pts)} points">
-    <div class="player-bar-plot"><div class="player-bar-number" style="bottom:calc(${height}% + 5px)">${fmt(pts)}</div>
-      <div class="bar" style="height:${height}%"></div></div>
-    <div class="bar-label">${esc(e.event.replace(/^([A-Za-z]{3})[A-Za-z]* (\d{4})$/,(_all,month,year)=>month+" '"+year.slice(2)))}</div>
-   </div>`;
- }).join('');
  const placements=p.events.map(e=>Number(e.rank)).filter(Number.isFinite);
  // Mutually exclusive placement tiers: 1st, 2nd, 3rd, 4th–5th, 6th–10th.
  const top1=placements.filter(r=>r===1).length;
@@ -408,7 +427,7 @@ function playerView(id){
  <section class="grid two profile-content">
   <div class="card points-card"><div class="chart-metric-head"><h2>Points over time</h2>${trendMetricBadge(pointsDelta)}</div>
     <div class="player-points-summary"><strong>${recentPoints===null?'—':fmt(recentPoints)}</strong><span class="muted">points · ${esc(recentEvent?.event||'no event')}</span></div>
-    <div class="chart-viewport"><div class="chart">${playerPointBars||'<div class="empty">No event results yet</div>'}</div></div>
+    ${playerPointsChart(p)}
     <div class="chart-metric-foot">Points scored in each recorded event · change vs previous scoring result</div></div>
   <div class="card"><h2>Name history</h2>${p.names.slice().reverse().map((n,i)=>`<div class="name-history-row"><span class="badge ${i===0?'current-name-badge':''}">${i===0?"Current":"Former"}</span> <strong>${esc(n)}</strong></div>`).join("")}</div>
  </section>
