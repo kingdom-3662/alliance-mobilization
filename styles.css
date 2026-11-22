@@ -406,16 +406,16 @@ th.sortable.num button{justify-content:flex-end;text-align:right}
 .trend-gridline{stroke:rgba(175,187,204,.16);stroke-dasharray:5 6;stroke-width:1}
 .trend-metric-card .chart-labels{font-size:10px}
 .trend-bar-scroll{width:100%;max-width:100%;overflow-x:auto;scrollbar-width:thin;padding-bottom:4px}
-.trend-metric-card .trend-bar-chart{min-width:600px;height:229px;gap:clamp(8px,1.5vw,18px);padding-top:8px}
+.trend-metric-card .trend-bar-chart{min-width:600px;height:199px;gap:clamp(12px,1.8vw,22px);padding-top:8px}
 .trend-metric-card .trend-bar-item{color:var(--muted);font-size:10px;gap:7px}
-.trend-metric-card .trend-bar-percent{font-size:12px;line-height:1.5;font-weight:850;color:#fff5df;font-variant-numeric:tabular-nums;white-space:nowrap;text-shadow:0 1px 3px rgba(9,12,17,.9);background:rgba(18,21,28,.34);padding:1px 4px;border-radius:4px}
-.trend-metric-card .trend-bar-track{height:195px;border-radius:6px;background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.055)}
-.trend-metric-card .trend-bar-fill{min-height:0;display:flex;align-items:flex-start;justify-content:center;padding-top:9px;background:linear-gradient(180deg,#f0d586,#8c6c30);box-shadow:0 0 12px rgba(232,198,109,.1);transition:filter .2s}
-.trend-metric-card .trend-bar-item:hover .trend-bar-fill{filter:brightness(1.17)}
+.trend-metric-card .trend-bar-percent{font-size:12px;line-height:1.5;font-weight:750;color:var(--text);font-variant-numeric:tabular-nums;white-space:nowrap;text-shadow:none;background:rgba(18,21,28,.55);padding:1px 4px;border-radius:4px}
+.trend-metric-card .trend-bar-track{height:165px;border-radius:6px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.045)}
+.trend-metric-card .trend-bar-fill{min-height:0;display:flex;align-items:flex-start;justify-content:center;padding-top:9px;background:linear-gradient(180deg,rgba(193,169,112,.72),rgba(125,105,64,.58));box-shadow:none;transition:filter .2s}
+.trend-metric-card .trend-bar-item:hover .trend-bar-fill{filter:brightness(1.12)}
 .trend-metric-card .trend-bar-label{font-size:10px}
 .rank-donut-graphic svg{filter:drop-shadow(0 2px 5px rgba(0,0,0,.13))}
 @media(max-width:800px){.trend-metric-card{padding:16px}.trend-metric-card .trend-line-svg{height:auto;max-height:150px}}
-@media(max-width:560px){.trend-metric-card .trend-bar-chart{min-width:540px}.trend-metric-card .trend-bar-percent{font-size:11px}.trend-metric-value{font-size:29px}}
+@media(max-width:560px){.trend-metric-card .trend-bar-chart{min-width:540px;height:199px}.trend-metric-card .trend-bar-percent{font-size:11px}.trend-metric-value{font-size:29px}}
 
 
 /* Alliance placements are neutral results, never the red warning treatment. */
