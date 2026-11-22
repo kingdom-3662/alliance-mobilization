@@ -321,7 +321,16 @@ function dashboard(){
  const mostPoints=eligibleLeaders.slice().sort((a,b)=>b.totalPoints-a.totalPoints)[0];
  const bestRank=eligibleLeaders.filter(p=>Number(p.averageRank)>0).sort((a,b)=>a.averageRank-b.averageRank)[0];
  const bestPPQ=eligibleLeaders.filter(p=>p.questsCompleted>0).sort((a,b)=>b.averagePPQ-a.averagePPQ)[0];
- const leaderCard=(label,p,value,note,icon)=>`<${p?'a':'div'} ${p?`href="#player/${encodeURIComponent(p.id)}"`:''} class="card leader-card ${p?'interactive-card':''}"><span class="leader-icon">${icon}</span><div class="leader-label">${label}</div><strong class="leader-name">${p?esc(p.currentName):'—'}</strong><div class="leader-value">${p?value:'—'}</div><span class="kpi-note">${note}</span></${p?'a':'div'}>`;
+ // Decorative, consistent outline symbols: no platform-specific emoji rendering.
+ const leaderIcon=key=>{
+  const paths={
+   trophy:'<path d="M8 21h8"/><path d="M12 17v4"/><path d="M7 4h10"/><path d="M17 4v5a5 5 0 0 1-10 0V4"/><path d="M7 8H4a2 2 0 0 0 0 4h3"/><path d="M17 8h3a2 2 0 0 1 0 4h-3"/>',
+   ranking:'<path d="M4 6h1v4"/><path d="M4 10h2"/><path d="M3 17h2a1 1 0 0 1 0 2H3v2h3"/><path d="M10 6h11"/><path d="M10 12h11"/><path d="M10 18h11"/>',
+   gauge:'<path d="M3.34 19a10 10 0 1 1 17.32 0"/><path d="m12 14 4-4"/><circle cx="12" cy="14" r="1"/>'
+  };
+  return `<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">${paths[key]||''}</svg>`;
+ };
+ const leaderCard=(label,p,value,note,icon)=>`<${p?'a':'div'} ${p?`href="#player/${encodeURIComponent(p.id)}"`:''} class="card leader-card ${p?'interactive-card':''}"><span class="leader-icon">${leaderIcon(icon)}</span><div class="leader-label">${label}</div><strong class="leader-name">${p?esc(p.currentName):'—'}</strong><div class="leader-value">${p?value:'—'}</div><span class="kpi-note">${note}</span></${p?'a':'div'}>`;
  app.innerHTML=`
  <section class="hero"><div><div class="eyebrow">Rise of Kingdoms · Kingdom 3662</div><h1>Alliance Mobilization</h1><p class="sub">${D.events.length} recorded events · latest: ${esc(latest.name)}</p></div>
  </section>
@@ -334,9 +343,9 @@ function dashboard(){
  </section>
  ${trendsCta()}
  <section class="leader-section"><div class="section-heading"><h2>Player leaders</h2><span class="muted">minimum 3 events participated</span></div><div class="grid leader-grid">
- ${leaderCard('Most total points',mostPoints,fmt(mostPoints?.totalPoints),'combined points','💎')}
- ${leaderCard('Best average ranking',bestRank,avg(bestRank?.averageRank),'average event placement · lower is better','📈')}
- ${leaderCard('Highest average points / quest',bestPPQ,avg(bestPPQ?.averagePPQ),'average of event-level points / quest','🚀')}
+ ${leaderCard('Most total points',mostPoints,fmt(mostPoints?.totalPoints),'combined points','trophy')}
+ ${leaderCard('Best average ranking',bestRank,avg(bestRank?.averageRank),'average event placement · lower is better','ranking')}
+ ${leaderCard('Highest average points / quest',bestPPQ,avg(bestPPQ?.averagePPQ),'average of event-level points / quest','gauge')}
  </div></section>
 
   <section class="grid dashboard-main">
