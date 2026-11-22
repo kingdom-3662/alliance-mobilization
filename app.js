@@ -230,15 +230,16 @@ function trendsView(){
  const participationRate=latest?.total?100*latest.active/latest.total:null;
  const previousRate=prior?.requirementRate;
  const completionRateChange=rate!=null&&previousRate!=null?rate-previousRate:null;
- const rateBars=eventStats.map(st=>{
+ const rateBars=eventStats.map((st,i)=>{
   const value=st.requirementRate,pct=value===null?'—':value.toFixed(1)+'%';
   const shortName=st.event.name.replace(/^([A-Za-z]{3})[A-Za-z]* (\d{4})$/,(_whole,month,year)=>month+" '"+year.slice(2));
   const valid=value!==null&&Number.isFinite(value);
   const position=valid?Math.max(0,Math.min(100,value)):0;
+  const marker=valid?'<span class="trend-lollipop-stem"></span><span class="trend-lollipop-dot'+(i===eventStats.length-1?' is-latest':'')+'"></span>':'<span class="trend-lollipop-empty">—</span>';
   return `<a href="#event/${encodeURIComponent(st.event.id)}" class="trend-lollipop-item" aria-label="${esc(st.event.name)}: ${pct} met the minimum">
    <span class="trend-lollipop-value">${pct}</span>
    <span class="trend-lollipop-track" style="--lollipop-position:${position}%">
-     ${valid?'<span class="trend-lollipop-stem"></span><span class="trend-lollipop-dot"></span>':'<span class="trend-lollipop-empty">—</span>'}
+     ${marker}
    </span>
    <span class="trend-lollipop-label">${esc(shortName)}</span>
   </a>`;
@@ -273,7 +274,7 @@ function trendsView(){
    ${trendLine(eventStats.map(st=>st.active),'Active scoring entries','number','steel-blue')}
    
    </div>
-  <div class="card trends-wide trend-metric-card"><div class="trend-metric-header"><h2 class="requirement-completion-title"><span class="desktop-title">Minimum requirement completion</span><span class="mobile-title">Min. requirement completion</span></h2>${trendMetricBadge(completionRateChange)}</div>
+  <div class="card trends-wide trend-metric-card"><div class="trend-metric-header"><h2 class="requirement-completion-title">Requirement completion</h2>${trendMetricBadge(completionRateChange)}</div>
    <div class="trend-metric-value">${rateText}</div>
    <div class="trend-metric-caption">${fmt(latest?.qualifying||0)} of ${fmt(latest?.total||0)} entries met the minimum · latest event</div>
    <div class="trend-bar-scroll"><div class="trend-lollipop-chart">${rateBars}</div></div>
@@ -331,7 +332,7 @@ function dashboard(){
     </tbody></table></div>
    </div>
    <div class="dashboard-side">
-    <div class="card chart-card"><div class="table-head compact alliance-performance-header"><h2>Alliance performance</h2>${trendMetricBadge(alliancePointsChange())}</div>${allianceChart(false)}</div>
+    <div class="card chart-card"><div class="table-head compact comparison-metric-header"><h2>Alliance performance</h2>${trendMetricBadge(alliancePointsChange())}</div>${allianceChart(false)}</div>
     <div class="card"><div class="table-head compact"><h2>Event history</h2><span class="muted">last 5 events</span></div><div class="event-list" style="grid-template-columns:1fr">
     ${!history.some(e=>e.id===bestEvent?.id)?`<a class="event-card best-event record-card interactive-card" href="#event/${bestEvent.id}"><div class="event-title"><strong>${esc(bestEvent.name)}</strong><span class="badge gold-badge">All-time best</span></div><div class="event-stat"><span class="muted">Alliance points</span><b>${fmt(bestEvent.alliancePoints)}</b></div><div class="event-meta"><span>Top player: <strong>${esc(bestEvent.topPlayer||'—')}</strong></span></div><div class="event-meta"><span>${esc(bestEvent.start)} → ${esc(bestEvent.end)} · Reward: ${esc(bestEvent.reward||'—')}</span></div></a>`:''}
     ${history.map(e=>`<a class="event-card interactive-card ${e.id===bestEvent?.id?'best-event':''}" href="#event/${e.id}"><div class="event-title"><strong>${esc(e.name)}</strong><span class="badge ${e.id===bestEvent?.id?'gold-badge':'alliance-placement-badge'}">${e.id===bestEvent?.id?'All-time best':esc(e.allianceRank)}</span></div><div class="event-stat"><span class="muted">Alliance points</span><b>${fmt(e.alliancePoints)}</b></div><div class="event-meta"><span>Top player: <strong>${esc(e.topPlayer||'—')}</strong></span></div><div class="event-meta"><span>${esc(e.start)} → ${esc(e.end)} · Reward: ${esc(e.reward||'—')}</span></div></a>`).join("")}
@@ -345,7 +346,7 @@ function eventsView(){
  const bestEvent=D.events.reduce((best,e)=>!best || Number(e.alliancePoints)>Number(best.alliancePoints)?e:best,null);
  app.innerHTML=`<section class="hero back-first"><button class="back" onclick="goBack('dashboard')">← Back</button><div><div class="eyebrow">History</div><h1>Events</h1><p class="sub">Every recorded Alliance Mobilization result.</p></div></section>
  <section class="event-overview-charts" aria-label="Alliance event performance charts">
-   <div class="card chart-card event-overview-chart"><div class="table-head compact"><h2>Alliance points</h2><span class="muted">points by event</span></div>${allianceChart()}</div>
+   <div class="card chart-card event-overview-chart"><div class="table-head compact comparison-metric-header"><h2>Alliance points</h2>${trendMetricBadge(alliancePointsChange())}</div>${allianceChart(false)}</div>
    <div class="card chart-card event-overview-chart"><div class="table-head compact"><h2>Alliance ranking distribution</h2><span class="muted">events by final placement</span></div>${allianceRankingChart()}</div>
   </section>
  ${trendsCta()}
@@ -395,7 +396,8 @@ function playerPointsChart(p){
  }).join('');
  const bars=events.map((event,i)=>{
   const value=values[i],x=left+gap*(i+.5),yy=y(value);
-  return `<g class="player-lollipop-point"><line class="player-lollipop-stem" x1="${x}" y1="${bottom}" x2="${x}" y2="${yy}"/><circle class="player-lollipop-dot" cx="${x}" cy="${yy}" r="5"><title>${esc(event.event)}: ${fmt(value)} points</title></circle><text class="metric-data-label" x="${x}" y="${Math.max(top-7,yy-12)}" text-anchor="middle">${fmt(value)}</text><text class="metric-axis-event" x="${x}" y="${h-17}" text-anchor="middle">${esc(shortEventLabel(event.event))}</text></g>`;
+  const latest=i===events.length-1;
+  return `<g class="player-lollipop-point"><line class="player-lollipop-stem" x1="${x}" y1="${bottom}" x2="${x}" y2="${yy}"/>${latest?`<circle class="player-lollipop-halo" cx="${x}" cy="${yy}" r="9"/>`:''}<circle class="player-lollipop-dot" cx="${x}" cy="${yy}" r="${latest?5.5:3.5}"><title>${esc(event.event)}: ${fmt(value)} points</title></circle><text class="metric-data-label" x="${x}" y="${Math.max(top-7,yy-12)}" text-anchor="middle">${fmt(value)}</text><text class="metric-axis-event" x="${x}" y="${h-17}" text-anchor="middle">${esc(shortEventLabel(event.event))}</text></g>`;
  }).join('');
  return `<div class="chart-axis-scroll player-axis-scroll"><svg class="metric-axis-chart player-axis-chart" style="min-width:${w}px" viewBox="0 0 ${w} ${h}" role="img" aria-label="Player points by scoring event as lollipop markers with point values, event axis, and a zero-based numeric axis">
   ${ticks}
