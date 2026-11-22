@@ -235,11 +235,10 @@ function trendsView(){
   const shortName=st.event.name.replace(/^([A-Za-z]{3})[A-Za-z]* (\d{4})$/,(_whole,month,year)=>month+" '"+year.slice(2));
   const valid=value!==null&&Number.isFinite(value);
   const position=valid?Math.max(0,Math.min(100,value)):0;
-  const marker=valid?'<span class="trend-lollipop-stem"></span><span class="trend-lollipop-dot'+(i===eventStats.length-1?' is-latest':'')+'"></span>':'<span class="trend-lollipop-empty">—</span>';
+  const marker=valid?`<span class="trend-lollipop-stem"></span><span class="trend-lollipop-dot${i===eventStats.length-1?' is-latest':''}"></span><span class="trend-lollipop-value">${pct}</span>`:'<span class="trend-lollipop-empty">—</span>';
   return `<a href="#event/${encodeURIComponent(st.event.id)}" class="trend-lollipop-item" aria-label="${esc(st.event.name)}: ${pct} met the minimum">
-   <span class="trend-lollipop-value">${pct}</span>
    <span class="trend-lollipop-track" style="--lollipop-position:${position}%">
-     ${marker}
+     <span class="trend-lollipop-plot">${marker}</span>
    </span>
    <span class="trend-lollipop-label">${esc(shortName)}</span>
   </a>`;
@@ -397,7 +396,7 @@ function playerPointsChart(p){
  const bars=events.map((event,i)=>{
   const value=values[i],x=left+gap*(i+.5),yy=y(value);
   const latest=i===events.length-1;
-  return `<g class="player-lollipop-point"><line class="player-lollipop-stem" x1="${x}" y1="${bottom}" x2="${x}" y2="${yy}"/>${latest?`<circle class="player-lollipop-halo" cx="${x}" cy="${yy}" r="9"/>`:''}<circle class="player-lollipop-dot" cx="${x}" cy="${yy}" r="${latest?5.5:3.5}"><title>${esc(event.event)}: ${fmt(value)} points</title></circle><text class="metric-data-label" x="${x}" y="${Math.max(top-7,yy-12)}" text-anchor="middle">${fmt(value)}</text><text class="metric-axis-event" x="${x}" y="${h-17}" text-anchor="middle">${esc(shortEventLabel(event.event))}</text></g>`;
+  return `<g class="player-lollipop-point"><line class="player-lollipop-stem" x1="${x}" y1="${bottom}" x2="${x}" y2="${yy}"/>${latest?`<circle class="player-lollipop-halo" cx="${x}" cy="${yy}" r="9"/>`:''}<circle class="player-lollipop-dot" cx="${x}" cy="${yy}" r="${latest?5.5:3.5}"><title>${esc(event.event)}: ${fmt(value)} points</title></circle><text class="metric-data-label" x="${x}" y="${yy-12}" text-anchor="middle">${fmt(value)}</text><text class="metric-axis-event" x="${x}" y="${h-17}" text-anchor="middle">${esc(shortEventLabel(event.event))}</text></g>`;
  }).join('');
  return `<div class="chart-axis-scroll player-axis-scroll"><svg class="metric-axis-chart player-axis-chart" style="min-width:${w}px" viewBox="0 0 ${w} ${h}" role="img" aria-label="Player points by scoring event as lollipop markers with point values, event axis, and a zero-based numeric axis">
   ${ticks}
