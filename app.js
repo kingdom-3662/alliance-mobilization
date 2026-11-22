@@ -114,56 +114,59 @@ function allianceChart(showBadge=true){
 }
 
 function allianceRankingChart(){
- const frequencies=new Map();
- D.events.forEach(e=>{
-   const rank=String(e.allianceRank ?? '').trim() || 'Unranked';
-   frequencies.set(rank,(frequencies.get(rank)||0)+1);
- });
- if(!frequencies.size) return '<div class="empty">No ranking data</div>';
- const rankNumber=rank=>{const n=parseInt(rank,10);return Number.isNaN(n)?Number.MAX_SAFE_INTEGER:n;};
- const distribution=[...frequencies.entries()].sort((a,b)=>rankNumber(a[0])-rankNumber(b[0]) || a[0].localeCompare(b[0]));
- const total=distribution.reduce((sum,[,count])=>sum+count,0);
- const circumference=2*Math.PI*68;
- // Use the shared ranking palette: gold / silver / bronze / purple / steel blue.
- // The donut uses midtones between each ranking circle's dark fill and light border.
- const colorFor=rank=>{
-   const place=rankNumber(rank);
-   if(place===1) return 'var(--place-mid-gold)';
-   if(place===2) return 'var(--place-mid-silver)';
-   if(place===3) return 'var(--place-mid-bronze)';
-   if(place===4 || place===5) return 'var(--place-mid-purple)';
-   if(place>=6 && place<=10) return 'var(--place-mid-steel-blue)';
-   return 'var(--place-mid-neutral)';
+ const rankNumber=rank=>{
+  const n=Number.parseInt(String(rank??''),10);
+  return Number.isFinite(n)&&n>0?n:null;
  };
+ const rankTier=rank=>{
+  const n=rankNumber(rank);
+  return n===1?'first':n===2||n===3?'podium':n===4||n===5?'high':n>=6&&n<=10?'top10':'other';
+ };
+ const categories=[
+  {id:'first',label:'1st place',color:'var(--place-mid-gold)'},
+  {id:'podium',label:'2nd–3rd place',color:'var(--place-mid-copper)'},
+  {id:'high',label:'4th–5th place',color:'var(--place-mid-purple)'},
+  {id:'top10',label:'6th–10th place',color:'var(--place-mid-steel-blue)'},
+  {id:'other',label:'Other / unranked',color:'var(--place-mid-neutral)'}
+ ];
+ const counts=new Map(categories.map(c=>[c.id,0]));
+ D.events.forEach(e=>{
+  const tier=rankTier(e.allianceRank);
+  counts.set(tier,counts.get(tier)+1);
+ });
+ const distribution=categories.filter(c=>counts.get(c.id)>0);
+ if(!distribution.length)return '<div class="empty">No ranking data</div>';
+ const total=D.events.length,circumference=2*Math.PI*68;
  let offset=0;
- const segments=distribution.map(([rank,count],index)=>{
-   const length=circumference*count/total;
-   // No spacing between segments: adjacent arc lengths meet at shared boundaries.
-   const dash=length;
-   const color=colorFor(rank);
-   const segment=`<circle cx="100" cy="100" r="68" fill="none" stroke="${color}" stroke-width="24" stroke-dasharray="${dash} ${circumference-dash}" stroke-dashoffset="${-offset}" transform="rotate(-90 100 100)"><title>${esc(rank)}: ${count} ${count===1?'event':'events'}</title></circle>`;
-   offset+=length;
-   return segment;
+ const segments=distribution.map(category=>{
+  const count=counts.get(category.id),length=circumference*count/total;
+  const segment=`<circle cx="100" cy="100" r="68" fill="none" stroke="${category.color}" stroke-width="24" stroke-dasharray="${length} ${circumference-length}" stroke-dashoffset="${-offset}" transform="rotate(-90 100 100)"><title>${esc(category.label)}: ${count} ${count===1?'event':'events'}</title></circle>`;
+  offset+=length;
+  return segment;
  }).join('');
- const legend=distribution.map(([rank,count],index)=>{
-   const percent=(100*count/total).toFixed(1);
-   const label=rank==='Unranked'?rank:`${rank} place`;
-   return `<li class="rank-donut-legend-item"><span class="rank-donut-legend-dot" style="background:${colorFor(rank)}" aria-hidden="true"></span><span class="rank-donut-legend-content"><span class="rank-donut-legend-label">${esc(label)}</span><span class="rank-donut-legend-detail">${count} ${count===1?'event':'events'} · ${percent}%</span></span></li>`;
+ const legend=distribution.map(category=>{
+  const count=counts.get(category.id),percent=(100*count/total).toFixed(1);
+  return `<li class="rank-donut-legend-item"><span class="rank-donut-legend-dot" style="background:${category.color}" aria-hidden="true"></span><span class="rank-donut-legend-content"><span class="rank-donut-legend-label">${esc(category.label)}</span><span class="rank-donut-legend-detail">${count} ${count===1?'event':'events'} · ${percent}%</span></span></li>`;
  }).join('');
- const summary=distribution.map(([rank,count])=>`${rank}: ${count} ${count===1?'event':'events'}`).join(', ');
+ const summary=distribution.map(category=>`${category.label}: ${counts.get(category.id)} ${counts.get(category.id)===1?'event':'events'}`).join(', ');
  const latestRank=D.events[D.events.length-1]?.allianceRank;
  const previousRank=D.events[D.events.length-2]?.allianceRank;
- const currentPlace=rankNumber(String(latestRank||''));
- const previousPlace=rankNumber(String(previousRank||''));
- const diff=currentPlace!==Number.MAX_SAFE_INTEGER&&previousPlace!==Number.MAX_SAFE_INTEGER?previousPlace-currentPlace:null;
+ const currentPlace=rankNumber(latestRank),previousPlace=rankNumber(previousRank);
+ const diff=currentPlace!==null&&previousPlace!==null?previousPlace-currentPlace:null;
  const comparison=diff===null?'No earlier placement':diff===0?'unchanged vs previous event':diff>0?`up ${diff} ${diff===1?'place':'places'} vs previous event`:`down ${-diff} ${-diff===1?'place':'places'} vs previous event`;
- return `<div class="rank-donut-layout">
+ const ordinal=n=>{
+  if(n===null)return '—';
+  const suffix=n%100>=11&&n%100<=13?'th':n%10===1?'st':n%10===2?'nd':n%10===3?'rd':'th';
+  return `${n}${suffix}`;
+ };
+ return `<div class="chart-metric-head rank-placement-summary"><div class="chart-summary"><strong>${esc(ordinal(currentPlace))}</strong><span class="muted">latest placement · ${esc(comparison)}</span></div></div>
+ <div class="rank-donut-layout">
   <div class="rank-donut-graphic"><svg viewBox="0 0 200 200" role="img" aria-label="Alliance ranking distribution: ${esc(summary)}">
     <circle cx="100" cy="100" r="68" fill="none" stroke="#343941" stroke-width="24"/>
     ${segments}
    </svg><div class="rank-donut-center" aria-hidden="true"><strong>${fmt(total)}</strong><span>events</span></div></div>
   <ul class="rank-donut-legend" aria-label="Alliance ranking legend">${legend}</ul>
- </div><div class="chart-metric-foot rank-donut-foot">Latest placement: <strong>${esc(latestRank||"—")}</strong> · ${esc(comparison)}</div>`;
+ </div>`;
 }
 
 /* Trends are derived from the deployed event and player data, never a separate data source. */
@@ -432,7 +435,7 @@ function playerView(id){
    <div class="card"><div class="kpi-label">Ø points / quest</div><div class="kpi-value">${avg(p.averagePPQ)}</div><div class="kpi-note">average across events</div></div>
  </section>
  ${momentumPanel}
-  <section class="card performance-card"><div class="table-head compact"><h2>Performance badges</h2><span class="muted">exclusive placement tiers · all events</span></div><div class="performance-badges"><div class="performance-badge rank1"><span class="medal">👑</span><strong>${top1}</strong><span>1st place</span></div><div class="performance-badge rank2"><span class="medal">🥈</span><strong>${top2}</strong><span>2nd place</span></div><div class="performance-badge rank3"><span class="medal">🥉</span><strong>${top3}</strong><span>3rd place</span></div><div class="performance-badge rank45"><span class="medal">🏅</span><strong>${top45}</strong><span>4th–5th place</span></div><div class="performance-badge rank10"><span class="medal">⭐</span><strong>${top10}</strong><span>6th–10th place</span></div></div></section>
+  <section class="card performance-card"><div class="table-head compact"><h2>Performance badges</h2><span class="muted">exclusive placement tiers · all events</span></div><div class="performance-badges"><div class="performance-badge rank1"><span class="tier-mark" aria-hidden="true">1st</span><strong>${top1}</strong><span>1st place</span></div><div class="performance-badge rank2"><span class="tier-mark" aria-hidden="true">2nd</span><strong>${top2}</strong><span>2nd place</span></div><div class="performance-badge rank3"><span class="tier-mark" aria-hidden="true">3rd</span><strong>${top3}</strong><span>3rd place</span></div><div class="performance-badge rank45"><span class="tier-mark" aria-hidden="true">4–5</span><strong>${top45}</strong><span>4th–5th place</span></div><div class="performance-badge rank10"><span class="tier-mark" aria-hidden="true">6–10</span><strong>${top10}</strong><span>6th–10th place</span></div></div></section>
  <section class="grid two profile-content">
   <div class="card points-card"><div class="chart-metric-head"><h2>Points over time</h2>${trendMetricBadge(pointsDelta)}</div>
     <div class="player-points-summary"><strong>${recentPoints===null?'—':fmt(recentPoints)}</strong><span class="muted">points · ${esc(recentEvent?.event||'no event')}</span></div>

@@ -102,7 +102,7 @@ main{max-width:1480px;padding-top:28px}
 .line-chart{width:100%;height:auto;display:block;overflow:visible}.chart-labels{display:flex;justify-content:space-between;color:var(--muted);font-size:11px}
 .performance-card{margin-top:16px}.performance-badges{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
 .performance-badge{min-height:100px;border:1px solid var(--line);border-radius:10px;padding:13px 16px;display:grid;grid-template-columns:auto 1fr;column-gap:10px;align-items:center;background:rgba(255,255,255,.018)}
-.performance-badge .medal{grid-row:span 2;font-size:24px}.performance-badge strong{font-size:26px;line-height:1;color:var(--gold)}.performance-badge>span:last-child{font-size:12px;color:var(--muted)}
+.performance-badge .tier-mark{grid-row:span 2;display:inline-flex;align-items:center;justify-content:center;width:42px;height:42px;border-radius:50%;font-size:11px;line-height:1;font-weight:800;color:var(--text);background:var(--tier-fill,var(--place-fill-neutral));border:2px solid var(--tier-color,var(--place-neutral));font-variant-numeric:tabular-nums}.performance-badge strong{font-size:26px;line-height:1;color:var(--text)}.performance-badge>span:last-child{font-size:12px;color:var(--muted)}
 
 th{background:#191c22}td,th{border-color:#343941}
 tr.clickable:hover{background:rgba(231,189,88,.055)}
@@ -127,16 +127,11 @@ tr.below-requirement td:first-child{box-shadow:inset 3px 0 0 #e16b70}
 tr[hidden]{display:none}
 /* Five mutually exclusive performance tiers */
 .performance-badges{grid-template-columns:repeat(5,minmax(0,1fr))}
-.performance-badge.rank1{border-color:var(--place-gold);background:linear-gradient(145deg,rgba(111,81,28,.2),rgba(255,255,255,.018))}
-.performance-badge.rank2{border-color:var(--place-silver)}
-.performance-badge.rank3{border-color:var(--place-bronze)}
-.performance-badge.rank45{border-color:var(--place-purple)}
-.performance-badge.rank10{border-color:var(--place-steel-blue)}
-.performance-badge.rank1 strong{color:var(--place-gold)}
-.performance-badge.rank2 strong{color:var(--place-silver)}
-.performance-badge.rank3 strong{color:var(--place-bronze)}
-.performance-badge.rank45 strong{color:var(--place-purple)}
-.performance-badge.rank10 strong{color:var(--place-steel-blue)}
+.performance-badge.rank1{--tier-color:var(--place-gold);--tier-fill:var(--place-fill-gold);border-color:var(--place-gold);background:linear-gradient(145deg,rgba(111,81,28,.2),rgba(255,255,255,.018))}
+.performance-badge.rank2,.performance-badge.rank3{--tier-color:var(--place-copper);--tier-fill:var(--place-fill-copper);border-color:var(--place-copper)}
+.performance-badge.rank45{--tier-color:var(--place-purple);--tier-fill:var(--place-fill-purple);border-color:var(--place-purple)}
+.performance-badge.rank10{--tier-color:var(--place-steel-blue);--tier-fill:var(--place-fill-steel-blue);border-color:var(--place-steel-blue)}
+.performance-badge strong{color:var(--text)}
 .performance-card + .profile-content{margin-top:16px}
 /* Neutral, gold-accented event bars replace the red-to-green gradient */
 .bar{background:linear-gradient(180deg,#e9c66b,#b88a3e);border:1px solid rgba(255,220,150,.16);border-radius:5px 5px 2px 2px;box-shadow:0 3px 12px rgba(231,189,88,.08)}
@@ -161,11 +156,10 @@ body{background:linear-gradient(180deg,#11151a 0%,#0c0f13 48%,#0a0d11 100%);back
 .current-name-badge{background:rgba(232,198,109,.17);color:#f2d58d}
 .current-name-note{display:inline-flex;align-items:center;margin-left:5px;padding:2px 7px;border:1px solid rgba(232,198,109,.2);border-radius:6px;background:rgba(232,198,109,.07);color:#d9c18b;font-size:10px;font-weight:600;vertical-align:middle}
 .mini-rank-badge{display:inline-flex;align-items:center;gap:4px;margin-left:5px;padding:2px 7px;border-radius:6px;border:1px solid rgba(255,255,255,.09);font-size:10px;font-weight:750;line-height:1.4;vertical-align:middle}
-.mini-rank-badge.rank1{color:var(--place-gold);background:rgba(232,198,109,.13);border-color:var(--place-gold)}
-.mini-rank-badge.rank2{color:var(--place-silver);background:rgba(185,198,216,.09);border-color:var(--place-silver)}
-.mini-rank-badge.rank3{color:var(--place-bronze);background:rgba(180,124,82,.09);border-color:var(--place-bronze)}
-.mini-rank-badge.rank45{color:var(--place-purple);background:rgba(154,127,203,.09);border-color:var(--place-purple)}
-.mini-rank-badge.rank10{color:var(--place-steel-blue);background:rgba(127,151,188,.1);border-color:var(--place-steel-blue)}
+.mini-rank-badge.rank1{color:var(--text);background:var(--place-fill-gold);border-color:var(--place-gold)}
+.mini-rank-badge.rank2,.mini-rank-badge.rank3{color:var(--text);background:var(--place-fill-copper);border-color:var(--place-copper)}
+.mini-rank-badge.rank45{color:var(--text);background:var(--place-fill-purple);border-color:var(--place-purple)}
+.mini-rank-badge.rank10{color:var(--text);background:var(--place-fill-steel-blue);border-color:var(--place-steel-blue)}
 @media(max-width:600px){.topbar nav{gap:2px;padding:3px}.nav-btn{padding:7px 9px;font-size:12px}}
 
 /* v6 refinements: consistent event modules, clear record highlight and filter placement */
@@ -204,11 +198,10 @@ main,.grid,.card,.profile-content,.profile-content>.card,.dashboard-main,.dashbo
 .leader-name{display:block;font-size:15px;margin:10px 0 3px;overflow-wrap:anywhere}
 .leader-value{font-weight:800;color:var(--gold);line-height:1.2}
 .rank-pill{display:inline-flex;align-items:center;justify-content:center;width:29px;height:29px;border-radius:50%;font-size:12px;font-weight:800;color:var(--text);background:#30363f;border:1px solid #454b55;font-variant-numeric:tabular-nums}
-.rank-pill.rank1{color:var(--place-gold);background:var(--place-fill-gold);border-color:var(--place-gold)}
-.rank-pill.rank2{color:var(--place-silver);background:var(--place-fill-silver);border-color:var(--place-silver)}
-.rank-pill.rank3{color:var(--place-bronze);background:var(--place-fill-bronze);border-color:var(--place-bronze)}
-.rank-pill.rank45{color:var(--place-purple);background:var(--place-fill-purple);border-color:var(--place-purple)}
-.rank-pill.rank10{color:var(--place-steel-blue);background:var(--place-fill-steel-blue);border-color:var(--place-steel-blue)}
+.rank-pill.rank1{color:var(--text);background:var(--place-fill-gold);border-color:var(--place-gold)}
+.rank-pill.rank2,.rank-pill.rank3{color:var(--text);background:var(--place-fill-copper);border-color:var(--place-copper)}
+.rank-pill.rank45{color:var(--text);background:var(--place-fill-purple);border-color:var(--place-purple)}
+.rank-pill.rank10{color:var(--text);background:var(--place-fill-steel-blue);border-color:var(--place-steel-blue)}
 .player-filter-row{padding:0 18px 12px}
 .pagination{flex-wrap:wrap}
 .points-card{overflow:hidden}
@@ -241,7 +234,7 @@ main,.grid,.card,.profile-content,.profile-content>.card,.dashboard-main,.dashbo
  .points-card .chart{height:215px}
  .performance-badges{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
  .performance-badge{padding:10px;min-width:0;grid-template-columns:1fr;gap:5px}
- .performance-badge .medal{grid-row:auto;font-size:20px}
+ .performance-badge .tier-mark{grid-row:auto;width:36px;height:36px;font-size:10px}
  .performance-badge strong{font-size:var(--number-lg)}
  .name-history-row strong{overflow-wrap:anywhere}
  footer{gap:10px;flex-wrap:wrap;padding:16px}
@@ -311,22 +304,19 @@ th.sortable.num button{justify-content:flex-end;text-align:right}
 /* Shared placement palette: badges, ranking circles and the Events donut. */
 :root{
  --place-gold:#e8c66d;
- --place-silver:#d5dce7;
- --place-bronze:#d9a77f;
+ --place-copper:#d9a77f;
  --place-purple:#c5b4e7;
  --place-steel-blue:#7f97bc;
  --place-neutral:#8793a5;
- /* Muted ranking-circle backgrounds, reused for donut segments. */
+ /* Muted ranking-circle backgrounds, with 2nd and 3rd sharing copper. */
  --place-fill-gold:#5b481f;
- --place-fill-silver:#3b4656;
- --place-fill-bronze:#594031;
+ --place-fill-copper:#594031;
  --place-fill-purple:#40364e;
  --place-fill-steel-blue:#2f3f57;
  --place-fill-neutral:#30363f;
- /* Donut uses midpoints between the dark rank-circle fills and light outlines. */
+ /* Donut segments use a softer midtone of each rank color. */
  --place-mid-gold:#a28f46;
- --place-mid-silver:#8892a0;
- --place-mid-bronze:#996f55;
+ --place-mid-copper:#996f55;
  --place-mid-purple:#8275a3;
  --place-mid-steel-blue:#5f7598;
  --place-mid-neutral:#59606a;
@@ -441,7 +431,7 @@ th.sortable.num button{justify-content:flex-end;text-align:right}
 .chart-metric-head .trend-metric-badge{max-width:100%}
 .chart-metric-foot{margin-top:10px;color:var(--muted);font-size:11px;line-height:1.5}
 .rank-donut-foot{padding-top:7px;border-top:1px solid var(--line)}
-.rank-donut-foot strong{color:var(--place-silver)}
+.rank-donut-foot strong{color:var(--text)}
 .player-points-summary{display:flex;align-items:baseline;flex-wrap:wrap;gap:7px;margin-top:10px;font-size:12px}
 .points-card .chart{padding-top:16px}
 .points-card .bar-wrap{height:100%;display:flex;flex-direction:column;justify-content:flex-end;gap:5px}
@@ -462,6 +452,8 @@ th.sortable.num button{justify-content:flex-end;text-align:right}
 .kpi-value,.trend-kpis .kpi-value{font-size:var(--number-primary);line-height:1.18;letter-spacing:-.025em;font-weight:800;font-variant-numeric:tabular-nums;color:var(--text)}
 .trend-metric-value{font-size:var(--number-feature);line-height:1.1;letter-spacing:-.035em;font-variant-numeric:tabular-nums}
 .chart-metric-head .chart-summary strong,.player-points-summary strong,.rank-donut-center strong{font-size:var(--number-primary);font-weight:800;line-height:1.18;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.rank-placement-summary{margin:0 0 12px}
+.rank-placement-summary .chart-summary strong{color:var(--text)}
 .leader-value,.event-stat b,.performance-badge strong,.trend-profile-value .trend-delta{font-size:var(--number-secondary);line-height:1.2;letter-spacing:-.01em;font-weight:800;font-variant-numeric:tabular-nums}
 .event-stat b,.performance-badge strong{color:var(--text)}
 .player-bar-number,.metric-data-label,.metric-axis-tick{font-variant-numeric:tabular-nums}
