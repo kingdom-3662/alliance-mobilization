@@ -456,15 +456,15 @@ function playerView(id){
  };
  const medalSvg=level=>`<svg class="tier-medal" viewBox="0 0 160 140" aria-hidden="true" focusable="false">
   ${medalStripeLayouts[level].map(([y,x1,x2])=>`<path class="medal-stripe" d="M${x1} ${y}H${x2}"/>`).join('')}
-  <circle class="medal-outer" cx="80" cy="70" r="47"/>
-  <circle class="medal-inner" cx="80" cy="70" r="40"/>
+  <circle class="medal-outer" cx="80" cy="70" r="45"/>
+  <circle class="medal-inner" cx="80" cy="70" r="38"/>
  </svg>`;
  const performanceBadges=[
   ['rank1',top1,'1st place',4],
   ['rank23',top23,'2nd–3rd place',3],
   ['rank45',top45,'4th–5th place',2],
   ['rank10',top10,'6th–10th place',1]
- ].map(([tier,count,label,level])=>`<div class="performance-badge ${tier}"><div class="tier-emblem">${medalSvg(level)}<strong class="tier-count ${String(count).length>=4?'tier-count-compact':''}">${fmt(count)}</strong></div><span class="tier-caption">${esc(label)}</span></div>`).join('');
+ ].map(([tier,count,label,level])=>`<div class="performance-badge ${tier}"><div class="tier-emblem">${medalSvg(level)}<strong class="tier-count ${String(count).length>=4?'tier-count-compact':String(count).length===3?'tier-count-triple':''}">${fmt(count)}</strong></div><span class="tier-caption">${esc(label)}</span></div>`).join('');
  const momentum=playerMomentum(p);
  const momentumPanel=momentum?`<a href="#trends" class="card profile-trend-card interactive-card"><div><span class="kpi-label">Recent momentum · last 3 events vs prior 3</span><div class="trend-profile-value">${trendChange(momentum.pct)} <span class="muted">average points / event</span></div><span class="kpi-note">${fmt(momentum.prior)} → ${fmt(momentum.recent)} points · average rank ${avg(momentum.priorRank)} → ${avg(momentum.recentRank)} (lower is better)</span></div><span class="trend-promo-action">Explore all trends →</span></a>`:
  `<a href="#trends" class="card profile-trend-card interactive-card"><div><span class="kpi-label">Recent momentum</span><p class="muted">Available after 6 recorded event results. No trend classification yet.</p></div><span class="trend-promo-action">Trends overview →</span></a>`;
