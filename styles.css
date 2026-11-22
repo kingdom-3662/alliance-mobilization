@@ -681,11 +681,13 @@ th.sortable.num button{justify-content:flex-end;text-align:right}
 }
 .performance-card .tier-laurel{
  position:absolute;inset:0;width:100%;height:100%;
- fill:var(--tier-color);fill-opacity:.46;
- pointer-events:none
+ fill:var(--tier-color);pointer-events:none
+}
+.performance-card .tier-laurel .laurel-leaf{
+ fill-opacity:.78;stroke:none
 }
 .performance-card .tier-laurel .laurel-stem{
- fill:none;stroke:var(--tier-color);stroke-width:1.4;stroke-opacity:.58;stroke-linecap:round
+ fill:none;stroke:var(--tier-color);stroke-width:1.5;stroke-opacity:.8;stroke-linecap:round;stroke-linejoin:round
 }
 .performance-card .tier-emblem .tier-mark{
  position:relative;z-index:1;grid-row:auto;display:flex;align-items:center;justify-content:center;

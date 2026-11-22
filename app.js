@@ -446,13 +446,20 @@ function playerView(id){
  const top23=placements.filter(r=>r===2||r===3).length;
  const top45=placements.filter(r=>r>=4&&r<=5).length;
  const top10=placements.filter(r=>r>=6&&r<=10).length;
- // Decorative laurel branches, deliberately muted to keep the numbers primary.
- const laurelBranch='<path class="laurel-stem" d="M29 68C13 60 8 45 12 29C15 18 20 11 26 7"/>'+
-  '<ellipse cx="21" cy="14" rx="3" ry="7" transform="rotate(32 21 14)"/>'+
-  '<ellipse cx="13" cy="27" rx="3" ry="7" transform="rotate(65 13 27)"/>'+
-  '<ellipse cx="10" cy="40" rx="3" ry="7" transform="rotate(82 10 40)"/>'+
-  '<ellipse cx="15" cy="53" rx="3" ry="7" transform="rotate(117 15 53)"/>'+
-  '<ellipse cx="25" cy="64" rx="3" ry="7" transform="rotate(137 25 64)"/>';
+ // Flat, symmetrical laurel with solid pointed leaves and crossed stems.
+ // A mirrored single branch keeps all four achievement tiers visually identical.
+ const laurelBranch='<path class="laurel-stem" d="M44 79C23 73 11 60 11 42C10 27 17 14 28 7"/>'+
+  '<path class="laurel-leaf" d="M27 12C22 11 21 6 24 2C29 4 30 9 27 12Z"/>'+
+  '<path class="laurel-leaf" d="M21 19C15 19 12 15 12 10C19 10 23 13 21 19Z"/>'+
+  '<path class="laurel-leaf" d="M16 27C15 20 20 16 27 15C26 21 22 26 16 27Z"/>'+
+  '<path class="laurel-leaf" d="M13 33C7 32 5 27 6 21C13 23 15 28 13 33Z"/>'+
+  '<path class="laurel-leaf" d="M12 41C11 35 17 31 23 31C21 38 17 41 12 41Z"/>'+
+  '<path class="laurel-leaf" d="M13 48C7 46 4 41 5 35C11 37 15 42 13 48Z"/>'+
+  '<path class="laurel-leaf" d="M16 55C14 48 20 45 26 45C24 51 20 55 16 55Z"/>'+
+  '<path class="laurel-leaf" d="M20 62C13 62 8 58 7 52C14 53 19 56 20 62Z"/>'+
+  '<path class="laurel-leaf" d="M25 67C20 62 24 57 31 54C31 60 29 65 25 67Z"/>'+
+  '<path class="laurel-leaf" d="M30 72C22 73 16 70 13 65C21 63 27 66 30 72Z"/>'+
+  '<path class="laurel-leaf" d="M38 77C32 78 26 75 23 71C30 68 35 71 38 77Z"/>';
  const laurelSvg=`<svg class="tier-laurel" viewBox="0 0 84 84" aria-hidden="true" focusable="false"><g>${laurelBranch}</g><g transform="translate(84 0) scale(-1 1)">${laurelBranch}</g></svg>`;
  const performanceBadges=[
   ['rank1','1st',top1,'1st place'],
