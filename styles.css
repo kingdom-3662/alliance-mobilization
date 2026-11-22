@@ -154,6 +154,13 @@ body{background:linear-gradient(180deg,#11151a 0%,#0c0f13 48%,#0a0d11 100%);back
 .name-history-row{padding:10px 0;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:9px}
 .name-history-row:last-child{border-bottom:0}
 .current-name-badge{background:rgba(232,198,109,.17);color:#f2d58d}
+/* Name changes are informational: use the established neutral placement palette. */
+.name-history-row .badge.former-name-badge{
+ background:var(--place-fill-neutral);
+ color:#d8dee8;
+ border:1px solid #505964;
+ font-weight:700
+}
 .current-name-note{display:inline-flex;align-items:center;margin-left:5px;padding:2px 7px;border:1px solid rgba(232,198,109,.2);border-radius:6px;background:rgba(232,198,109,.07);color:#d9c18b;font-size:10px;font-weight:600;vertical-align:middle}
 .mini-rank-badge{display:inline-flex;align-items:center;gap:4px;margin-left:5px;padding:2px 7px;border-radius:6px;border:1px solid rgba(255,255,255,.09);font-size:10px;font-weight:750;line-height:1.4;vertical-align:middle}
 .mini-rank-badge.rank1{color:var(--text);background:var(--place-fill-gold);border-color:var(--place-gold)}
@@ -726,17 +733,23 @@ th.sortable.num button{justify-content:flex-end;text-align:right}
 .chart-point-hit,.player-lollipop-hit{fill:transparent;stroke:none;pointer-events:all}
 .chart-tooltip-target{cursor:help}
 .chart-tooltip-target:focus-visible{outline:none}
+/* Inherit each chart's own series color instead of a universal gold highlight. */
+.unified-line-chart .chart-tooltip-target{--chart-hover-accent:var(--chart-line-color)}
+.player-axis-chart .chart-tooltip-target{--chart-hover-accent:var(--gold)}
+.trend-lollipop-item.chart-tooltip-target{--chart-hover-accent:var(--gold)}
 .chart-tooltip-target:focus-visible .unified-chart-point,
 .chart-tooltip-target.is-chart-hovered .unified-chart-point,
 .chart-tooltip-target:focus-visible .player-lollipop-dot,
 .chart-tooltip-target.is-chart-hovered .player-lollipop-dot{
- stroke:var(--gold);stroke-width:2.5
+ stroke:var(--chart-hover-accent,var(--chart-line-color,var(--gold)));
+ stroke-width:2.5
 }
 .chart-tooltip-target:focus-visible .chart-point-hit,
 .chart-tooltip-target.is-chart-hovered .chart-point-hit,
 .chart-tooltip-target:focus-visible .player-lollipop-hit,
 .chart-tooltip-target.is-chart-hovered .player-lollipop-hit{
- stroke:rgba(232,198,109,.38);stroke-width:2;fill:transparent
+ stroke:var(--chart-hover-accent,var(--chart-line-color,var(--gold)));
+ stroke-opacity:.4;stroke-width:2;fill:transparent
 }
 .rank-donut-segment{cursor:help;transition:stroke-width .12s}
 .rank-donut-segment:hover,.rank-donut-segment:focus-visible,.rank-donut-segment.is-chart-hovered{stroke-width:29;outline:none}
@@ -744,7 +757,8 @@ th.sortable.num button{justify-content:flex-end;text-align:right}
 .rank-donut-legend-item.chart-tooltip-target:hover,
 .rank-donut-legend-item.chart-tooltip-target:focus-visible,
 .rank-donut-legend-item.chart-tooltip-target.is-chart-hovered{
- background:rgba(177,188,205,.07);outline:1px solid rgba(177,188,205,.2)
+ background:rgba(177,188,205,.07);
+ outline:1px solid var(--chart-hover-accent,var(--place-mid-neutral))
 }
 .chart-hover-tooltip{
  position:fixed;z-index:1000;box-sizing:border-box;width:max-content;max-width:min(265px,calc(100vw - 16px));
