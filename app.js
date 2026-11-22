@@ -91,8 +91,7 @@ function unifiedLineChart(values,options={}){
  return `<svg class="unified-line-chart tone-${tone}" viewBox="0 0 ${w} ${h}" role="img" aria-label="${esc(options.label||'Recorded event trend')}; values: ${esc(nums.map(exact).join(', '))}">
  <defs><linearGradient id="${gradientId}" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="var(--chart-line-color)" stop-opacity=".22"/><stop offset="1" stop-color="var(--chart-line-color)" stop-opacity="0"/></linearGradient></defs>
  ${grid}
- <line class="unified-chart-axis" x1="${left}" x2="${left}" y1="${top}" y2="${bottom}"/>
- <line class="unified-chart-axis" x1="${left}" x2="${w-right}" y1="${bottom}" y2="${bottom}"/>
+ <line class="unified-chart-x-axis" x1="${left}" x2="${w-right}" y1="${bottom}" y2="${bottom}"/>
  <polygon points="${left},${bottom} ${pts} ${lastX},${bottom}" fill="url(#${gradientId})"/>
  <polyline points="${pts}" fill="none" stroke="var(--chart-line-color)" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
  ${marks}
