@@ -274,7 +274,8 @@ function trendsView(){
   const valid=value!==null&&Number.isFinite(value);
   const position=valid?Math.max(0,Math.min(100,value)):0;
   const marker=valid?`<span class="trend-lollipop-stem"></span><span class="trend-lollipop-dot${i===eventStats.length-1?' is-latest':''}"></span><span class="trend-lollipop-value">${pct}</span>`:'<span class="trend-lollipop-empty">—</span>';
-  return `<a href="#event/${encodeURIComponent(st.event.id)}" class="trend-lollipop-item" aria-label="${esc(st.event.name)}: ${pct} met the minimum">
+  const tipDetail=valid?`${fmt(st.qualifying)} of ${fmt(st.total)} entries met the minimum`:'Completion rate unavailable';
+  return `<a href="#event/${encodeURIComponent(st.event.id)}" class="trend-lollipop-item chart-tooltip-target" ${chartTooltipAttributes(st.event.name,valid?'Requirement completion: '+pct:'No rate recorded',tipDetail)}>
    <span class="trend-lollipop-track" style="--lollipop-position:${position}%">
      <span class="trend-lollipop-plot">${marker}</span>
    </span>
@@ -447,7 +448,14 @@ function playerPointsChart(p){
   const latest=i===events.length-1;
   const showValue=latest||(i%valueLabelEvery===0&&events.length-1-i>=valueLabelEvery);
   const showEventLabel=events.length<=8||i===0||i===eventLabelMiddle||latest;
-  return `<g class="player-lollipop-point"><line class="player-lollipop-stem" x1="${x}" y1="${bottom}" x2="${x}" y2="${yy}"/>${latest?`<circle class="player-lollipop-halo" cx="${x}" cy="${yy}" r="9"/>`:''}<circle class="player-lollipop-dot" cx="${x}" cy="${yy}" r="${latest?5.5:3.5}"><title>${esc(event.event)}: ${fmt(value)} points</title></circle>${showValue?`<text class="metric-data-label" x="${x}" y="${yy-12}" text-anchor="middle">${fmt(value)}</text>`:""}${showEventLabel?`<text class="metric-axis-event" x="${x}" y="${h-17}" text-anchor="middle">${esc(shortEventLabel(event.event))}</text>`:""}</g>`;
+  return `<g class="player-lollipop-point chart-tooltip-target" tabindex="0" focusable="true" role="img" ${chartTooltipAttributes(event.event,`${fmt(value)} points`,chartPercentageChange(value,i?values[i-1]:null))}>
+   <line class="player-lollipop-stem" x1="${x}" y1="${bottom}" x2="${x}" y2="${yy}"/>
+   ${latest?`<circle class="player-lollipop-halo" cx="${x}" cy="${yy}" r="9"/>`:''}
+   <circle class="player-lollipop-hit" cx="${x}" cy="${yy}" r="14"/>
+   <circle class="player-lollipop-dot" cx="${x}" cy="${yy}" r="${latest?5.5:3.5}"/>
+   ${showValue?`<text class="metric-data-label" x="${x}" y="${yy-12}" text-anchor="middle">${fmt(value)}</text>`:""}
+   ${showEventLabel?`<text class="metric-axis-event" x="${x}" y="${h-17}" text-anchor="middle">${esc(shortEventLabel(event.event))}</text>`:""}
+  </g>`;
  }).join('');
  return `<div class="chart-axis-scroll player-axis-scroll"><svg class="metric-axis-chart player-axis-chart" viewBox="0 0 ${w} ${h}" role="img" aria-label="Player points by scoring event as lollipop markers with point values, event axis, and a zero-based numeric axis">
   ${ticks}
