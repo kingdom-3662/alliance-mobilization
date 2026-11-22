@@ -712,8 +712,8 @@ th.sortable.num button{justify-content:flex-end;text-align:right}
  .performance-card .performance-badges{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
 @media(max-width:480px){
- .performance-card .performance-badges{grid-template-columns:minmax(0,1fr);gap:9px}
- .performance-card .performance-badge{min-height:135px;padding:9px 12px}
+ .performance-card .performance-badges{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+ .performance-card .performance-badge{min-height:135px;padding:9px 6px}
  .performance-card .tier-emblem{flex-basis:91px;width:104px;height:91px}
  .performance-card .tier-count{font-size:24px}
  .performance-card .tier-count-triple{font-size:20px}
