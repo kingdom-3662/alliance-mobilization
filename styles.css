@@ -356,6 +356,8 @@ th.sortable.num button{justify-content:flex-end;text-align:right}
 .trend-promo:hover{border-color:var(--gold)}
 .trend-promo>span:first-child{display:grid;gap:3px}
 .trend-promo strong{font-size:15px}
+.trend-promo-title{display:inline-flex;align-items:center;gap:10px;line-height:1.35}
+.trend-promo-title svg{display:block;flex:none;width:20px;height:20px;fill:none;stroke:var(--muted);stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round}
 .trend-promo-action,.trend-inline-link a,.profile-trend-card a,.event-trend-card a{color:var(--gold);font-weight:700;text-decoration:none}
 .trend-inline-link{display:flex;justify-content:flex-end;margin:-6px 0 12px;font-size:13px}
 .profile-trend-card,.event-trend-card{display:flex;gap:16px;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap}
