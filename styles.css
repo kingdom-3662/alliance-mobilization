@@ -626,8 +626,8 @@ th.sortable.num button{justify-content:flex-end;text-align:right}
  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
  max-width:100%;color:var(--muted);
 }
-/* A 26px hover ring matches the line chart's SVG hit circle (r=13).
-   Inner dots are 7px / 11px, matching the regular / latest line markers. */
+/* The 28px outer hover diameter and 8.3px / 12.3px visible dot diameters
+   include SVG stroke thickness, matching the line-chart markers precisely. */
 .trend-lollipop-dot::before{
  content:"";position:absolute;left:50%;top:50%;
  transform:translate(-50%,-50%);
