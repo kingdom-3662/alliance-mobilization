@@ -446,27 +446,15 @@ function playerView(id){
  const top23=placements.filter(r=>r===2||r===3).length;
  const top45=placements.filter(r=>r>=4&&r<=5).length;
  const top10=placements.filter(r=>r>=6&&r<=10).length;
- // Flat, symmetrical laurel with solid pointed leaves and crossed stems.
- // A mirrored single branch keeps all four achievement tiers visually identical.
- const laurelBranch='<path class="laurel-stem" d="M44 79C23 73 11 60 11 42C10 27 17 14 28 7"/>'+
-  '<path class="laurel-leaf" d="M27 12C22 11 21 6 24 2C29 4 30 9 27 12Z"/>'+
-  '<path class="laurel-leaf" d="M21 19C15 19 12 15 12 10C19 10 23 13 21 19Z"/>'+
-  '<path class="laurel-leaf" d="M16 27C15 20 20 16 27 15C26 21 22 26 16 27Z"/>'+
-  '<path class="laurel-leaf" d="M13 33C7 32 5 27 6 21C13 23 15 28 13 33Z"/>'+
-  '<path class="laurel-leaf" d="M12 41C11 35 17 31 23 31C21 38 17 41 12 41Z"/>'+
-  '<path class="laurel-leaf" d="M13 48C7 46 4 41 5 35C11 37 15 42 13 48Z"/>'+
-  '<path class="laurel-leaf" d="M16 55C14 48 20 45 26 45C24 51 20 55 16 55Z"/>'+
-  '<path class="laurel-leaf" d="M20 62C13 62 8 58 7 52C14 53 19 56 20 62Z"/>'+
-  '<path class="laurel-leaf" d="M25 67C20 62 24 57 31 54C31 60 29 65 25 67Z"/>'+
-  '<path class="laurel-leaf" d="M30 72C22 73 16 70 13 65C21 63 27 66 30 72Z"/>'+
-  '<path class="laurel-leaf" d="M38 77C32 78 26 75 23 71C30 68 35 71 38 77Z"/>';
- const laurelSvg=`<svg class="tier-laurel" viewBox="0 0 84 84" aria-hidden="true" focusable="false"><g>${laurelBranch}</g><g transform="translate(84 0) scale(-1 1)">${laurelBranch}</g></svg>`;
+ // The four exclusive placement tiers are the same as the Events donut.
+ // Fuller, flat SVG leaves and crossed stems frame the achievement count.
+ const laurelSvg="<svg class=\"tier-laurel\" viewBox=\"0 0 120 120\" aria-hidden=\"true\" focusable=\"false\"><g class=\"laurel-half\"><path class=\"laurel-stem\" d=\"M41 15 C14 30 4 59 16 87 Q31 107 65 116\"/><path class=\"laurel-leaf\" d=\"M 40.5 26.2 Q 45.7 10.0 35.0 8.8 Q 28.0 19.0 40.5 26.2 Z\"/><path class=\"laurel-leaf\" d=\"M 32.3 32.6 Q 33.0 15.6 22.4 17.2 Q 18.3 28.9 32.3 32.6 Z\"/><path class=\"laurel-leaf\" d=\"M 26.0 40.9 Q 22.2 24.3 12.4 28.6 Q 11.6 41.0 26.0 40.9 Z\"/><path class=\"laurel-leaf\" d=\"M 22.2 50.5 Q 14.1 35.5 5.8 42.3 Q 8.3 54.5 22.2 50.5 Z\"/><path class=\"laurel-leaf\" d=\"M 21.0 60.8 Q 9.3 48.5 3.1 57.2 Q 8.7 68.3 21.0 60.8 Z\"/><path class=\"laurel-leaf\" d=\"M 22.6 71.1 Q 8.0 62.3 4.4 72.3 Q 12.7 81.6 22.6 71.1 Z\"/><path class=\"laurel-leaf\" d=\"M 26.9 80.6 Q 10.5 75.9 9.6 86.6 Q 20.0 93.3 26.9 80.6 Z\"/><path class=\"laurel-leaf\" d=\"M 33.5 88.6 Q 16.4 88.4 18.4 98.9 Q 30.2 102.6 33.5 88.6 Z\"/><path class=\"laurel-leaf\" d=\"M 41.9 94.6 Q 25.5 98.9 30.1 108.5 Q 42.6 109.0 41.9 94.6 Z\"/></g><g class=\"laurel-half\" transform=\"translate(120 0) scale(-1 1)\"><path class=\"laurel-stem\" d=\"M41 15 C14 30 4 59 16 87 Q31 107 65 116\"/><path class=\"laurel-leaf\" d=\"M 40.5 26.2 Q 45.7 10.0 35.0 8.8 Q 28.0 19.0 40.5 26.2 Z\"/><path class=\"laurel-leaf\" d=\"M 32.3 32.6 Q 33.0 15.6 22.4 17.2 Q 18.3 28.9 32.3 32.6 Z\"/><path class=\"laurel-leaf\" d=\"M 26.0 40.9 Q 22.2 24.3 12.4 28.6 Q 11.6 41.0 26.0 40.9 Z\"/><path class=\"laurel-leaf\" d=\"M 22.2 50.5 Q 14.1 35.5 5.8 42.3 Q 8.3 54.5 22.2 50.5 Z\"/><path class=\"laurel-leaf\" d=\"M 21.0 60.8 Q 9.3 48.5 3.1 57.2 Q 8.7 68.3 21.0 60.8 Z\"/><path class=\"laurel-leaf\" d=\"M 22.6 71.1 Q 8.0 62.3 4.4 72.3 Q 12.7 81.6 22.6 71.1 Z\"/><path class=\"laurel-leaf\" d=\"M 26.9 80.6 Q 10.5 75.9 9.6 86.6 Q 20.0 93.3 26.9 80.6 Z\"/><path class=\"laurel-leaf\" d=\"M 33.5 88.6 Q 16.4 88.4 18.4 98.9 Q 30.2 102.6 33.5 88.6 Z\"/><path class=\"laurel-leaf\" d=\"M 41.9 94.6 Q 25.5 98.9 30.1 108.5 Q 42.6 109.0 41.9 94.6 Z\"/></g></svg>";
  const performanceBadges=[
-  ['rank1','1st',top1,'1st place'],
-  ['rank23','2–3',top23,'2nd–3rd place'],
-  ['rank45','4–5',top45,'4th–5th place'],
-  ['rank10','6–10',top10,'6th–10th place']
- ].map(([tier,mark,count,label])=>`<div class="performance-badge ${tier}"><div class="tier-emblem" aria-hidden="true">${laurelSvg}<span class="tier-mark">${esc(mark)}</span></div><div class="tier-metric"><strong>${fmt(count)}</strong><span>${esc(label)}</span></div></div>`).join('');
+  ['rank1',top1,'1st place'],
+  ['rank23',top23,'2nd–3rd place'],
+  ['rank45',top45,'4th–5th place'],
+  ['rank10',top10,'6th–10th place']
+ ].map(([tier,count,label])=>`<div class="performance-badge ${tier}"><div class="tier-emblem">${laurelSvg}<strong class="tier-count ${String(count).length>=4?'tier-count-compact':''}">${fmt(count)}</strong></div><span class="tier-caption">${esc(label)}</span></div>`).join('');
  const momentum=playerMomentum(p);
  const momentumPanel=momentum?`<a href="#trends" class="card profile-trend-card interactive-card"><div><span class="kpi-label">Recent momentum · last 3 events vs prior 3</span><div class="trend-profile-value">${trendChange(momentum.pct)} <span class="muted">average points / event</span></div><span class="kpi-note">${fmt(momentum.prior)} → ${fmt(momentum.recent)} points · average rank ${avg(momentum.priorRank)} → ${avg(momentum.recentRank)} (lower is better)</span></div><span class="trend-promo-action">Explore all trends →</span></a>`:
  `<a href="#trends" class="card profile-trend-card interactive-card"><div><span class="kpi-label">Recent momentum</span><p class="muted">Available after 6 recorded event results. No trend classification yet.</p></div><span class="trend-promo-action">Trends overview →</span></a>`;
