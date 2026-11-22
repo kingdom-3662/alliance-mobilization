@@ -143,6 +143,32 @@ function chartTooltipAttributes(title,value,detail=''){
 /* Shared SVG marker geometry for line and player lollipop charts.
    All regular points and the last highlighted point use identical radii. */
 const chartDotRadius=3.5,chartLatestDotRadius=5.5,chartHoverRingRadius=13;
+const chartLastHaloRadius=9;
+/* SVG viewBox units become bigger/smaller with their container. Normalize
+   circles to the same physical CSS pixels as the HTML Trends lollipop chart.
+   Recalculate on view changes and on chart resize, including mobile layouts. */
+const svgChartObserver=typeof ResizeObserver!=='undefined'
+ ?new ResizeObserver(entries=>entries.forEach(entry=>normalizeSvgChartMarkers(entry.target)))
+ :null;
+function normalizeSvgChartMarkers(svg){
+ if(!svg?.isConnected||!svg.viewBox?.baseVal?.width)return;
+ const bounds=svg.getBoundingClientRect();
+ const scale=bounds.width/svg.viewBox.baseVal.width;
+ if(!(scale>0))return;
+ svg.querySelectorAll('circle[data-chart-px-radius]').forEach(circle=>{
+  const radius=Number(circle.dataset.chartPxRadius);
+  if(Number.isFinite(radius)&&radius>0)circle.setAttribute('r',String(radius/scale));
+ });
+}
+function bindSvgChartMarkers(){
+ svgChartObserver?.disconnect();
+ app.querySelectorAll('svg.unified-line-chart,svg.player-axis-chart').forEach(svg=>{
+  normalizeSvgChartMarkers(svg);
+  svgChartObserver?.observe(svg);
+ });
+}
+window.addEventListener('resize',()=>requestAnimationFrame(bindSvgChartMarkers));
+
 /* Shared responsive line-chart renderer used throughout the site. */
 function unifiedLineChart(values,options={}){
  if(!values.length)return '<div class="empty">No event data</div>';
@@ -176,8 +202,8 @@ function unifiedLineChart(values,options={}){
   const detail=[chartPercentageChange(v,i?nums[i-1]:null),options.pointDetails?.[i]].filter(Boolean).join(' · ');
   const value=exact(v)+(options.unit?' '+options.unit:'');
   return `<g class="chart-tooltip-target" tabindex="0" focusable="true" role="img" ${chartTooltipAttributes(labels[i]||'Event',value,detail)}>
-   <circle class="chart-point-hit" cx="${x(i)}" cy="${y(v)}" r="${chartHoverRingRadius}"/>
-   <circle cx="${x(i)}" cy="${y(v)}" r="${i===nums.length-1?chartLatestDotRadius:chartDotRadius}" class="unified-chart-point"/>
+   <circle class="chart-point-hit" cx="${x(i)}" cy="${y(v)}" r="${chartHoverRingRadius}" data-chart-px-radius="${chartHoverRingRadius}"/>
+   <circle cx="${x(i)}" cy="${y(v)}" r="${i===nums.length-1?chartLatestDotRadius:chartDotRadius}" data-chart-px-radius="${i===nums.length-1?chartLatestDotRadius:chartDotRadius}" class="unified-chart-point"/>
   </g>`;
  }).join('');
  const lastX=x(nums.length-1),lastY=y(nums[nums.length-1]);
@@ -186,9 +212,9 @@ function unifiedLineChart(values,options={}){
  ${grid}
  <line class="unified-chart-x-axis" x1="${left}" x2="${w-right}" y1="${bottom}" y2="${bottom}"/>
  <polygon points="${left},${bottom} ${pts} ${lastX},${bottom}" fill="url(#${gradientId})"/>
- <polyline points="${pts}" fill="none" stroke="var(--chart-line-color)" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
+ <polyline class="chart-series-line" points="${pts}" fill="none" stroke="var(--chart-line-color)" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
  ${marks}
- <circle cx="${lastX}" cy="${lastY}" r="9" stroke="var(--chart-line-color)" stroke-width="4" opacity=".18" fill="none"/>
+ <circle class="chart-latest-halo" cx="${lastX}" cy="${lastY}" r="${chartLastHaloRadius}" data-chart-px-radius="${chartLastHaloRadius}" stroke="var(--chart-line-color)" stroke-width="4" opacity=".18" fill="none"/>
  ${xLabels}
  </svg>`;
 }
@@ -523,9 +549,9 @@ function playerPointsChart(p){
   const showEventLabel=events.length<=8||i===0||i===eventLabelMiddle||latest;
   return `<g class="player-lollipop-point chart-tooltip-target" tabindex="0" focusable="true" role="img" ${chartTooltipAttributes(event.event,`${fmt(value)} points`,chartPercentageChange(value,i?values[i-1]:null))}>
    <line class="player-lollipop-stem" x1="${x}" y1="${bottom}" x2="${x}" y2="${yy}"/>
-   ${latest?`<circle class="player-lollipop-halo" cx="${x}" cy="${yy}" r="9"/>`:''}
-   <circle class="player-lollipop-hit" cx="${x}" cy="${yy}" r="${chartHoverRingRadius}"/>
-   <circle class="player-lollipop-dot" cx="${x}" cy="${yy}" r="${latest?chartLatestDotRadius:chartDotRadius}"/>
+   ${latest?`<circle class="player-lollipop-halo" cx="${x}" cy="${yy}" r="${chartLastHaloRadius}" data-chart-px-radius="${chartLastHaloRadius}"/>`:''}
+   <circle class="player-lollipop-hit" cx="${x}" cy="${yy}" r="${chartHoverRingRadius}" data-chart-px-radius="${chartHoverRingRadius}"/>
+   <circle class="player-lollipop-dot" cx="${x}" cy="${yy}" r="${latest?chartLatestDotRadius:chartDotRadius}" data-chart-px-radius="${latest?chartLatestDotRadius:chartDotRadius}"/>
    ${showValue?`<text class="metric-data-label" x="${x}" y="${yy-12}" text-anchor="middle">${fmt(value)}</text>`:""}
    ${showEventLabel?`<text class="metric-axis-event" x="${x}" y="${h-17}" text-anchor="middle">${esc(shortEventLabel(event.event))}</text>`:""}
   </g>`;
@@ -670,6 +696,8 @@ function route(){
  else if(h==='trends'){trendsView();setPageTitle('Trends');}
  else{dashboard();setPageTitle('Dashboard');}
  closeMobileMenu();
+ // Chart nodes were just replaced by view rendering; observe the fresh SVGs.
+ requestAnimationFrame(bindSvgChartMarkers);
 }
 document.querySelectorAll('.nav-btn').forEach(b=>b.onclick=()=>{location.hash=b.dataset.view;closeMobileMenu()});
 document.getElementById('mobileMenuButton')?.addEventListener('click',()=>{
