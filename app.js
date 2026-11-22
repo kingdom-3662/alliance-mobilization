@@ -446,26 +446,25 @@ function playerView(id){
  const top23=placements.filter(r=>r===2||r===3).length;
  const top45=placements.filter(r=>r>=4&&r<=5).length;
  const top10=placements.filter(r=>r>=6&&r<=10).length;
- // Flat medal progression: gold five stripes and star, copper three,
- // purple one, steel-blue plain. Counts are displayed inside every circle.
+ // Compact, flat achievement medals. Stripes run behind the two rings:
+ // gold 4, copper 3, purple 2, and steel-blue 1. No decorative star.
  const medalStripeLayouts={
-  5:[[42,22,138],[56,15,145],[70,8,152],[84,15,145],[98,22,138]],
-  3:[[49,18,142],[70,8,152],[91,18,142]],
-  1:[[70,10,150]],
-  0:[]
+  4:[[46,22,138],[62,12,148],[78,12,148],[94,22,138]],
+  3:[[54,22,138],[70,10,150],[86,22,138]],
+  2:[[62,19,141],[78,19,141]],
+  1:[[70,15,145]]
  };
- const medalSvg=(level,star)=>`<svg class="tier-medal" viewBox="0 0 160 140" aria-hidden="true" focusable="false">
+ const medalSvg=level=>`<svg class="tier-medal" viewBox="0 0 160 140" aria-hidden="true" focusable="false">
   ${medalStripeLayouts[level].map(([y,x1,x2])=>`<path class="medal-stripe" d="M${x1} ${y}H${x2}"/>`).join('')}
   <circle class="medal-outer" cx="80" cy="70" r="47"/>
   <circle class="medal-inner" cx="80" cy="70" r="40"/>
-  ${star?'<path class="medal-star" d="M80 7L84.5 17.4L96 18.3L87 25.5L90 36.5L80 30.3L70 36.5L73 25.5L64 18.3L75.5 17.4Z"/>':''}
  </svg>`;
  const performanceBadges=[
-  ['rank1',top1,'1st place',5,true],
-  ['rank23',top23,'2nd–3rd place',3,false],
-  ['rank45',top45,'4th–5th place',1,false],
-  ['rank10',top10,'6th–10th place',0,false]
- ].map(([tier,count,label,level,star])=>`<div class="performance-badge ${tier}"><div class="tier-emblem">${medalSvg(level,star)}<strong class="tier-count ${String(count).length>=4?'tier-count-compact':''}">${fmt(count)}</strong></div><span class="tier-caption">${esc(label)}</span></div>`).join('');
+  ['rank1',top1,'1st place',4],
+  ['rank23',top23,'2nd–3rd place',3],
+  ['rank45',top45,'4th–5th place',2],
+  ['rank10',top10,'6th–10th place',1]
+ ].map(([tier,count,label,level])=>`<div class="performance-badge ${tier}"><div class="tier-emblem">${medalSvg(level)}<strong class="tier-count ${String(count).length>=4?'tier-count-compact':''}">${fmt(count)}</strong></div><span class="tier-caption">${esc(label)}</span></div>`).join('');
  const momentum=playerMomentum(p);
  const momentumPanel=momentum?`<a href="#trends" class="card profile-trend-card interactive-card"><div><span class="kpi-label">Recent momentum · last 3 events vs prior 3</span><div class="trend-profile-value">${trendChange(momentum.pct)} <span class="muted">average points / event</span></div><span class="kpi-note">${fmt(momentum.prior)} → ${fmt(momentum.recent)} points · average rank ${avg(momentum.priorRank)} → ${avg(momentum.recentRank)} (lower is better)</span></div><span class="trend-promo-action">Explore all trends →</span></a>`:
  `<a href="#trends" class="card profile-trend-card interactive-card"><div><span class="kpi-label">Recent momentum</span><p class="muted">Available after 6 recorded event results. No trend classification yet.</p></div><span class="trend-promo-action">Trends overview →</span></a>`;
