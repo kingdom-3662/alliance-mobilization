@@ -3,6 +3,7 @@
   --bg:#090d14; --panel:#141923; --panel2:#1a202d; --line:#303746;
   --text:#f7f8fb; --muted:#a1a8b7; --accent:#e21d2f; --accent2:#ffdc32;
   --gold:#ffdc32; --danger:#ff6b78; --shadow:0 18px 45px rgba(0,0,0,.28);
+  --chart-guide-color:rgba(177,188,205,.18);
 }
 *{box-sizing:border-box}
 body{margin:0;background:radial-gradient(circle at 80% -10%,#4a1018 0,#090d14 38%);color:var(--text);font:14px/1.5 Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
@@ -471,7 +472,8 @@ th.sortable.num button{justify-content:flex-end;text-align:right}
 .chart-axis-scroll .metric-axis-chart{display:block;width:100%;min-width:620px;height:auto;max-width:none;max-height:none;overflow:visible}
 .chart-axis-scroll.player-axis-scroll .metric-axis-chart{min-width:550px}
 .event-overview-charts .chart-axis-scroll .line-chart{width:100%;height:auto;max-height:none;max-width:none}
-.metric-grid-line{stroke:rgba(177,188,205,.22);stroke-width:1;stroke-dasharray:3 5}
+/* The same dotted guides are used by line charts and both lollipop charts. */
+.metric-grid-line,.unified-chart-grid{stroke:var(--chart-guide-color);stroke-width:1;stroke-dasharray:4 6}
 .metric-axis-line{stroke:rgba(177,188,205,.4);stroke-width:1.1}
 .metric-axis-tick,.metric-axis-event{font-size:11px;fill:#a9b3c2;font-family:inherit}
 .metric-data-label{font-size:10px;font-weight:800;fill:#f4d990;font-family:inherit;paint-order:stroke;stroke:#15191e;stroke-width:2.2;stroke-linejoin:round}
@@ -489,8 +491,7 @@ th.sortable.num button{justify-content:flex-end;text-align:right}
 .unified-line-chart.tone-gold{--chart-line-color:var(--gold)}
 .unified-line-chart.tone-purple{--chart-line-color:var(--place-purple)}
 .unified-line-chart.tone-steel-blue{--chart-line-color:var(--place-steel-blue)}
-.unified-chart-grid{stroke:rgba(177,188,205,.18);stroke-width:1;stroke-dasharray:4 6}
-.unified-chart-axis{stroke:rgba(177,188,205,.35);stroke-width:1}
+.unified-chart-x-axis{stroke:rgba(177,188,205,.45);stroke-width:1.2;stroke-dasharray:none}
 .unified-chart-y,.unified-chart-x{font-family:inherit;font-size:11px;fill:#aeb7c5;font-variant-numeric:tabular-nums}
 .unified-chart-point{fill:var(--chart-line-color);stroke:var(--panel);stroke-width:1.3}
 .chart-card .unified-line-chart,.event-overview-charts .unified-line-chart{width:100%;max-width:100%;height:auto;max-height:none;overflow:visible}
@@ -559,9 +560,14 @@ th.sortable.num button{justify-content:flex-end;text-align:right}
 .trend-lollipop-plot{
  position:absolute;bottom:0;left:0;right:0;height:151px;
  border-bottom:1px solid rgba(177,188,205,.25);
- background:repeating-linear-gradient(
-   to top,transparent 0,transparent calc(25% - 1px),
-   rgba(177,188,205,.09) calc(25% - 1px),rgba(177,188,205,.09) 25%);
+ /* Four guides at 25% intervals; the bottom baseline remains solid. */
+ background-image:repeating-linear-gradient(to right,var(--chart-guide-color) 0 4px,transparent 4px 10px),
+  repeating-linear-gradient(to right,var(--chart-guide-color) 0 4px,transparent 4px 10px),
+  repeating-linear-gradient(to right,var(--chart-guide-color) 0 4px,transparent 4px 10px),
+  repeating-linear-gradient(to right,var(--chart-guide-color) 0 4px,transparent 4px 10px);
+ background-size:100% 1px,100% 1px,100% 1px,100% 1px;
+ background-position:left 0%,left 25%,left 50%,left 75%;
+ background-repeat:no-repeat;
 }
 .trend-lollipop-stem{
  position:absolute;bottom:0;left:50%;transform:translateX(-50%);
