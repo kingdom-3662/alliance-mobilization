@@ -663,14 +663,14 @@ th.sortable.num button{justify-content:flex-end;text-align:right}
  .event-overview-charts .comparison-metric-header .trend-metric-badge{font-size:10px;padding:3px 6px}
 }
 
-/* Four placement tiers, matching the Events donut. Achievements are counted
-   inside flat, full laurel wreaths; captions carry the placement labels. */
+/* Achievement-medal progression: gold 5 stripes and star, copper 3,
+   purple 1, steel-blue 0. Both rings are shared by all four tiers. */
 .performance-card .performance-badges{
  display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px
 }
 .performance-card .performance-badge{
  display:flex;flex-direction:column;align-items:center;justify-content:center;
- gap:5px;min-width:0;min-height:175px;padding:12px 8px;
+ gap:3px;min-width:0;min-height:194px;padding:11px 8px;
  text-align:center
 }
 .performance-card .performance-badge.rank23{
@@ -678,27 +678,35 @@ th.sortable.num button{justify-content:flex-end;text-align:right}
  border-color:var(--place-copper)
 }
 .performance-card .tier-emblem{
- position:relative;display:grid;place-items:center;flex:0 0 115px;
- width:115px;height:115px;max-width:100%
+ position:relative;display:grid;place-items:center;
+ flex:0 0 145px;width:166px;height:145px;max-width:100%
 }
-.performance-card .tier-laurel{
- position:absolute;inset:0;display:block;width:100%;height:100%;
- fill:var(--tier-color);pointer-events:none
+.performance-card .tier-medal{
+ display:block;width:100%;height:100%;overflow:visible;
+ color:var(--tier-color);pointer-events:none
 }
-.performance-card .tier-laurel .laurel-leaf{fill-opacity:.84;stroke:none}
-.performance-card .tier-laurel .laurel-stem{
- fill:none;stroke:var(--tier-color);stroke-width:1.9;stroke-opacity:.85;
- stroke-linecap:round;stroke-linejoin:round
+.performance-card .tier-medal .medal-stripe{
+ fill:none;stroke:currentColor;stroke-width:5.5;stroke-linecap:round
+}
+.performance-card .tier-medal .medal-outer{
+ fill:var(--tier-fill,var(--place-fill-neutral));
+ stroke:currentColor;stroke-width:3.5
+}
+.performance-card .tier-medal .medal-inner{
+ fill:none;stroke:currentColor;stroke-width:1.7;opacity:.75
+}
+.performance-card .tier-medal .medal-star{
+ fill:currentColor;stroke:var(--panel);stroke-width:1.4;stroke-linejoin:round
 }
 .performance-card .tier-count{
- position:relative;z-index:1;display:flex;align-items:center;justify-content:center;
- flex:none;width:63px;height:63px;margin:0;border-radius:50%;
- border:2.5px solid var(--tier-color,var(--place-neutral));
- background:var(--tier-fill,var(--place-fill-neutral));
- color:var(--text);font-size:29px;font-weight:800;line-height:1;
+ position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+ display:block;z-index:1;margin:0;padding:0;
+ border:none;border-radius:0;background:transparent;
+ width:auto;height:auto;min-width:0;
+ font-size:33px;font-weight:800;line-height:1;color:var(--text);
  letter-spacing:-.03em;font-variant-numeric:tabular-nums
 }
-.performance-card .tier-count-compact{font-size:20px;letter-spacing:-.05em}
+.performance-card .tier-count-compact{font-size:23px;letter-spacing:-.05em}
 .performance-card .tier-caption{
  display:block;color:var(--muted);font-size:12px;font-weight:600;line-height:1.3
 }
@@ -707,8 +715,8 @@ th.sortable.num button{justify-content:flex-end;text-align:right}
 }
 @media(max-width:480px){
  .performance-card .performance-badges{grid-template-columns:minmax(0,1fr);gap:9px}
- .performance-card .performance-badge{min-height:160px;padding:9px 12px}
- .performance-card .tier-emblem{flex-basis:105px;width:105px;height:105px}
- .performance-card .tier-count{width:58px;height:58px;font-size:27px}
- .performance-card .tier-count-compact{font-size:19px}
+ .performance-card .performance-badge{min-height:178px;padding:9px 12px}
+ .performance-card .tier-emblem{flex-basis:131px;width:151px;height:131px}
+ .performance-card .tier-count{font-size:30px}
+ .performance-card .tier-count-compact{font-size:21px}
 }
