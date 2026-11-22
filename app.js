@@ -140,13 +140,26 @@ function chartTooltipAttributes(title,value,detail=''){
  const label=[title,value,detail].filter(Boolean).join(' · ');
  return `data-chart-tip data-tip-title="${esc(title)}" data-tip-value="${esc(value)}" data-tip-detail="${esc(detail)}" aria-label="${esc(label)}"`;
 }
-/* Shared SVG marker geometry for line and player lollipop charts.
-   All regular points and the last highlighted point use identical radii. */
+/* One marker renderer for every line and lollipop chart on every page.
+   Regular point: r=3.5, latest: r=5.5, hover ring: r=13, final halo: r=9.
+   All radii represent screen pixels, not scale-dependent SVG user units. */
 const chartDotRadius=3.5,chartLatestDotRadius=5.5,chartHoverRingRadius=13;
 const chartLastHaloRadius=9;
-/* SVG viewBox units become bigger/smaller with their container. Normalize
-   circles to the same physical CSS pixels as the HTML Trends lollipop chart.
-   Recalculate on view changes and on chart resize, including mobile layouts. */
+function chartMarkerSvg(x,y,latest,type){
+ const classes={
+  line:['unified-chart-point','chart-point-hit','chart-latest-halo'],
+  player:['player-lollipop-dot','player-lollipop-hit','player-lollipop-halo'],
+  requirement:['trend-lollipop-svg-dot','trend-lollipop-svg-hit','trend-lollipop-svg-halo']
+ }[type];
+ if(!classes)throw new Error('Unknown chart marker type: '+type);
+ const [dot,hit,halo]=classes;
+ const circle=(name,r)=>`<circle class="${name}" cx="${x}" cy="${y}" r="${r}" data-chart-px-radius="${r}"/>`;
+ return (latest?circle('chart-marker-halo '+halo,chartLastHaloRadius):'')
+  +circle('chart-marker-hit '+hit,chartHoverRingRadius)
+  +circle('chart-marker-dot '+dot,latest?chartLatestDotRadius:chartDotRadius);
+}
+/* Normalize SVG circles to physical CSS pixels when any chart changes size.
+   The fixed-size SVG in the HTML Requirements chart also uses this renderer. */
 const svgChartObserver=typeof ResizeObserver!=='undefined'
  ?new ResizeObserver(entries=>entries.forEach(entry=>normalizeSvgChartMarkers(entry.target)))
  :null;
@@ -162,7 +175,7 @@ function normalizeSvgChartMarkers(svg){
 }
 function bindSvgChartMarkers(){
  svgChartObserver?.disconnect();
- app.querySelectorAll('svg.unified-line-chart,svg.player-axis-chart').forEach(svg=>{
+ app.querySelectorAll('svg[data-chart-pixel-markers]').forEach(svg=>{
   normalizeSvgChartMarkers(svg);
   svgChartObserver?.observe(svg);
  });
@@ -202,19 +215,17 @@ function unifiedLineChart(values,options={}){
   const detail=[chartPercentageChange(v,i?nums[i-1]:null),options.pointDetails?.[i]].filter(Boolean).join(' · ');
   const value=exact(v)+(options.unit?' '+options.unit:'');
   return `<g class="chart-tooltip-target" tabindex="0" focusable="true" role="img" ${chartTooltipAttributes(labels[i]||'Event',value,detail)}>
-   <circle class="chart-point-hit" cx="${x(i)}" cy="${y(v)}" r="${chartHoverRingRadius}" data-chart-px-radius="${chartHoverRingRadius}"/>
-   <circle cx="${x(i)}" cy="${y(v)}" r="${i===nums.length-1?chartLatestDotRadius:chartDotRadius}" data-chart-px-radius="${i===nums.length-1?chartLatestDotRadius:chartDotRadius}" class="unified-chart-point"/>
+   ${chartMarkerSvg(x(i),y(v),i===nums.length-1,'line')}
   </g>`;
  }).join('');
  const lastX=x(nums.length-1),lastY=y(nums[nums.length-1]);
- return `<svg class="unified-line-chart tone-${tone}" viewBox="0 0 ${w} ${h}" role="img" aria-label="${esc(options.label||'Recorded event trend')}; values: ${esc(nums.map(exact).join(', '))}">
+ return `<svg class="unified-line-chart tone-${tone}" data-chart-pixel-markers viewBox="0 0 ${w} ${h}" role="img" aria-label="${esc(options.label||'Recorded event trend')}; values: ${esc(nums.map(exact).join(', '))}">
  <defs><linearGradient id="${gradientId}" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="var(--chart-line-color)" stop-opacity=".22"/><stop offset="1" stop-color="var(--chart-line-color)" stop-opacity="0"/></linearGradient></defs>
  ${grid}
  <line class="unified-chart-x-axis" x1="${left}" x2="${w-right}" y1="${bottom}" y2="${bottom}"/>
  <polygon points="${left},${bottom} ${pts} ${lastX},${bottom}" fill="url(#${gradientId})"/>
  <polyline class="chart-series-line" points="${pts}" fill="none" stroke="var(--chart-line-color)" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
  ${marks}
- <circle class="chart-latest-halo" cx="${lastX}" cy="${lastY}" r="${chartLastHaloRadius}" data-chart-px-radius="${chartLastHaloRadius}" stroke="var(--chart-line-color)" stroke-width="4" opacity=".18" fill="none"/>
  ${xLabels}
  </svg>`;
 }
@@ -372,7 +383,11 @@ function trendsView(){
   const shortName=st.event.name.replace(/^([A-Za-z]{3})[A-Za-z]* (\d{4})$/,(_whole,month,year)=>month+" '"+year.slice(2));
   const valid=value!==null&&Number.isFinite(value);
   const position=valid?Math.max(0,Math.min(100,value)):0;
-  const marker=valid?`<span class="trend-lollipop-stem"></span><span class="trend-lollipop-dot${i===eventStats.length-1?' is-latest':''}"></span><span class="trend-lollipop-value">${pct}</span>`:'<span class="trend-lollipop-empty">—</span>';
+  const marker=valid?`<span class="trend-lollipop-stem"></span>
+   <svg class="trend-lollipop-svg" data-chart-pixel-markers viewBox="0 0 40 40" width="40" height="40" aria-hidden="true" focusable="false">
+    ${chartMarkerSvg(20,20,i===eventStats.length-1,'requirement')}
+   </svg>
+   <span class="trend-lollipop-value">${pct}</span>`:'<span class="trend-lollipop-empty">—</span>';
   const tipDetail=valid?`${fmt(st.qualifying)} of ${fmt(st.total)} entries met the minimum`:'Completion rate unavailable';
   return `<a href="#event/${encodeURIComponent(st.event.id)}" class="trend-lollipop-item chart-tooltip-target" ${chartTooltipAttributes(st.event.name,valid?'Requirement completion: '+pct:'No rate recorded',tipDetail)}>
    <span class="trend-lollipop-track" style="--lollipop-position:${position}%">
@@ -549,14 +564,12 @@ function playerPointsChart(p){
   const showEventLabel=events.length<=8||i===0||i===eventLabelMiddle||latest;
   return `<g class="player-lollipop-point chart-tooltip-target" tabindex="0" focusable="true" role="img" ${chartTooltipAttributes(event.event,`${fmt(value)} points`,chartPercentageChange(value,i?values[i-1]:null))}>
    <line class="player-lollipop-stem" x1="${x}" y1="${bottom}" x2="${x}" y2="${yy}"/>
-   ${latest?`<circle class="player-lollipop-halo" cx="${x}" cy="${yy}" r="${chartLastHaloRadius}" data-chart-px-radius="${chartLastHaloRadius}"/>`:''}
-   <circle class="player-lollipop-hit" cx="${x}" cy="${yy}" r="${chartHoverRingRadius}" data-chart-px-radius="${chartHoverRingRadius}"/>
-   <circle class="player-lollipop-dot" cx="${x}" cy="${yy}" r="${latest?chartLatestDotRadius:chartDotRadius}" data-chart-px-radius="${latest?chartLatestDotRadius:chartDotRadius}"/>
+   ${chartMarkerSvg(x,yy,latest,'player')}
    ${showValue?`<text class="metric-data-label" x="${x}" y="${yy-12}" text-anchor="middle">${fmt(value)}</text>`:""}
    ${showEventLabel?`<text class="metric-axis-event" x="${x}" y="${h-17}" text-anchor="middle">${esc(shortEventLabel(event.event))}</text>`:""}
   </g>`;
  }).join('');
- return `<div class="chart-axis-scroll player-axis-scroll"><svg class="metric-axis-chart player-axis-chart" viewBox="0 0 ${w} ${h}" role="img" aria-label="Player points by scoring event as lollipop markers with point values, event axis, and a zero-based numeric axis">
+ return `<div class="chart-axis-scroll player-axis-scroll"><svg class="metric-axis-chart player-axis-chart" data-chart-pixel-markers viewBox="0 0 ${w} ${h}" role="img" aria-label="Player points by scoring event as lollipop markers with point values, event axis, and a zero-based numeric axis">
   ${ticks}
   <line class="metric-axis-line" x1="${left}" y1="${bottom}" x2="${w-right}" y2="${bottom}"/>
   ${bars}
