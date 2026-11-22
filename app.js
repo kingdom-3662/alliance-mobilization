@@ -65,7 +65,8 @@ const tipTitle=document.createElement('div'),tipValue=document.createElement('st
 tipTitle.className='chart-tip-title';tipValue.className='chart-tip-value';tipDetail.className='chart-tip-detail';
 chartTip.append(tipTitle,tipValue,tipDetail);
 document.body.appendChild(chartTip);
-let chartTipTarget=null,chartTouchTarget=null;
+let chartTipTarget=null,chartTouchTarget=null,lastChartTouch=0;
+document.addEventListener('pointerdown',e=>{if(e.pointerType==='touch')lastChartTouch=Date.now()});
 function hideChartTooltip(){
  chartTip.hidden=true;
  chartTipTarget?.classList.remove('is-chart-hovered');
@@ -113,7 +114,7 @@ document.addEventListener('click',e=>{
  const target=e.target.closest?.('[data-chart-tip]');
  if(!target){chartTouchTarget=null;hideChartTooltip();return}
  // First tap previews a linked event; a second tap follows its original href.
- if(e.detail&&('ontouchstart' in window||navigator.maxTouchPoints>0)){
+ if(e.detail&&Date.now()-lastChartTouch<900){
   if(chartTouchTarget!==target){
    chartTouchTarget=target;showChartTooltip(target);
    if(target.closest('a[href]')){e.preventDefault();e.stopPropagation()}
