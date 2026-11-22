@@ -306,7 +306,7 @@ function trendsView(){
 }
 
 function trendsCta(){
- return '<a href="#trends" class="trend-promo interactive-card card"><span><strong>📈 Trends & momentum</strong><span class="muted">Explore player momentum, alliance efficiency and event progression</span></span><span class="trend-promo-action">Explore trends →</span></a>';
+ return '<a href="#trends" class="trend-promo interactive-card card"><span><strong class="trend-promo-title"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg><span>Trends & momentum</span></strong><span class="muted">Explore player momentum, alliance efficiency and event progression</span></span><span class="trend-promo-action">Explore trends →</span></a>';
 }
 
 function dashboard(){
