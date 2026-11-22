@@ -519,30 +519,28 @@ th.sortable.num button{justify-content:flex-end;text-align:right}
 .trend-promo .trend-promo-action,.profile-trend-card .trend-promo-action,.event-trend-card .trend-promo-action{color:var(--gold);font-weight:700}
 @media(prefers-reduced-motion:reduce){.interactive-card{transition:none}.interactive-card:hover,.interactive-card:focus-visible{transform:none}}
 
-/* Compact completion heading on mobile keeps the comparison percentage alongside its title. */
-.requirement-completion-title .mobile-title{display:none}
-@media(max-width:560px){.requirement-completion-title .desktop-title{display:none}.requirement-completion-title .mobile-title{display:inline}.trend-metric-header:has(.requirement-completion-title){flex-wrap:nowrap;gap:6px}.trend-metric-header:has(.requirement-completion-title) .trend-metric-badge{flex-shrink:0;font-size:11px;padding:3px 6px}}
-
-/* Keep the Dashboard alliance performance comparison next to its heading on mobile. */
-.alliance-performance-header{gap:8px;min-width:0}
-.alliance-performance-header h2{min-width:0;margin:0}
-.alliance-performance-header .trend-metric-badge{flex-shrink:0}
+/* Shared title-and-badge positioning across Dashboard, Events and Trends. */
+.comparison-metric-header{gap:8px;min-width:0}
+.comparison-metric-header h2{min-width:0;margin:0}
+.comparison-metric-header .trend-metric-badge{flex-shrink:0}
 @media(max-width:560px){
- .alliance-performance-header{flex-wrap:nowrap;align-items:center;gap:6px}
- .alliance-performance-header h2{font-size:clamp(12px,3.5vw,17px)}
- .alliance-performance-header .trend-metric-badge{font-size:11px;padding:3px 6px}
+ .comparison-metric-header{flex-wrap:nowrap;align-items:center;gap:6px}
+ .comparison-metric-header h2{font-size:clamp(12px,3.5vw,17px)}
+ .comparison-metric-header .trend-metric-badge{font-size:11px;padding:3px 6px}
+ .trend-metric-header:has(.requirement-completion-title){flex-wrap:nowrap;align-items:center;gap:6px}
+ .trend-metric-header:has(.requirement-completion-title) .trend-metric-badge{flex-shrink:0;font-size:11px;padding:3px 6px}
 }
 
 
 /* Lollipop charts: lightweight markers instead of visually dominant filled bars. */
-.player-lollipop-stem{stroke:rgba(210,185,123,.6);stroke-width:2.5;stroke-linecap:round}
-.player-lollipop-dot{fill:var(--gold);stroke:var(--panel);stroke-width:2}
+.player-lollipop-stem{stroke:var(--gold);stroke-width:3;stroke-linecap:round}
+.player-lollipop-dot{fill:var(--gold);stroke:var(--panel);stroke-width:1.3}
 .player-lollipop-point:hover .player-lollipop-stem{stroke:var(--gold)}
-.player-lollipop-point:hover .player-lollipop-dot{r:6;stroke-width:2.5}
+.player-lollipop-point:hover .player-lollipop-dot{stroke:var(--gold);stroke-width:1.3}
 
 .trend-metric-card .trend-lollipop-chart{
  display:flex;align-items:stretch;gap:clamp(12px,1.8vw,22px);
- padding:8px 0 0;min-width:600px;height:199px;
+ padding:8px 0 0;min-width:600px;height:225px;
 }
 .trend-lollipop-item{
  flex:1 1 0;min-width:0;display:flex;flex-direction:column;
@@ -550,26 +548,31 @@ th.sortable.num button{justify-content:flex-end;text-align:right}
  font-size:10px;text-align:center;
 }
 .trend-lollipop-value{
- color:var(--text);font-size:12px;font-weight:750;
+ position:absolute;left:50%;bottom:calc(var(--lollipop-position) + 12px);
+ transform:translateX(-50%);z-index:1;
+ color:var(--text);font-size:12px;line-height:18px;font-weight:750;
  font-variant-numeric:tabular-nums;white-space:nowrap;
 }
 .trend-lollipop-track{
- height:151px;width:100%;min-width:0;position:relative;
- display:block;border-bottom:1px solid rgba(177,188,205,.25);
+ height:185px;width:100%;min-width:0;position:relative;display:block;
+}
+.trend-lollipop-plot{
+ position:absolute;bottom:0;left:0;right:0;height:151px;
+ border-bottom:1px solid rgba(177,188,205,.25);
  background:repeating-linear-gradient(
    to top,transparent 0,transparent calc(25% - 1px),
    rgba(177,188,205,.09) calc(25% - 1px),rgba(177,188,205,.09) 25%);
 }
 .trend-lollipop-stem{
  position:absolute;bottom:0;left:50%;transform:translateX(-50%);
- height:var(--lollipop-position);width:2.5px;
- border-radius:3px;background:rgba(210,185,123,.65);
+ height:var(--lollipop-position);width:3px;
+ border-radius:3px;background:var(--gold);
 }
 .trend-lollipop-dot{
  position:absolute;bottom:var(--lollipop-position);left:50%;
  transform:translate(-50%,50%);
- height:10px;width:10px;border-radius:50%;background:var(--gold);
- border:2px solid var(--panel);box-shadow:0 0 0 1px rgba(232,198,109,.35);
+ height:7px;width:7px;border-radius:50%;background:var(--gold);
+ border:1.3px solid var(--panel);box-shadow:none;
 }
 .trend-lollipop-empty{
  position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
@@ -591,3 +594,8 @@ th.sortable.num button{justify-content:flex-end;text-align:right}
 @media(prefers-reduced-motion:reduce){
  .player-lollipop-dot,.trend-lollipop-dot{transition:none}
 }
+
+/* Match the latest lollipop marker to the larger final dot and subtle halo in line charts. */
+.player-lollipop-halo{fill:none;stroke:var(--gold);stroke-width:4;opacity:.18;pointer-events:none}
+.trend-lollipop-dot.is-latest{height:11px;width:11px}
+.trend-lollipop-dot.is-latest::after{content:"";position:absolute;inset:-5.5px;border:4px solid var(--gold);border-radius:50%;opacity:.18;pointer-events:none}
