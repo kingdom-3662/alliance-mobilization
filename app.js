@@ -81,7 +81,7 @@ function unifiedLineChart(values,options={}){
  const gradientId='unified-line-'+tone;
  const grid=Array.from({length:5},(_,i)=>{
   const value=axisMin+(axisMax-axisMin)*i/4,yy=y(value);
-  return `<line class="unified-chart-grid" x1="${left}" x2="${w-right}" y1="${yy}" y2="${yy}"/><text class="unified-chart-y" text-anchor="end" x="${left-9}" y="${yy+4}">${short(value)}</text>`;
+  return `<line class="unified-chart-grid" x1="${left}" x2="${w-right}" y1="${yy}" y2="${yy}"/>${i%2===0?`<text class="unified-chart-y" text-anchor="end" x="${left-9}" y="${yy+4}">${short(value)}</text>`:""}`;
  }).join('');
  // First / middle / last labels stay readable in compact cards.
  const labelPositions=[0,Math.floor((nums.length-1)/2),nums.length-1].filter((v,i,a)=>a.indexOf(v)===i);
@@ -98,6 +98,22 @@ function unifiedLineChart(values,options={}){
  <circle cx="${lastX}" cy="${lastY}" r="9" stroke="var(--chart-line-color)" stroke-width="4" opacity=".18" fill="none"/>
  ${xLabels}
  </svg>`;
+}
+function alliancePlacementDelta(){
+ if(D.events.length<2)return null;
+ const parseRank=e=>{
+  const n=Number.parseInt(String(e?.allianceRank??''),10);
+  return Number.isFinite(n)&&n>0?n:null;
+ };
+ const current=parseRank(D.events[D.events.length-1]);
+ const previous=parseRank(D.events[D.events.length-2]);
+ return current===null||previous===null?null:previous-current;
+}
+function alliancePlacementBadge(){
+ const change=alliancePlacementDelta();
+ const state=change===null||change===0?'neutral':change>0?'positive':'negative';
+ const label=change===null?'No comparison':change===0?'last: unchanged':`last: ${change>0?'↑':'↓'}${Math.abs(change)} ${Math.abs(change)===1?'place':'places'}`;
+ return `<span class="trend-metric-badge ${state}">${label}</span>`;
 }
 function alliancePointsChange(){
  const values=D.events.map(e=>Number(e.alliancePoints)||0);
@@ -150,16 +166,13 @@ function allianceRankingChart(){
  }).join('');
  const summary=distribution.map(category=>`${category.label}: ${counts.get(category.id)} ${counts.get(category.id)===1?'event':'events'}`).join(', ');
  const latestRank=D.events[D.events.length-1]?.allianceRank;
- const previousRank=D.events[D.events.length-2]?.allianceRank;
- const currentPlace=rankNumber(latestRank),previousPlace=rankNumber(previousRank);
- const diff=currentPlace!==null&&previousPlace!==null?previousPlace-currentPlace:null;
- const comparison=diff===null?'No earlier placement':diff===0?'unchanged vs previous event':diff>0?`up ${diff} ${diff===1?'place':'places'} vs previous event`:`down ${-diff} ${-diff===1?'place':'places'} vs previous event`;
+ const currentPlace=rankNumber(latestRank);
  const ordinal=n=>{
   if(n===null)return '—';
   const suffix=n%100>=11&&n%100<=13?'th':n%10===1?'st':n%10===2?'nd':n%10===3?'rd':'th';
   return `${n}${suffix}`;
  };
- return `<div class="chart-metric-head rank-placement-summary"><div class="chart-summary"><strong>${esc(ordinal(currentPlace))}</strong><span class="muted">latest placement · ${esc(comparison)}</span></div></div>
+ return `<div class="chart-metric-head rank-placement-summary"><div class="chart-summary"><strong>${esc(ordinal(currentPlace))}</strong><span class="muted">latest placement</span></div></div>
  <div class="rank-donut-layout">
   <div class="rank-donut-graphic"><svg viewBox="0 0 200 200" role="img" aria-label="Alliance ranking distribution: ${esc(summary)}">
     <circle cx="100" cy="100" r="68" fill="none" stroke="#343941" stroke-width="24"/>
@@ -278,7 +291,7 @@ function trendsView(){
   <div class="card trends-wide trend-metric-card"><div class="trend-metric-header"><h2 class="requirement-completion-title">Requirement completion</h2>${trendMetricBadge(completionRateChange)}</div>
    <div class="trend-metric-value">${rateText}</div>
    <div class="trend-metric-caption">${fmt(latest?.qualifying||0)} of ${fmt(latest?.total||0)} entries met the minimum · latest event</div>
-   <div class="trend-bar-scroll"><div class="trend-lollipop-chart">${rateBars}</div></div>
+   <div class="trend-bar-scroll"><div class="trend-lollipop-chart"><div class="trend-lollipop-y-axis" aria-hidden="true"><span class="trend-lollipop-y-tick" style="top:0">100%</span><span class="trend-lollipop-y-tick" style="top:50%">50%</span><span class="trend-lollipop-y-tick" style="top:100%">0%</span></div>${rateBars}</div></div>
    </div>
  </section>
  <section class="section-heading trend-section-title"><h2>Player momentum</h2><span class="muted">last 3 events vs. previous 3 events</span></section>
@@ -348,7 +361,7 @@ function eventsView(){
  app.innerHTML=`<section class="hero back-first"><button class="back" onclick="goBack('dashboard')">← Back</button><div><div class="eyebrow">History</div><h1>Events</h1><p class="sub">Every recorded Alliance Mobilization result.</p></div></section>
  <section class="event-overview-charts" aria-label="Alliance event performance charts">
    <div class="card chart-card event-overview-chart"><div class="table-head compact comparison-metric-header"><h2>Alliance points</h2>${trendMetricBadge(alliancePointsChange())}</div>${allianceChart(false)}</div>
-   <div class="card chart-card event-overview-chart"><div class="table-head compact"><h2>Alliance ranking distribution</h2><span class="muted">events by final placement</span></div>${allianceRankingChart()}</div>
+   <div class="card chart-card event-overview-chart"><div class="table-head compact comparison-metric-header"><h2>Alliance ranking distribution</h2>${alliancePlacementBadge()}</div>${allianceRankingChart()}</div>
   </section>
  ${trendsCta()}
  <section class="event-list">${D.events.slice().reverse().map(e=>`
@@ -387,22 +400,25 @@ function playerPointsChart(p){
  if(!events.length)return '<div class="empty">No scoring event results yet.</div>';
  const values=events.map(e=>Number(e.points)||0);
  const max=Math.max(...values,1),step=Math.max(250,Math.ceil(max/4/250)*250),ceiling=4*step;
- const w=Math.max(550,86+events.length*68),h=242,left=65,right=18,top=25,bottom=195;
+ const w=620,h=242,left=65,right=18,top=25,bottom=195;
  const y=v=>bottom-(v/ceiling)*(bottom-top);
  const plotWidth=w-left-right;
  const gap=plotWidth/events.length;
  const ticks=Array.from({length:5},(_,i)=>{
   const v=i*step,yy=y(v);
-  return `<line class="metric-grid-line" x1="${left}" x2="${w-right}" y1="${yy}" y2="${yy}"/><text class="metric-axis-tick" x="${left-9}" y="${yy+4}" text-anchor="end">${fmt(v)}</text>`;
+  return `<line class="metric-grid-line" x1="${left}" x2="${w-right}" y1="${yy}" y2="${yy}"/>${i%2===0?`<text class="metric-axis-tick" x="${left-9}" y="${yy+4}" text-anchor="end">${fmt(v)}</text>`:""}`;
  }).join('');
+ const valueLabelEvery=Math.max(1,Math.ceil(events.length/9));
+ const eventLabelMiddle=Math.floor((events.length-1)/2);
  const bars=events.map((event,i)=>{
   const value=values[i],x=left+gap*(i+.5),yy=y(value);
   const latest=i===events.length-1;
-  return `<g class="player-lollipop-point"><line class="player-lollipop-stem" x1="${x}" y1="${bottom}" x2="${x}" y2="${yy}"/>${latest?`<circle class="player-lollipop-halo" cx="${x}" cy="${yy}" r="9"/>`:''}<circle class="player-lollipop-dot" cx="${x}" cy="${yy}" r="${latest?5.5:3.5}"><title>${esc(event.event)}: ${fmt(value)} points</title></circle><text class="metric-data-label" x="${x}" y="${yy-12}" text-anchor="middle">${fmt(value)}</text><text class="metric-axis-event" x="${x}" y="${h-17}" text-anchor="middle">${esc(shortEventLabel(event.event))}</text></g>`;
+  const showValue=latest||(i%valueLabelEvery===0&&events.length-1-i>=valueLabelEvery);
+  const showEventLabel=events.length<=8||i===0||i===eventLabelMiddle||latest;
+  return `<g class="player-lollipop-point"><line class="player-lollipop-stem" x1="${x}" y1="${bottom}" x2="${x}" y2="${yy}"/>${latest?`<circle class="player-lollipop-halo" cx="${x}" cy="${yy}" r="9"/>`:''}<circle class="player-lollipop-dot" cx="${x}" cy="${yy}" r="${latest?5.5:3.5}"><title>${esc(event.event)}: ${fmt(value)} points</title></circle>${showValue?`<text class="metric-data-label" x="${x}" y="${yy-12}" text-anchor="middle">${fmt(value)}</text>`:""}${showEventLabel?`<text class="metric-axis-event" x="${x}" y="${h-17}" text-anchor="middle">${esc(shortEventLabel(event.event))}</text>`:""}</g>`;
  }).join('');
- return `<div class="chart-axis-scroll player-axis-scroll"><svg class="metric-axis-chart player-axis-chart" style="min-width:${w}px" viewBox="0 0 ${w} ${h}" role="img" aria-label="Player points by scoring event as lollipop markers with point values, event axis, and a zero-based numeric axis">
+ return `<div class="chart-axis-scroll player-axis-scroll"><svg class="metric-axis-chart player-axis-chart" viewBox="0 0 ${w} ${h}" role="img" aria-label="Player points by scoring event as lollipop markers with point values, event axis, and a zero-based numeric axis">
   ${ticks}
-  <line class="metric-axis-line" x1="${left}" y1="${top}" x2="${left}" y2="${bottom}"/>
   <line class="metric-axis-line" x1="${left}" y1="${bottom}" x2="${w-right}" y2="${bottom}"/>
   ${bars}
  </svg></div>`;
