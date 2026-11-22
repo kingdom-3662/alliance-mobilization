@@ -100,13 +100,17 @@ function unifiedLineChart(values,options={}){
  ${xLabels}
  </svg>`;
 }
-function allianceChart(){
+function alliancePointsChange(){
+ const values=D.events.map(e=>Number(e.alliancePoints)||0);
+ const previous=values[values.length-2],last=values[values.length-1];
+ return values.length>1&&previous>0?100*(last-previous)/previous:null;
+}
+function allianceChart(showBadge=true){
  const values=D.events.map(e=>Number(e.alliancePoints)||0);
  if(!values.length)return '<div class="empty">No event data</div>';
  const latest=D.events[D.events.length-1];
- const last=values[values.length-1],previous=values[values.length-2];
- const change=values.length>1&&previous>0?100*(last-previous)/previous:null;
- return `<div class="chart-metric-head"><div class="chart-summary"><strong>${fmt(last)}</strong><span class="muted">alliance points · ${esc(latest.name)}</span></div>${trendMetricBadge(change)}</div>
+ const last=values[values.length-1];
+ return `<div class="chart-metric-head"><div class="chart-summary"><strong>${fmt(last)}</strong><span class="muted">alliance points · ${esc(latest.name)}</span></div>${showBadge?trendMetricBadge(alliancePointsChange()):''}</div>
  ${unifiedLineChart(values,{tone:'gold',unit:'points',label:'Alliance points by event'})}`;
 }
 
@@ -322,7 +326,7 @@ function dashboard(){
     </tbody></table></div>
    </div>
    <div class="dashboard-side">
-    <div class="card chart-card"><div class="table-head compact"><h2>Alliance performance</h2><span class="muted">points by event</span></div>${allianceChart()}</div>
+    <div class="card chart-card"><div class="table-head compact alliance-performance-header"><h2>Alliance performance</h2>${trendMetricBadge(alliancePointsChange())}</div>${allianceChart(false)}</div>
     <div class="card"><div class="table-head compact"><h2>Event history</h2><span class="muted">last 5 events</span></div><div class="event-list" style="grid-template-columns:1fr">
     ${!history.some(e=>e.id===bestEvent?.id)?`<a class="event-card best-event record-card interactive-card" href="#event/${bestEvent.id}"><div class="event-title"><strong>${esc(bestEvent.name)}</strong><span class="badge gold-badge">All-time best</span></div><div class="event-stat"><span class="muted">Alliance points</span><b>${fmt(bestEvent.alliancePoints)}</b></div><div class="event-meta"><span>Top player: <strong>${esc(bestEvent.topPlayer||'—')}</strong></span></div><div class="event-meta"><span>${esc(bestEvent.start)} → ${esc(bestEvent.end)} · Reward: ${esc(bestEvent.reward||'—')}</span></div></a>`:''}
     ${history.map(e=>`<a class="event-card interactive-card ${e.id===bestEvent?.id?'best-event':''}" href="#event/${e.id}"><div class="event-title"><strong>${esc(e.name)}</strong><span class="badge ${e.id===bestEvent?.id?'gold-badge':'alliance-placement-badge'}">${e.id===bestEvent?.id?'All-time best':esc(e.allianceRank)}</span></div><div class="event-stat"><span class="muted">Alliance points</span><b>${fmt(e.alliancePoints)}</b></div><div class="event-meta"><span>Top player: <strong>${esc(e.topPlayer||'—')}</strong></span></div><div class="event-meta"><span>${esc(e.start)} → ${esc(e.end)} · Reward: ${esc(e.reward||'—')}</span></div></a>`).join("")}
