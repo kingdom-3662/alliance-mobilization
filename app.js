@@ -233,9 +233,14 @@ function trendsView(){
  const rateBars=eventStats.map(st=>{
   const value=st.requirementRate,pct=value===null?'—':value.toFixed(1)+'%';
   const shortName=st.event.name.replace(/^([A-Za-z]{3})[A-Za-z]* (\d{4})$/,(_whole,month,year)=>month+" '"+year.slice(2));
-  return `<a href="#event/${encodeURIComponent(st.event.id)}" class="trend-bar-item" aria-label="${esc(st.event.name)}: ${pct} met the minimum">
-   <div class="trend-bar-track"><div class="trend-bar-fill" style="height:${value===null?0:value}%"><span class="trend-bar-percent">${pct}</span></div></div>
-   <span class="trend-bar-label">${esc(shortName)}</span>
+  const valid=value!==null&&Number.isFinite(value);
+  const position=valid?Math.max(0,Math.min(100,value)):0;
+  return `<a href="#event/${encodeURIComponent(st.event.id)}" class="trend-lollipop-item" aria-label="${esc(st.event.name)}: ${pct} met the minimum">
+   <span class="trend-lollipop-value">${pct}</span>
+   <span class="trend-lollipop-track" style="--lollipop-position:${position}%">
+     ${valid?'<span class="trend-lollipop-stem"></span><span class="trend-lollipop-dot"></span>':'<span class="trend-lollipop-empty">—</span>'}
+   </span>
+   <span class="trend-lollipop-label">${esc(shortName)}</span>
   </a>`;
  }).join('');
  const eventRows=eventStats.slice().reverse().map(st=>`<tr class="clickable" onclick="location.hash='event/${encodeURIComponent(st.event.id)}'">
@@ -271,7 +276,7 @@ function trendsView(){
   <div class="card trends-wide trend-metric-card"><div class="trend-metric-header"><h2 class="requirement-completion-title"><span class="desktop-title">Minimum requirement completion</span><span class="mobile-title">Min. requirement completion</span></h2>${trendMetricBadge(completionRateChange)}</div>
    <div class="trend-metric-value">${rateText}</div>
    <div class="trend-metric-caption">${fmt(latest?.qualifying||0)} of ${fmt(latest?.total||0)} entries met the minimum · latest event</div>
-   <div class="trend-bar-scroll"><div class="trend-bar-chart">${rateBars}</div></div>
+   <div class="trend-bar-scroll"><div class="trend-lollipop-chart">${rateBars}</div></div>
    </div>
  </section>
  <section class="section-heading trend-section-title"><h2>Player momentum</h2><span class="muted">last 3 events vs. previous 3 events</span></section>
@@ -384,17 +389,15 @@ function playerPointsChart(p){
  const y=v=>bottom-(v/ceiling)*(bottom-top);
  const plotWidth=w-left-right;
  const gap=plotWidth/events.length;
- const barWidth=Math.min(26,gap*.46);
  const ticks=Array.from({length:5},(_,i)=>{
   const v=i*step,yy=y(v);
   return `<line class="metric-grid-line" x1="${left}" x2="${w-right}" y1="${yy}" y2="${yy}"/><text class="metric-axis-tick" x="${left-9}" y="${yy+4}" text-anchor="end">${fmt(v)}</text>`;
  }).join('');
  const bars=events.map((event,i)=>{
-  const value=values[i],x=left+gap*(i+.5),yy=y(value),barHeight=Math.max(0,bottom-yy);
-  return `<rect x="${x-barWidth/2}" y="${yy}" width="${barWidth}" height="${barHeight}" rx="3" fill="url(#playerChartFill)"><title>${esc(event.event)}: ${fmt(value)} points</title></rect><text class="metric-data-label" x="${x}" y="${Math.max(top-7,yy-8)}" text-anchor="middle">${fmt(value)}</text><text class="metric-axis-event" x="${x}" y="${h-17}" text-anchor="middle">${esc(shortEventLabel(event.event))}</text>`;
+  const value=values[i],x=left+gap*(i+.5),yy=y(value);
+  return `<g class="player-lollipop-point"><line class="player-lollipop-stem" x1="${x}" y1="${bottom}" x2="${x}" y2="${yy}"/><circle class="player-lollipop-dot" cx="${x}" cy="${yy}" r="5"><title>${esc(event.event)}: ${fmt(value)} points</title></circle><text class="metric-data-label" x="${x}" y="${Math.max(top-7,yy-12)}" text-anchor="middle">${fmt(value)}</text><text class="metric-axis-event" x="${x}" y="${h-17}" text-anchor="middle">${esc(shortEventLabel(event.event))}</text></g>`;
  }).join('');
- return `<div class="chart-axis-scroll player-axis-scroll"><svg class="metric-axis-chart player-axis-chart" style="min-width:${w}px" viewBox="0 0 ${w} ${h}" role="img" aria-label="Player points by scoring event with point values, event axis, and a zero-based numeric axis">
-  <defs><linearGradient id="playerChartFill" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#bca46e" stop-opacity=".78"/><stop offset="1" stop-color="#8c7953" stop-opacity=".58"/></linearGradient></defs>
+ return `<div class="chart-axis-scroll player-axis-scroll"><svg class="metric-axis-chart player-axis-chart" style="min-width:${w}px" viewBox="0 0 ${w} ${h}" role="img" aria-label="Player points by scoring event as lollipop markers with point values, event axis, and a zero-based numeric axis">
   ${ticks}
   <line class="metric-axis-line" x1="${left}" y1="${top}" x2="${left}" y2="${bottom}"/>
   <line class="metric-axis-line" x1="${left}" y1="${bottom}" x2="${w-right}" y2="${bottom}"/>

@@ -532,3 +532,62 @@ th.sortable.num button{justify-content:flex-end;text-align:right}
  .alliance-performance-header h2{font-size:clamp(12px,3.5vw,17px)}
  .alliance-performance-header .trend-metric-badge{font-size:11px;padding:3px 6px}
 }
+
+
+/* Lollipop charts: lightweight markers instead of visually dominant filled bars. */
+.player-lollipop-stem{stroke:rgba(210,185,123,.6);stroke-width:2.5;stroke-linecap:round}
+.player-lollipop-dot{fill:var(--gold);stroke:var(--panel);stroke-width:2}
+.player-lollipop-point:hover .player-lollipop-stem{stroke:var(--gold)}
+.player-lollipop-point:hover .player-lollipop-dot{r:6;stroke-width:2.5}
+
+.trend-metric-card .trend-lollipop-chart{
+ display:flex;align-items:stretch;gap:clamp(12px,1.8vw,22px);
+ padding:8px 0 0;min-width:600px;height:199px;
+}
+.trend-lollipop-item{
+ flex:1 1 0;min-width:0;display:flex;flex-direction:column;
+ align-items:center;gap:6px;text-decoration:none;color:var(--muted);
+ font-size:10px;text-align:center;
+}
+.trend-lollipop-value{
+ color:var(--text);font-size:12px;font-weight:750;
+ font-variant-numeric:tabular-nums;white-space:nowrap;
+}
+.trend-lollipop-track{
+ height:151px;width:100%;min-width:0;position:relative;
+ display:block;border-bottom:1px solid rgba(177,188,205,.25);
+ background:repeating-linear-gradient(
+   to top,transparent 0,transparent calc(25% - 1px),
+   rgba(177,188,205,.09) calc(25% - 1px),rgba(177,188,205,.09) 25%);
+}
+.trend-lollipop-stem{
+ position:absolute;bottom:0;left:50%;transform:translateX(-50%);
+ height:var(--lollipop-position);width:2.5px;
+ border-radius:3px;background:rgba(210,185,123,.65);
+}
+.trend-lollipop-dot{
+ position:absolute;bottom:var(--lollipop-position);left:50%;
+ transform:translate(-50%,50%);
+ height:10px;width:10px;border-radius:50%;background:var(--gold);
+ border:2px solid var(--panel);box-shadow:0 0 0 1px rgba(232,198,109,.35);
+}
+.trend-lollipop-empty{
+ position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+ color:var(--muted);
+}
+.trend-lollipop-label{
+ white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+ max-width:100%;color:var(--muted);
+}
+.trend-lollipop-item:hover .trend-lollipop-dot,
+.trend-lollipop-item:focus-visible .trend-lollipop-dot{
+ box-shadow:0 0 0 3px rgba(232,198,109,.2);
+}
+.trend-lollipop-item:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
+@media(max-width:560px){
+ .trend-metric-card .trend-lollipop-chart{min-width:540px}
+ .trend-lollipop-value{font-size:11px}
+}
+@media(prefers-reduced-motion:reduce){
+ .player-lollipop-dot,.trend-lollipop-dot{transition:none}
+}
