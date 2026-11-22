@@ -140,6 +140,9 @@ function chartTooltipAttributes(title,value,detail=''){
  const label=[title,value,detail].filter(Boolean).join(' · ');
  return `data-chart-tip data-tip-title="${esc(title)}" data-tip-value="${esc(value)}" data-tip-detail="${esc(detail)}" aria-label="${esc(label)}"`;
 }
+/* Shared SVG marker geometry for line and player lollipop charts.
+   All regular points and the last highlighted point use identical radii. */
+const chartDotRadius=3.5,chartLatestDotRadius=5.5,chartHoverRingRadius=13;
 /* Shared responsive line-chart renderer used throughout the site. */
 function unifiedLineChart(values,options={}){
  if(!values.length)return '<div class="empty">No event data</div>';
@@ -173,8 +176,8 @@ function unifiedLineChart(values,options={}){
   const detail=[chartPercentageChange(v,i?nums[i-1]:null),options.pointDetails?.[i]].filter(Boolean).join(' · ');
   const value=exact(v)+(options.unit?' '+options.unit:'');
   return `<g class="chart-tooltip-target" tabindex="0" focusable="true" role="img" ${chartTooltipAttributes(labels[i]||'Event',value,detail)}>
-   <circle class="chart-point-hit" cx="${x(i)}" cy="${y(v)}" r="13"/>
-   <circle cx="${x(i)}" cy="${y(v)}" r="${i===nums.length-1?5.5:3.5}" class="unified-chart-point"/>
+   <circle class="chart-point-hit" cx="${x(i)}" cy="${y(v)}" r="${chartHoverRingRadius}"/>
+   <circle cx="${x(i)}" cy="${y(v)}" r="${i===nums.length-1?chartLatestDotRadius:chartDotRadius}" class="unified-chart-point"/>
   </g>`;
  }).join('');
  const lastX=x(nums.length-1),lastY=y(nums[nums.length-1]);
@@ -521,8 +524,8 @@ function playerPointsChart(p){
   return `<g class="player-lollipop-point chart-tooltip-target" tabindex="0" focusable="true" role="img" ${chartTooltipAttributes(event.event,`${fmt(value)} points`,chartPercentageChange(value,i?values[i-1]:null))}>
    <line class="player-lollipop-stem" x1="${x}" y1="${bottom}" x2="${x}" y2="${yy}"/>
    ${latest?`<circle class="player-lollipop-halo" cx="${x}" cy="${yy}" r="9"/>`:''}
-   <circle class="player-lollipop-hit" cx="${x}" cy="${yy}" r="14"/>
-   <circle class="player-lollipop-dot" cx="${x}" cy="${yy}" r="${latest?5.5:3.5}"/>
+   <circle class="player-lollipop-hit" cx="${x}" cy="${yy}" r="${chartHoverRingRadius}"/>
+   <circle class="player-lollipop-dot" cx="${x}" cy="${yy}" r="${latest?chartLatestDotRadius:chartDotRadius}"/>
    ${showValue?`<text class="metric-data-label" x="${x}" y="${yy-12}" text-anchor="middle">${fmt(value)}</text>`:""}
    ${showEventLabel?`<text class="metric-axis-event" x="${x}" y="${h-17}" text-anchor="middle">${esc(shortEventLabel(event.event))}</text>`:""}
   </g>`;
