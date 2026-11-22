@@ -54,8 +54,91 @@ function playerById(id){return D.players.find(p=>p.id===decodeURIComponent(id));
 function eventById(id){return D.events.find(e=>e.id===id);}
 function playerRows(p){const order=new Map(D.events.map((e,i)=>[e.name,i]));return p.events.slice().sort((a,b)=>(order.get(b.event)??-1)-(order.get(a.event)??-1)).map(x=>`<tr><td data-value="${order.get(x.event)??-1}">${esc(x.event)}</td><td class="num" data-value="${x.rank}">${rankPill(x.rank)}</td><td class="num">${fmt(x.points)}</td><td class="num">${x.started}</td><td class="num">${x.completed}</td><td class="num">${avg(x.ppq)}</td></tr>`).join("")}
 
+/* One delegated tooltip layer works across views replaced by app.innerHTML.
+   Native textContent prevents event/player names from becoming HTML. */
+const chartTip=document.createElement('div');
+chartTip.className='chart-hover-tooltip';
+chartTip.setAttribute('role','status');
+chartTip.setAttribute('aria-live','off');
+chartTip.hidden=true;
+const tipTitle=document.createElement('div'),tipValue=document.createElement('strong'),tipDetail=document.createElement('small');
+tipTitle.className='chart-tip-title';tipValue.className='chart-tip-value';tipDetail.className='chart-tip-detail';
+chartTip.append(tipTitle,tipValue,tipDetail);
+document.body.appendChild(chartTip);
+let chartTipTarget=null,chartTouchTarget=null,lastChartTouch=0;
+document.addEventListener('pointerdown',e=>{if(e.pointerType==='touch')lastChartTouch=Date.now()});
+function hideChartTooltip(){
+ chartTip.hidden=true;
+ chartTipTarget?.classList.remove('is-chart-hovered');
+ chartTipTarget=null;
+}
+function showChartTooltip(target){
+ if(!target||!target.isConnected)return;
+ if(chartTipTarget!==target){
+  chartTipTarget?.classList.remove('is-chart-hovered');
+  chartTipTarget=target;target.classList.add('is-chart-hovered');
+ }
+ tipTitle.textContent=target.dataset.tipTitle||'';
+ tipValue.textContent=target.dataset.tipValue||'';
+ tipDetail.textContent=target.dataset.tipDetail||'';
+ tipDetail.hidden=!tipDetail.textContent;
+ chartTip.hidden=false;
+ placeChartTooltip(target);
+}
+function placeChartTooltip(target){
+ if(chartTip.hidden||!target?.isConnected)return;
+ const r=target.getBoundingClientRect(),t=chartTip.getBoundingClientRect();
+ const preferredX=r.left+r.width/2-t.width/2;
+ const x=Math.max(8,Math.min(window.innerWidth-t.width-8,preferredX));
+ const y=r.top-t.height-11>=8?r.top-t.height-11:Math.min(window.innerHeight-t.height-8,r.bottom+11);
+ chartTip.style.left=Math.round(x)+'px';
+ chartTip.style.top=Math.round(Math.max(8,y))+'px';
+}
+document.addEventListener('pointerover',e=>{
+ if(e.pointerType==='touch')return;
+ const target=e.target.closest?.('[data-chart-tip]');
+ if(target)showChartTooltip(target);
+});
+document.addEventListener('pointerout',e=>{
+ if(e.pointerType==='touch'||!chartTipTarget)return;
+ if(chartTipTarget.contains(e.relatedTarget))return;
+ const next=e.relatedTarget?.closest?.('[data-chart-tip]');
+ if(next){showChartTooltip(next);return}
+ if(document.activeElement!==chartTipTarget)hideChartTooltip();
+});
+document.addEventListener('focusin',e=>{const t=e.target.closest?.('[data-chart-tip]');if(t)showChartTooltip(t)});
+document.addEventListener('focusout',e=>{
+ if(chartTipTarget&&chartTipTarget.contains(e.target)&&!chartTipTarget.contains(e.relatedTarget))hideChartTooltip();
+});
+document.addEventListener('click',e=>{
+ const target=e.target.closest?.('[data-chart-tip]');
+ if(!target){chartTouchTarget=null;hideChartTooltip();return}
+ // First tap previews a linked event; a second tap follows its original href.
+ if(e.detail&&Date.now()-lastChartTouch<900){
+  if(chartTouchTarget!==target){
+   chartTouchTarget=target;showChartTooltip(target);
+   if(target.closest('a[href]')){e.preventDefault();e.stopPropagation()}
+  }else{chartTouchTarget=null;if(!target.closest('a[href]'))hideChartTooltip()}
+ }else if(!target.closest('a[href]'))showChartTooltip(target);
+});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){chartTouchTarget=null;hideChartTooltip()}});
+window.addEventListener('scroll',()=>hideChartTooltip(),{passive:true});
+window.addEventListener('resize',()=>hideChartTooltip());
 function shortEventLabel(name){
  return String(name||'').replace(/^([A-Za-z]{3})[A-Za-z]* (\d{4})$/,(_match,month,year)=>month+" '"+year.slice(2));
+}
+/* Tooltips preserve exact values and explain relative change, rather than
+   presenting raw points or entries as misleading percentages. */
+function chartPercentageChange(current,previous,unit='event'){
+ if(previous===undefined||previous===null)return 'First recorded '+unit;
+ const prev=Number(previous),now=Number(current);
+ if(!Number.isFinite(prev)||!Number.isFinite(now)||prev===0)return 'Change unavailable (previous value: 0)';
+ const delta=100*(now-prev)/Math.abs(prev);
+ return 'vs previous '+unit+': '+(delta>0?'+':'')+delta.toFixed(1)+'%';
+}
+function chartTooltipAttributes(title,value,detail=''){
+ const label=[title,value,detail].filter(Boolean).join(' · ');
+ return `data-chart-tip data-tip-title="${esc(title)}" data-tip-value="${esc(value)}" data-tip-detail="${esc(detail)}" aria-label="${esc(label)}"`;
 }
 /* Shared responsive line-chart renderer used throughout the site. */
 function unifiedLineChart(values,options={}){
@@ -86,7 +169,14 @@ function unifiedLineChart(values,options={}){
  // First / middle / last labels stay readable in compact cards.
  const labelPositions=[0,Math.floor((nums.length-1)/2),nums.length-1].filter((v,i,a)=>a.indexOf(v)===i);
  const xLabels=labelPositions.map(i=>`<text class="unified-chart-x" text-anchor="${i===0?'start':i===nums.length-1?'end':'middle'}" x="${x(i)}" y="${h-9}">${esc(shortEventLabel(labels[i]))}</text>`).join('');
- const marks=nums.map((v,i)=>`<circle cx="${x(i)}" cy="${y(v)}" r="${i===nums.length-1?5.5:3.5}" class="unified-chart-point"><title>${esc(labels[i])}: ${esc(exact(v))} ${esc(options.unit||'')}</title></circle>`).join('');
+ const marks=nums.map((v,i)=>{
+  const detail=[chartPercentageChange(v,i?nums[i-1]:null),options.pointDetails?.[i]].filter(Boolean).join(' · ');
+  const value=exact(v)+(options.unit?' '+options.unit:'');
+  return `<g class="chart-tooltip-target" tabindex="0" focusable="true" role="img" ${chartTooltipAttributes(labels[i]||'Event',value,detail)}>
+   <circle class="chart-point-hit" cx="${x(i)}" cy="${y(v)}" r="13"/>
+   <circle cx="${x(i)}" cy="${y(v)}" r="${i===nums.length-1?5.5:3.5}" class="unified-chart-point"/>
+  </g>`;
+ }).join('');
  const lastX=x(nums.length-1),lastY=y(nums[nums.length-1]);
  return `<svg class="unified-line-chart tone-${tone}" viewBox="0 0 ${w} ${h}" role="img" aria-label="${esc(options.label||'Recorded event trend')}; values: ${esc(nums.map(exact).join(', '))}">
  <defs><linearGradient id="${gradientId}" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="var(--chart-line-color)" stop-opacity=".22"/><stop offset="1" stop-color="var(--chart-line-color)" stop-opacity="0"/></linearGradient></defs>
@@ -156,13 +246,15 @@ function allianceRankingChart(){
  let offset=0;
  const segments=distribution.map(category=>{
   const count=counts.get(category.id),length=circumference*count/total;
-  const segment=`<circle cx="100" cy="100" r="68" fill="none" stroke="${category.color}" stroke-width="24" stroke-dasharray="${length} ${circumference-length}" stroke-dashoffset="${-offset}" transform="rotate(-90 100 100)"><title>${esc(category.label)}: ${count} ${count===1?'event':'events'}</title></circle>`;
+  const percentage=(100*count/total).toFixed(1);
+  const tip=chartTooltipAttributes(category.label,`${count} ${count===1?'event':'events'} · ${percentage}%`,'Share of all recorded events');
+  const segment=`<circle class="chart-tooltip-target rank-donut-segment" tabindex="0" focusable="true" role="img" ${tip} cx="100" cy="100" r="68" fill="none" stroke="${category.color}" stroke-width="24" stroke-dasharray="${length} ${circumference-length}" stroke-dashoffset="${-offset}" transform="rotate(-90 100 100)"/>`;
   offset+=length;
   return segment;
  }).join('');
  const legend=distribution.map(category=>{
   const count=counts.get(category.id),percent=(100*count/total).toFixed(1);
-  return `<li class="rank-donut-legend-item"><span class="rank-donut-legend-dot" style="background:${category.color}" aria-hidden="true"></span><span class="rank-donut-legend-content"><span class="rank-donut-legend-label">${esc(category.label)}</span><span class="rank-donut-legend-detail">${count} ${count===1?'event':'events'} · ${percent}%</span></span></li>`;
+  return `<li class="rank-donut-legend-item chart-tooltip-target" tabindex="0" ${chartTooltipAttributes(category.label,`${count} ${count===1?'event':'events'} · ${percent}%`,'Share of all recorded events')}><span class="rank-donut-legend-dot" style="background:${category.color}" aria-hidden="true"></span><span class="rank-donut-legend-content"><span class="rank-donut-legend-label">${esc(category.label)}</span><span class="rank-donut-legend-detail">${count} ${count===1?'event':'events'} · ${percent}%</span></span></li>`;
  }).join('');
  const summary=distribution.map(category=>`${category.label}: ${counts.get(category.id)} ${counts.get(category.id)===1?'event':'events'}`).join(', ');
  const latestRank=D.events[D.events.length-1]?.allianceRank;
@@ -222,7 +314,8 @@ function trendMetricBadge(change,unit='%',decimals=1){
  return `<span class="trend-metric-badge ${status}"><span class="trend-metric-prefix">last:</span> ${sign}${rounded.toFixed(decimals)}${unit}</span>`;
 }
 function trendLine(values,caption,format='number',tone='gold'){
- return unifiedLineChart(values,{format,tone,label:caption,unit:format==='decimal'?'points per quest':'entries'});
+ const details=caption==='Active scoring entries'?trendEvents().map(st=>st.total?`${(100*st.active/st.total).toFixed(1)}% of ${fmt(st.total)} recorded entries`:'No recorded entries'):undefined;
+ return unifiedLineChart(values,{format,tone,label:caption,unit:format==='decimal'?'points per quest':'entries',pointDetails:details});
 }
 function trendsView(){
  nav('trends');
@@ -251,7 +344,8 @@ function trendsView(){
   const valid=value!==null&&Number.isFinite(value);
   const position=valid?Math.max(0,Math.min(100,value)):0;
   const marker=valid?`<span class="trend-lollipop-stem"></span><span class="trend-lollipop-dot${i===eventStats.length-1?' is-latest':''}"></span><span class="trend-lollipop-value">${pct}</span>`:'<span class="trend-lollipop-empty">—</span>';
-  return `<a href="#event/${encodeURIComponent(st.event.id)}" class="trend-lollipop-item" aria-label="${esc(st.event.name)}: ${pct} met the minimum">
+  const tipDetail=valid?`${fmt(st.qualifying)} of ${fmt(st.total)} entries met the minimum`:'Completion rate unavailable';
+  return `<a href="#event/${encodeURIComponent(st.event.id)}" class="trend-lollipop-item chart-tooltip-target" ${chartTooltipAttributes(st.event.name,valid?'Requirement completion: '+pct:'No rate recorded',tipDetail)}>
    <span class="trend-lollipop-track" style="--lollipop-position:${position}%">
      <span class="trend-lollipop-plot">${marker}</span>
    </span>
@@ -424,7 +518,14 @@ function playerPointsChart(p){
   const latest=i===events.length-1;
   const showValue=latest||(i%valueLabelEvery===0&&events.length-1-i>=valueLabelEvery);
   const showEventLabel=events.length<=8||i===0||i===eventLabelMiddle||latest;
-  return `<g class="player-lollipop-point"><line class="player-lollipop-stem" x1="${x}" y1="${bottom}" x2="${x}" y2="${yy}"/>${latest?`<circle class="player-lollipop-halo" cx="${x}" cy="${yy}" r="9"/>`:''}<circle class="player-lollipop-dot" cx="${x}" cy="${yy}" r="${latest?5.5:3.5}"><title>${esc(event.event)}: ${fmt(value)} points</title></circle>${showValue?`<text class="metric-data-label" x="${x}" y="${yy-12}" text-anchor="middle">${fmt(value)}</text>`:""}${showEventLabel?`<text class="metric-axis-event" x="${x}" y="${h-17}" text-anchor="middle">${esc(shortEventLabel(event.event))}</text>`:""}</g>`;
+  return `<g class="player-lollipop-point chart-tooltip-target" tabindex="0" focusable="true" role="img" ${chartTooltipAttributes(event.event,`${fmt(value)} points`,chartPercentageChange(value,i?values[i-1]:null))}>
+   <line class="player-lollipop-stem" x1="${x}" y1="${bottom}" x2="${x}" y2="${yy}"/>
+   ${latest?`<circle class="player-lollipop-halo" cx="${x}" cy="${yy}" r="9"/>`:''}
+   <circle class="player-lollipop-hit" cx="${x}" cy="${yy}" r="14"/>
+   <circle class="player-lollipop-dot" cx="${x}" cy="${yy}" r="${latest?5.5:3.5}"/>
+   ${showValue?`<text class="metric-data-label" x="${x}" y="${yy-12}" text-anchor="middle">${fmt(value)}</text>`:""}
+   ${showEventLabel?`<text class="metric-axis-event" x="${x}" y="${h-17}" text-anchor="middle">${esc(shortEventLabel(event.event))}</text>`:""}
+  </g>`;
  }).join('');
  return `<div class="chart-axis-scroll player-axis-scroll"><svg class="metric-axis-chart player-axis-chart" viewBox="0 0 ${w} ${h}" role="img" aria-label="Player points by scoring event as lollipop markers with point values, event axis, and a zero-based numeric axis">
   ${ticks}
@@ -551,6 +652,7 @@ function goBack(fallback){
 function closeMobileMenu(){document.querySelector('.topbar')?.classList.remove('menu-open');document.getElementById('mobileMenuButton')?.setAttribute('aria-expanded','false')}
 function setPageTitle(label){document.title=label+' · Alliance Mobilization · Kingdom 3662';}
 function route(){
+ hideChartTooltip();chartTouchTarget=null;
  const h=location.hash.replace(/^#/,'');
  if(h.startsWith('player/')){
   const id=h.slice(7),player=playerById(id);
