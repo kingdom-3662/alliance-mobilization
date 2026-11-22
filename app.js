@@ -248,13 +248,13 @@ function allianceRankingChart(){
   const count=counts.get(category.id),length=circumference*count/total;
   const percentage=(100*count/total).toFixed(1);
   const tip=chartTooltipAttributes(category.label,`${count} ${count===1?'event':'events'} · ${percentage}%`,'Share of all recorded events');
-  const segment=`<circle class="chart-tooltip-target rank-donut-segment" tabindex="0" focusable="true" role="img" ${tip} cx="100" cy="100" r="68" fill="none" stroke="${category.color}" stroke-width="24" stroke-dasharray="${length} ${circumference-length}" stroke-dashoffset="${-offset}" transform="rotate(-90 100 100)"/>`;
+  const segment=`<circle class="chart-tooltip-target rank-donut-segment" style="--chart-hover-accent:${category.color}" tabindex="0" focusable="true" role="img" ${tip} cx="100" cy="100" r="68" fill="none" stroke="${category.color}" stroke-width="24" stroke-dasharray="${length} ${circumference-length}" stroke-dashoffset="${-offset}" transform="rotate(-90 100 100)"/>`;
   offset+=length;
   return segment;
  }).join('');
  const legend=distribution.map(category=>{
   const count=counts.get(category.id),percent=(100*count/total).toFixed(1);
-  return `<li class="rank-donut-legend-item chart-tooltip-target" tabindex="0" ${chartTooltipAttributes(category.label,`${count} ${count===1?'event':'events'} · ${percent}%`,'Share of all recorded events')}><span class="rank-donut-legend-dot" style="background:${category.color}" aria-hidden="true"></span><span class="rank-donut-legend-content"><span class="rank-donut-legend-label">${esc(category.label)}</span><span class="rank-donut-legend-detail">${count} ${count===1?'event':'events'} · ${percent}%</span></span></li>`;
+  return `<li class="rank-donut-legend-item chart-tooltip-target" style="--chart-hover-accent:${category.color}" tabindex="0" ${chartTooltipAttributes(category.label,`${count} ${count===1?'event':'events'} · ${percent}%`,'Share of all recorded events')}><span class="rank-donut-legend-dot" style="background:${category.color}" aria-hidden="true"></span><span class="rank-donut-legend-content"><span class="rank-donut-legend-label">${esc(category.label)}</span><span class="rank-donut-legend-detail">${count} ${count===1?'event':'events'} · ${percent}%</span></span></li>`;
  }).join('');
  const summary=distribution.map(category=>`${category.label}: ${counts.get(category.id)} ${counts.get(category.id)===1?'event':'events'}`).join(', ');
  const latestRank=D.events[D.events.length-1]?.allianceRank;
@@ -585,7 +585,7 @@ function playerView(id){
     <div class="player-points-summary"><strong>${recentPoints===null?'—':fmt(recentPoints)}</strong><span class="muted">points · ${esc(recentEvent?.event||'no event')}</span></div>
     ${playerPointsChart(p)}
     <div class="chart-metric-foot">Points by event</div></div>
-  <div class="card"><h2>Name history</h2>${p.names.slice().reverse().map((n,i)=>`<div class="name-history-row"><span class="badge ${i===0?'current-name-badge':''}">${i===0?"Current":"Former"}</span> <strong>${esc(n)}</strong></div>`).join("")}</div>
+  <div class="card"><h2>Name history</h2>${p.names.slice().reverse().map((n,i)=>`<div class="name-history-row"><span class="badge ${i===0?'current-name-badge':'former-name-badge'}">${i===0?"Current":"Former"}</span> <strong>${esc(n)}</strong></div>`).join("")}</div>
  </section>
  <section class="card table-card" style="margin-top:16px"><div class="table-head"><h2>Event-by-event results</h2></div><div class="table-scroll"><table id="playerEventsTable" data-sort-col="0" data-sort-dir="desc"><thead><tr>${sortHead("Event","playerEventsTable",0,"number")}${sortHead("Rank","playerEventsTable",1,"number")}${sortHead("Points","playerEventsTable",2,"number")}${sortHead("Started","playerEventsTable",3,"number")}${sortHead("Completed","playerEventsTable",4,"number")}${sortHead("Pts/quest","playerEventsTable",5,"number")}</tr></thead><tbody>${playerRows(p)}</tbody></table></div></section>`;
 }
