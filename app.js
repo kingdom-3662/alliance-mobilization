@@ -112,8 +112,8 @@ function alliancePlacementDelta(){
 function alliancePlacementBadge(){
  const change=alliancePlacementDelta();
  const state=change===null||change===0?'neutral':change>0?'positive':'negative';
- const label=change===null?'No comparison':change===0?'last: unchanged':`last: ${change>0?'↑':'↓'}${Math.abs(change)} ${Math.abs(change)===1?'place':'places'}`;
- return `<span class="trend-metric-badge ${state}">${label}</span>`;
+ const detail=change===null?'No comparison':change===0?'unchanged':`${change>0?'↑':'↓'}${Math.abs(change)} ${Math.abs(change)===1?'place':'places'}`;
+ return `<span class="trend-metric-badge ${state}"><span class="trend-metric-prefix">last:</span> ${detail}</span>`;
 }
 function alliancePointsChange(){
  const values=D.events.map(e=>Number(e.alliancePoints)||0);
@@ -441,12 +441,25 @@ function playerView(id){
  const previousEventPoints=previousEvent?Number(previousEvent.points)||0:null;
  const pointsDelta=previousEventPoints>0?100*(recentPoints-previousEventPoints)/previousEventPoints:null;
  const placements=p.events.map(e=>Number(e.rank)).filter(Number.isFinite);
- // Mutually exclusive placement tiers: 1st, 2nd, 3rd, 4th–5th, 6th–10th.
+ // The same four mutually exclusive placement tiers as the Events donut.
  const top1=placements.filter(r=>r===1).length;
- const top2=placements.filter(r=>r===2).length;
- const top3=placements.filter(r=>r===3).length;
- const top45=placements.filter(r=>r>=4 && r<=5).length;
- const top10=placements.filter(r=>r>=6 && r<=10).length;
+ const top23=placements.filter(r=>r===2||r===3).length;
+ const top45=placements.filter(r=>r>=4&&r<=5).length;
+ const top10=placements.filter(r=>r>=6&&r<=10).length;
+ // Decorative laurel branches, deliberately muted to keep the numbers primary.
+ const laurelBranch='<path class="laurel-stem" d="M29 68C13 60 8 45 12 29C15 18 20 11 26 7"/>'+
+  '<ellipse cx="21" cy="14" rx="3" ry="7" transform="rotate(32 21 14)"/>'+
+  '<ellipse cx="13" cy="27" rx="3" ry="7" transform="rotate(65 13 27)"/>'+
+  '<ellipse cx="10" cy="40" rx="3" ry="7" transform="rotate(82 10 40)"/>'+
+  '<ellipse cx="15" cy="53" rx="3" ry="7" transform="rotate(117 15 53)"/>'+
+  '<ellipse cx="25" cy="64" rx="3" ry="7" transform="rotate(137 25 64)"/>';
+ const laurelSvg=`<svg class="tier-laurel" viewBox="0 0 84 84" aria-hidden="true" focusable="false"><g>${laurelBranch}</g><g transform="translate(84 0) scale(-1 1)">${laurelBranch}</g></svg>`;
+ const performanceBadges=[
+  ['rank1','1st',top1,'1st place'],
+  ['rank23','2–3',top23,'2nd–3rd place'],
+  ['rank45','4–5',top45,'4th–5th place'],
+  ['rank10','6–10',top10,'6th–10th place']
+ ].map(([tier,mark,count,label])=>`<div class="performance-badge ${tier}"><div class="tier-emblem" aria-hidden="true">${laurelSvg}<span class="tier-mark">${esc(mark)}</span></div><div class="tier-metric"><strong>${fmt(count)}</strong><span>${esc(label)}</span></div></div>`).join('');
  const momentum=playerMomentum(p);
  const momentumPanel=momentum?`<a href="#trends" class="card profile-trend-card interactive-card"><div><span class="kpi-label">Recent momentum · last 3 events vs prior 3</span><div class="trend-profile-value">${trendChange(momentum.pct)} <span class="muted">average points / event</span></div><span class="kpi-note">${fmt(momentum.prior)} → ${fmt(momentum.recent)} points · average rank ${avg(momentum.priorRank)} → ${avg(momentum.recentRank)} (lower is better)</span></div><span class="trend-promo-action">Explore all trends →</span></a>`:
  `<a href="#trends" class="card profile-trend-card interactive-card"><div><span class="kpi-label">Recent momentum</span><p class="muted">Available after 6 recorded event results. No trend classification yet.</p></div><span class="trend-promo-action">Trends overview →</span></a>`;
@@ -460,7 +473,7 @@ function playerView(id){
    <div class="card"><div class="kpi-label">Ø points / quest</div><div class="kpi-value">${avg(p.averagePPQ)}</div><div class="kpi-note">average across events</div></div>
  </section>
  ${momentumPanel}
-  <section class="card performance-card"><div class="table-head compact"><h2>Performance badges</h2><span class="muted">exclusive placement tiers · all events</span></div><div class="performance-badges"><div class="performance-badge rank1"><span class="tier-mark" aria-hidden="true">1st</span><strong>${top1}</strong><span>1st place</span></div><div class="performance-badge rank2"><span class="tier-mark" aria-hidden="true">2nd</span><strong>${top2}</strong><span>2nd place</span></div><div class="performance-badge rank3"><span class="tier-mark" aria-hidden="true">3rd</span><strong>${top3}</strong><span>3rd place</span></div><div class="performance-badge rank45"><span class="tier-mark" aria-hidden="true">4–5</span><strong>${top45}</strong><span>4th–5th place</span></div><div class="performance-badge rank10"><span class="tier-mark" aria-hidden="true">6–10</span><strong>${top10}</strong><span>6th–10th place</span></div></div></section>
+  <section class="card performance-card"><div class="table-head compact"><h2>Performance badges</h2><span class="muted">exclusive placement tiers · all events</span></div><div class="performance-badges">${performanceBadges}</div></section>
  <section class="grid two profile-content">
   <div class="card points-card"><div class="chart-metric-head"><h2>Points over time</h2>${trendMetricBadge(pointsDelta)}</div>
     <div class="player-points-summary"><strong>${recentPoints===null?'—':fmt(recentPoints)}</strong><span class="muted">points · ${esc(recentEvent?.event||'no event')}</span></div>
