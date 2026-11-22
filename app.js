@@ -54,6 +54,75 @@ function playerById(id){return D.players.find(p=>p.id===decodeURIComponent(id));
 function eventById(id){return D.events.find(e=>e.id===id);}
 function playerRows(p){const order=new Map(D.events.map((e,i)=>[e.name,i]));return p.events.slice().sort((a,b)=>(order.get(b.event)??-1)-(order.get(a.event)??-1)).map(x=>`<tr><td data-value="${order.get(x.event)??-1}">${esc(x.event)}</td><td class="num" data-value="${x.rank}">${rankPill(x.rank)}</td><td class="num">${fmt(x.points)}</td><td class="num">${x.started}</td><td class="num">${x.completed}</td><td class="num">${avg(x.ppq)}</td></tr>`).join("")}
 
+/* One delegated tooltip layer works across views replaced by app.innerHTML.
+   Native textContent prevents event/player names from becoming HTML. */
+const chartTip=document.createElement('div');
+chartTip.className='chart-hover-tooltip';
+chartTip.setAttribute('role','status');
+chartTip.setAttribute('aria-live','off');
+chartTip.hidden=true;
+const tipTitle=document.createElement('div'),tipValue=document.createElement('strong'),tipDetail=document.createElement('small');
+tipTitle.className='chart-tip-title';tipValue.className='chart-tip-value';tipDetail.className='chart-tip-detail';
+chartTip.append(tipTitle,tipValue,tipDetail);
+document.body.appendChild(chartTip);
+let chartTipTarget=null,chartTouchTarget=null;
+function hideChartTooltip(){
+ chartTip.hidden=true;
+ chartTipTarget?.classList.remove('is-chart-hovered');
+ chartTipTarget=null;
+}
+function showChartTooltip(target){
+ if(!target||!target.isConnected)return;
+ if(chartTipTarget!==target){
+  chartTipTarget?.classList.remove('is-chart-hovered');
+  chartTipTarget=target;target.classList.add('is-chart-hovered');
+ }
+ tipTitle.textContent=target.dataset.tipTitle||'';
+ tipValue.textContent=target.dataset.tipValue||'';
+ tipDetail.textContent=target.dataset.tipDetail||'';
+ tipDetail.hidden=!tipDetail.textContent;
+ chartTip.hidden=false;
+ placeChartTooltip(target);
+}
+function placeChartTooltip(target){
+ if(chartTip.hidden||!target?.isConnected)return;
+ const r=target.getBoundingClientRect(),t=chartTip.getBoundingClientRect();
+ const preferredX=r.left+r.width/2-t.width/2;
+ const x=Math.max(8,Math.min(window.innerWidth-t.width-8,preferredX));
+ const y=r.top-t.height-11>=8?r.top-t.height-11:Math.min(window.innerHeight-t.height-8,r.bottom+11);
+ chartTip.style.left=Math.round(x)+'px';
+ chartTip.style.top=Math.round(Math.max(8,y))+'px';
+}
+document.addEventListener('pointerover',e=>{
+ if(e.pointerType==='touch')return;
+ const target=e.target.closest?.('[data-chart-tip]');
+ if(target)showChartTooltip(target);
+});
+document.addEventListener('pointerout',e=>{
+ if(e.pointerType==='touch'||!chartTipTarget)return;
+ if(chartTipTarget.contains(e.relatedTarget))return;
+ const next=e.relatedTarget?.closest?.('[data-chart-tip]');
+ if(next){showChartTooltip(next);return}
+ if(document.activeElement!==chartTipTarget)hideChartTooltip();
+});
+document.addEventListener('focusin',e=>{const t=e.target.closest?.('[data-chart-tip]');if(t)showChartTooltip(t)});
+document.addEventListener('focusout',e=>{
+ if(chartTipTarget&&chartTipTarget.contains(e.target)&&!chartTipTarget.contains(e.relatedTarget))hideChartTooltip();
+});
+document.addEventListener('click',e=>{
+ const target=e.target.closest?.('[data-chart-tip]');
+ if(!target){chartTouchTarget=null;hideChartTooltip();return}
+ // First tap previews a linked event; a second tap follows its original href.
+ if(e.detail&&('ontouchstart' in window||navigator.maxTouchPoints>0)){
+  if(chartTouchTarget!==target){
+   chartTouchTarget=target;showChartTooltip(target);
+   if(target.closest('a[href]')){e.preventDefault();e.stopPropagation()}
+  }else{chartTouchTarget=null;if(!target.closest('a[href]'))hideChartTooltip()}
+ }else if(!target.closest('a[href]'))showChartTooltip(target);
+});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){chartTouchTarget=null;hideChartTooltip()}});
+window.addEventListener('scroll',()=>hideChartTooltip(),{passive:true});
+window.addEventListener('resize',()=>hideChartTooltip());
 function shortEventLabel(name){
  return String(name||'').replace(/^([A-Za-z]{3})[A-Za-z]* (\d{4})$/,(_match,month,year)=>month+" '"+year.slice(2));
 }
@@ -582,6 +651,7 @@ function goBack(fallback){
 function closeMobileMenu(){document.querySelector('.topbar')?.classList.remove('menu-open');document.getElementById('mobileMenuButton')?.setAttribute('aria-expanded','false')}
 function setPageTitle(label){document.title=label+' · Alliance Mobilization · Kingdom 3662';}
 function route(){
+ hideChartTooltip();chartTouchTarget=null;
  const h=location.hash.replace(/^#/,'');
  if(h.startsWith('player/')){
   const id=h.slice(7),player=playerById(id);
