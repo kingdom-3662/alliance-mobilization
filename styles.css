@@ -719,3 +719,43 @@ th.sortable.num button{justify-content:flex-end;text-align:right}
  .performance-card .tier-count-triple{font-size:20px}
  .performance-card .tier-count-compact{font-size:17px}
 }
+
+
+/* Interactive SVG and lollipop chart points. Tooltips are shared, readable,
+   keyboard-focusable, and clamped to the visible viewport. */
+.chart-point-hit,.player-lollipop-hit{fill:transparent;stroke:none;pointer-events:all}
+.chart-tooltip-target{cursor:help}
+.chart-tooltip-target:focus-visible{outline:none}
+.chart-tooltip-target:focus-visible .unified-chart-point,
+.chart-tooltip-target.is-chart-hovered .unified-chart-point,
+.chart-tooltip-target:focus-visible .player-lollipop-dot,
+.chart-tooltip-target.is-chart-hovered .player-lollipop-dot{
+ stroke:var(--gold);stroke-width:2.5
+}
+.chart-tooltip-target:focus-visible .chart-point-hit,
+.chart-tooltip-target.is-chart-hovered .chart-point-hit,
+.chart-tooltip-target:focus-visible .player-lollipop-hit,
+.chart-tooltip-target.is-chart-hovered .player-lollipop-hit{
+ stroke:rgba(232,198,109,.38);stroke-width:2;fill:transparent
+}
+.rank-donut-segment{cursor:help;transition:stroke-width .12s}
+.rank-donut-segment:hover,.rank-donut-segment:focus-visible,.rank-donut-segment.is-chart-hovered{stroke-width:29;outline:none}
+.rank-donut-legend-item.chart-tooltip-target{border-radius:5px;cursor:help}
+.rank-donut-legend-item.chart-tooltip-target:hover,
+.rank-donut-legend-item.chart-tooltip-target:focus-visible,
+.rank-donut-legend-item.chart-tooltip-target.is-chart-hovered{
+ background:rgba(177,188,205,.07);outline:1px solid rgba(177,188,205,.2)
+}
+.chart-hover-tooltip{
+ position:fixed;z-index:1000;box-sizing:border-box;width:max-content;max-width:min(265px,calc(100vw - 16px));
+ padding:9px 12px;border:1px solid rgba(177,188,205,.3);border-radius:9px;
+ background:#191d25;color:var(--text);
+ box-shadow:0 8px 22px rgba(0,0,0,.32);
+ text-align:left;pointer-events:none;line-height:1.45
+}
+.chart-hover-tooltip[hidden]{display:none}
+.chart-hover-tooltip .chart-tip-title{color:var(--muted);font-size:11px;line-height:1.3}
+.chart-hover-tooltip .chart-tip-value{display:block;font-size:14px;font-weight:800;font-variant-numeric:tabular-nums}
+.chart-hover-tooltip .chart-tip-detail{display:block;font-size:11px;color:var(--muted);white-space:normal}
+.chart-hover-tooltip .chart-tip-detail[hidden]{display:none}
+@media(prefers-reduced-motion:reduce){.rank-donut-segment{transition:none}}
