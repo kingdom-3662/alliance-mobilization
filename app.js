@@ -57,6 +57,19 @@ function playerRows(p){const order=new Map(D.events.map((e,i)=>[e.name,i]));retu
 function shortEventLabel(name){
  return String(name||'').replace(/^([A-Za-z]{3})[A-Za-z]* (\d{4})$/,(_match,month,year)=>month+" '"+year.slice(2));
 }
+/* Tooltips preserve exact values and explain relative change, rather than
+   presenting raw points or entries as misleading percentages. */
+function chartPercentageChange(current,previous,unit='event'){
+ if(previous===undefined||previous===null)return 'First recorded '+unit;
+ const prev=Number(previous),now=Number(current);
+ if(!Number.isFinite(prev)||!Number.isFinite(now)||prev===0)return 'Change unavailable (previous value: 0)';
+ const delta=100*(now-prev)/Math.abs(prev);
+ return 'vs previous '+unit+': '+(delta>0?'+':'')+delta.toFixed(1)+'%';
+}
+function chartTooltipAttributes(title,value,detail=''){
+ const label=[title,value,detail].filter(Boolean).join(' · ');
+ return `data-chart-tip data-tip-title="${esc(title)}" data-tip-value="${esc(value)}" data-tip-detail="${esc(detail)}" aria-label="${esc(label)}"`;
+}
 /* Shared responsive line-chart renderer used throughout the site. */
 function unifiedLineChart(values,options={}){
  if(!values.length)return '<div class="empty">No event data</div>';
@@ -86,7 +99,14 @@ function unifiedLineChart(values,options={}){
  // First / middle / last labels stay readable in compact cards.
  const labelPositions=[0,Math.floor((nums.length-1)/2),nums.length-1].filter((v,i,a)=>a.indexOf(v)===i);
  const xLabels=labelPositions.map(i=>`<text class="unified-chart-x" text-anchor="${i===0?'start':i===nums.length-1?'end':'middle'}" x="${x(i)}" y="${h-9}">${esc(shortEventLabel(labels[i]))}</text>`).join('');
- const marks=nums.map((v,i)=>`<circle cx="${x(i)}" cy="${y(v)}" r="${i===nums.length-1?5.5:3.5}" class="unified-chart-point"><title>${esc(labels[i])}: ${esc(exact(v))} ${esc(options.unit||'')}</title></circle>`).join('');
+ const marks=nums.map((v,i)=>{
+  const detail=[chartPercentageChange(v,i?nums[i-1]:null),options.pointDetails?.[i]].filter(Boolean).join(' · ');
+  const value=exact(v)+(options.unit?' '+options.unit:'');
+  return `<g class="chart-tooltip-target" tabindex="0" focusable="true" role="img" ${chartTooltipAttributes(labels[i]||'Event',value,detail)}>
+   <circle class="chart-point-hit" cx="${x(i)}" cy="${y(v)}" r="13"/>
+   <circle cx="${x(i)}" cy="${y(v)}" r="${i===nums.length-1?5.5:3.5}" class="unified-chart-point"/>
+  </g>`;
+ }).join('');
  const lastX=x(nums.length-1),lastY=y(nums[nums.length-1]);
  return `<svg class="unified-line-chart tone-${tone}" viewBox="0 0 ${w} ${h}" role="img" aria-label="${esc(options.label||'Recorded event trend')}; values: ${esc(nums.map(exact).join(', '))}">
  <defs><linearGradient id="${gradientId}" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="var(--chart-line-color)" stop-opacity=".22"/><stop offset="1" stop-color="var(--chart-line-color)" stop-opacity="0"/></linearGradient></defs>
@@ -156,13 +176,15 @@ function allianceRankingChart(){
  let offset=0;
  const segments=distribution.map(category=>{
   const count=counts.get(category.id),length=circumference*count/total;
-  const segment=`<circle cx="100" cy="100" r="68" fill="none" stroke="${category.color}" stroke-width="24" stroke-dasharray="${length} ${circumference-length}" stroke-dashoffset="${-offset}" transform="rotate(-90 100 100)"><title>${esc(category.label)}: ${count} ${count===1?'event':'events'}</title></circle>`;
+  const percentage=(100*count/total).toFixed(1);
+  const tip=chartTooltipAttributes(category.label,`${count} ${count===1?'event':'events'} · ${percentage}%`,'Share of all recorded events');
+  const segment=`<circle class="chart-tooltip-target rank-donut-segment" tabindex="0" focusable="true" role="img" ${tip} cx="100" cy="100" r="68" fill="none" stroke="${category.color}" stroke-width="24" stroke-dasharray="${length} ${circumference-length}" stroke-dashoffset="${-offset}" transform="rotate(-90 100 100)"/>`;
   offset+=length;
   return segment;
  }).join('');
  const legend=distribution.map(category=>{
   const count=counts.get(category.id),percent=(100*count/total).toFixed(1);
-  return `<li class="rank-donut-legend-item"><span class="rank-donut-legend-dot" style="background:${category.color}" aria-hidden="true"></span><span class="rank-donut-legend-content"><span class="rank-donut-legend-label">${esc(category.label)}</span><span class="rank-donut-legend-detail">${count} ${count===1?'event':'events'} · ${percent}%</span></span></li>`;
+  return `<li class="rank-donut-legend-item chart-tooltip-target" tabindex="0" ${chartTooltipAttributes(category.label,`${count} ${count===1?'event':'events'} · ${percent}%`,'Share of all recorded events')}><span class="rank-donut-legend-dot" style="background:${category.color}" aria-hidden="true"></span><span class="rank-donut-legend-content"><span class="rank-donut-legend-label">${esc(category.label)}</span><span class="rank-donut-legend-detail">${count} ${count===1?'event':'events'} · ${percent}%</span></span></li>`;
  }).join('');
  const summary=distribution.map(category=>`${category.label}: ${counts.get(category.id)} ${counts.get(category.id)===1?'event':'events'}`).join(', ');
  const latestRank=D.events[D.events.length-1]?.allianceRank;
@@ -222,7 +244,8 @@ function trendMetricBadge(change,unit='%',decimals=1){
  return `<span class="trend-metric-badge ${status}"><span class="trend-metric-prefix">last:</span> ${sign}${rounded.toFixed(decimals)}${unit}</span>`;
 }
 function trendLine(values,caption,format='number',tone='gold'){
- return unifiedLineChart(values,{format,tone,label:caption,unit:format==='decimal'?'points per quest':'entries'});
+ const details=caption==='Active scoring entries'?trendEvents().map(st=>st.total?`${(100*st.active/st.total).toFixed(1)}% of ${fmt(st.total)} recorded entries`:'No recorded entries'):undefined;
+ return unifiedLineChart(values,{format,tone,label:caption,unit:format==='decimal'?'points per quest':'entries',pointDetails:details});
 }
 function trendsView(){
  nav('trends');
