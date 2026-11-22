@@ -522,3 +522,13 @@ th.sortable.num button{justify-content:flex-end;text-align:right}
 /* Compact completion heading on mobile keeps the comparison percentage alongside its title. */
 .requirement-completion-title .mobile-title{display:none}
 @media(max-width:560px){.requirement-completion-title .desktop-title{display:none}.requirement-completion-title .mobile-title{display:inline}.trend-metric-header:has(.requirement-completion-title){flex-wrap:nowrap;gap:6px}.trend-metric-header:has(.requirement-completion-title) .trend-metric-badge{flex-shrink:0;font-size:11px;padding:3px 6px}}
+
+/* Keep the Dashboard alliance performance comparison next to its heading on mobile. */
+.alliance-performance-header{gap:8px;min-width:0}
+.alliance-performance-header h2{min-width:0;margin:0}
+.alliance-performance-header .trend-metric-badge{flex-shrink:0}
+@media(max-width:560px){
+ .alliance-performance-header{flex-wrap:nowrap;align-items:center;gap:6px}
+ .alliance-performance-header h2{font-size:clamp(12px,3.5vw,17px)}
+ .alliance-performance-header .trend-metric-badge{font-size:11px;padding:3px 6px}
+}
