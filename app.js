@@ -195,10 +195,10 @@ function playerMomentum(p){
   priorPPQ:mean(prior,'ppq'),recentPPQ:mean(recent,'ppq'),
   label:pct>5?'Improving':pct< -5?'Declining':'Stable'};
 }
-function trendChange(pct,decimals=1){
+function trendChange(pct,decimals=1,colorBySign=false){
  if(pct===null||pct===undefined||!Number.isFinite(pct))return '<span class="muted">—</span>';
  const sign=pct>0?'+':'';
- const state=pct>5?'up':pct< -5?'down':'flat';
+ const state=colorBySign?(pct>0?'up':pct<0?'down':'flat'):(pct>5?'up':pct< -5?'down':'flat');
  return `<span class="trend-delta ${state}">${sign}${pct.toFixed(decimals)}%</span>`;
 }
 function trendMetricBadge(change,unit='%',decimals=1){
@@ -241,7 +241,7 @@ function trendsView(){
  const eventRows=eventStats.slice().reverse().map(st=>`<tr class="clickable" onclick="location.hash='event/${encodeURIComponent(st.event.id)}'">
   <td><button class="player-link">${esc(st.event.name)}</button></td>
   <td class="num">${fmt(st.points)}</td>
-  <td class="num">${trendChange(st.pointsChange)}</td>
+  <td class="num">${trendChange(st.pointsChange,1,true)}</td>
   <td class="num">${esc(st.event.allianceRank??'—')}</td>
   <td class="num">${fmt(st.active)}</td>
   <td class="num">${st.requirementRate===null?'—':st.requirementRate.toFixed(1)+'%'}</td>
@@ -384,7 +384,7 @@ function playerPointsChart(p){
  const y=v=>bottom-(v/ceiling)*(bottom-top);
  const plotWidth=w-left-right;
  const gap=plotWidth/events.length;
- const barWidth=Math.min(37,gap*.6);
+ const barWidth=Math.min(26,gap*.46);
  const ticks=Array.from({length:5},(_,i)=>{
   const v=i*step,yy=y(v);
   return `<line class="metric-grid-line" x1="${left}" x2="${w-right}" y1="${yy}" y2="${yy}"/><text class="metric-axis-tick" x="${left-9}" y="${yy+4}" text-anchor="end">${fmt(v)}</text>`;
@@ -394,7 +394,7 @@ function playerPointsChart(p){
   return `<rect x="${x-barWidth/2}" y="${yy}" width="${barWidth}" height="${barHeight}" rx="3" fill="url(#playerChartFill)"><title>${esc(event.event)}: ${fmt(value)} points</title></rect><text class="metric-data-label" x="${x}" y="${Math.max(top-7,yy-8)}" text-anchor="middle">${fmt(value)}</text><text class="metric-axis-event" x="${x}" y="${h-17}" text-anchor="middle">${esc(shortEventLabel(event.event))}</text>`;
  }).join('');
  return `<div class="chart-axis-scroll player-axis-scroll"><svg class="metric-axis-chart player-axis-chart" style="min-width:${w}px" viewBox="0 0 ${w} ${h}" role="img" aria-label="Player points by scoring event with point values, event axis, and a zero-based numeric axis">
-  <defs><linearGradient id="playerChartFill" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#e9c66b"/><stop offset="1" stop-color="#a27d36"/></linearGradient></defs>
+  <defs><linearGradient id="playerChartFill" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#bca46e" stop-opacity=".78"/><stop offset="1" stop-color="#8c7953" stop-opacity=".58"/></linearGradient></defs>
   ${ticks}
   <line class="metric-axis-line" x1="${left}" y1="${top}" x2="${left}" y2="${bottom}"/>
   <line class="metric-axis-line" x1="${left}" y1="${bottom}" x2="${w-right}" y2="${bottom}"/>
